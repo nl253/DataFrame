@@ -15,8 +15,7 @@ function readJSON(filePath) {
  * @returns {Array<Array<String>>} table
  */
 function readCSV(filePath, hasHeader = false) {
-  return parseCSV(
-    readFileSync(filePath), {
+  return parseCSV(readFileSync(filePath), {
       header: hasHeader,
       skip_empty_lines: true,
     });

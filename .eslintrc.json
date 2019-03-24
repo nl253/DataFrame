@@ -324,12 +324,7 @@
     "no-throw-literal": 2,
     "no-undef-init": 2,
     "no-undefined": 2,
-    "no-underscore-dangle": [
-      "error",
-      {
-        "allowAfterThis": true
-      }
-    ],
+    "no-underscore-dangle": [1, {"allowAfterThis": true}],
     "no-unexpected-multiline": 2,
     "no-unmodified-loop-condition": 2,
     "no-unreachable": 2,

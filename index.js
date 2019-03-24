@@ -1,5 +1,73 @@
+/* eslint-disable complexity */
 const isNumRegex = /^(\d+\.?\d*|\d*\.\d+)$/g;
 const bitsRegex = /(64|32|16|8)/;
+const uint64Regex = /^u(int)64?/i;
+const int64Regex = /^i(nt)64?/i;
+const intRegex = /^i(nt)?/i;
+const uintRegex = /^u(int)?/i;
+const floatRegex = /^f(loat)?/i;
+
+/**
+ * @param {!Array<*>|!TypedArray} xs
+ * @param {!Array<*>|!TypedArray} ys
+ * @param {!Number} p
+ * @returns {!Array<*>|!TypedArray} array
+ */
+function minkDist(xs, ys, p = 2) {
+  return sum(subP(xs, ys).map(x => Math.abs(x) ** p)) ** (1 / p);
+}
+
+/**
+ * @param {!Array<*>|!TypedArray} xs
+ * @param {!Array<*>|!TypedArray} ys
+ * @returns {!Array<*>|!TypedArray} array
+ */
+function euclDist(xs, ys) {
+  return Math.sqrt(sum(subP(xs, ys).map(x => x ** 2)));
+}
+
+/**
+ * @param {!Array<*>|!TypedArray} xs
+ * @param {!Array<*>|!TypedArray} ys
+ * @returns {!Array<*>|!TypedArray} array
+ */
+function manhDist(xs, ys) {
+  return sum(subP(xs, ys).map(x => Math.abs(x)));
+}
+
+/**
+ * @param {!TypedArray} xs
+ * @param {!TypedArray} ys
+ * @returns {!TypedArray} array
+ */
+function concat(xs, ys) {
+  const newArr = getTypedArray(xs.length + ys.length);
+  newArr.set(xs);
+  newArr.set(ys, xs.length);
+  return newArr;
+}
+
+/**
+ * @param {!Array<*>|!TypedArray} xs
+ * @param {!Array<*>|!TypedArray} ys
+ * @param {!Function} f
+ * @returns {!Array<*>|!TypedArray} array
+ */
+function zipWith(xs, ys, f) {
+  return xs.map((x, idx) => f(x, ys[idx]));
+}
+
+// noinspection FunctionNamingConventionJS
+/**
+ * @param {!Array<*>|!TypedArray} xs
+ * @param {!Array<*>|!TypedArray} ys
+ * @param {!Array<*>|!TypedArray} zs
+ * @param {!Function} f
+ * @returns {!Array<*>|!TypedArray} array
+ */
+function zipWith3(xs, ys, zs, f) {
+  return xs.map((x, idx) => f(x, ys[idx], zs[idx]));
+}
 
 /**
  * @param {!Number} a min val
@@ -23,12 +91,12 @@ function randInt(a, b) {
 
 /**
  * @param {!Number} [n] #elems
- * @param {!Number} [min] min val
- * @param {!Number} [max] max val
+ * @param {!Number} [lowBound] lowBound val
+ * @param {!Number} [upBound] upBound val
  * @returns {!Array<Number>} array
  */
-function randArr(n = 100, min = 0, max = 1) {
-  return Array(n).fill(0).map(_ => randInRange(min, max));
+function randArr(n = 100, lowBound = 0, upBound = 1) {
+  return Array(n).fill(0).map(_ => randInRange(lowBound, upBound));
 }
 
 /**
@@ -41,11 +109,16 @@ function randArrEl(xs) {
 
 /**
  * @param {!Array<*>|!TypedArray} xs
- * @param {!Number} n
+ * @param {!Number} n number of items OR ratio in [0, 1]
  * @returns {!TypedArray|!Array<*>} sample
  */
 function sampleWOR(xs, n) {
-  if (n === null) return sampleWOR(xs, xs.length);
+  if (n === null) {
+    return sampleWOR(xs, xs.length);
+  }
+  if (n < 1) {
+    return sampleWOR(xs, Math.floor(xs.length * n));
+  }
   if (xs.constructor.name === 'Array') {
     const newArr = [];
     while (newArr.length < n) {
@@ -69,15 +142,22 @@ function sampleWOR(xs, n) {
 }
 
 /**
- * @param {Array<!Number>} xs
+ * @param {!Array<*>|!TypedArray} xs
  * @param {!Number} n
- * @returns {*}
+ * @returns {!Array<*>|!TypedArray}
  */
 function sampleWR(xs, n) {
   if (n === null) {
     return Array.from(xs);
   }
-  return xs.slice(0, n).map(_ => xs[randInt(0, xs.length)]);
+  if (n < 1) {
+    return sampleWR(xs, Math.floor(xs.length * n));
+  }
+  if (xs.constructor.name === 'Array') {
+    return Array(n).fill(0).map(_ => xs[randInt(0, xs.length)]);
+  } else {
+    return getTypedArray(n, xs.constructor.name.replace('Array', '')).map(_ => xs[randInt(0, xs.length)]);
+  }
 }
 
 /**
@@ -331,10 +411,35 @@ function nCombinations(n, k) {
 }
 
 /**
+ * @param {Array<!Number>|!TypedArray} xs
+ * @returns {!Number} magnitude
+ */
+function magnitude(xs) {
+  if (xs.constructor.name !== 'Array' && xs.constructor.name.indexOf('Float') < 0) {
+    return Math.sqrt(sum(cast(xs, 'Float64').map(x => x ** 2)));
+  } else {
+    return Math.sqrt(sum(xs.map(x => x ** 2)));
+  }
+}
+
+/**
+ * @param {!Array<!Number>|!TypedArray} xs
+ * @param {!Number} r
+ * @returns {!Array<!Number>} array
+ */
+function scale(xs, r) {
+  if (xs.constructor.name === 'Array' || (Number.isInteger(r) && r > 0) || xs.dtype.indexOf('Float') >= 0) {
+    return xs.map(x => x * r);
+  } else {
+    return cast(xs, 'Float64').map(x => x * r);
+  }
+}
+
+/**
  * @param {!Array<!Number>|!TypedArray} xs
  * @returns {!Number}
  */
-function product(xs) {
+function prod(xs) {
   return xs.reduce((v1, v2) => v1 * v2, 1);
 }
 
@@ -342,7 +447,7 @@ function product(xs) {
  * @param {!Array<!Number>|!TypedArray} xs
  * @returns {!Number}
  */
-function quotient(xs) {
+function quot(xs) {
   return xs.reduce((v1, v2) => v1 / v2, 1);
 }
 
@@ -358,17 +463,21 @@ function sum(xs) {
  * @param {!Array<!Number>|!TypedArray} xs
  * @returns {!Number}
  */
-function difference(xs) {
+function diff(xs) {
   return xs.reduce((v1, v2) => v1 - v2, 0);
 }
 
 /**
- * @param {!Array<!Number>|!TypedArray} xs
- * @param {!Array<!Number>|!TypedArray} ys
- * @returns {!TypedArray}
+ * @param {!Array<!Number>|TypedArray} xs
+ * @param {!Number} v
+ * @returns {!Array<!Number>|TypedArray} array
  */
-function add(xs, ys) {
-  return elementWise(xs, ys, (a, b) => a + b);
+function add(xs, v) {
+  if (Number.isInteger(v) || this.dtype.indexOf('Float') >= 0) {
+    return this.map(x => x + v);
+  } else {
+    return cast(this, 'Float64').map(x => x + v);
+  }
 }
 
 /**
@@ -376,8 +485,8 @@ function add(xs, ys) {
  * @param {!Array<!Number>|!TypedArray} ys
  * @returns {!TypedArray}
  */
-function subtract(xs, ys) {
-  return elementWise(xs, ys, (a, b) => a - b);
+function addP(xs, ys) {
+  return pairWise(xs, ys, (a, b) => a + b);
 }
 
 /**
@@ -385,8 +494,8 @@ function subtract(xs, ys) {
  * @param {!Array<!Number>|!TypedArray} ys
  * @returns {!TypedArray}
  */
-function multiply(xs, ys) {
-  return elementWise(xs, ys, (a, b) => a * b);
+function subP(xs, ys) {
+  return pairWise(xs, ys, (a, b) => a - b);
 }
 
 /**
@@ -394,8 +503,17 @@ function multiply(xs, ys) {
  * @param {!Array<!Number>|!TypedArray} ys
  * @returns {!TypedArray}
  */
-function divide(xs, ys) {
-  return elementWise(xs, ys, (a, b) => a / b);
+function mulP(xs, ys) {
+  return pairWise(xs, ys, (a, b) => a * b);
+}
+
+/**
+ * @param {!Array<!Number>|!TypedArray} xs
+ * @param {!Array<!Number>|!TypedArray} ys
+ * @returns {!TypedArray}
+ */
+function divP(xs, ys) {
+  return pairWise(xs, ys, (a, b) => a / b);
 }
 
 /**
@@ -404,7 +522,7 @@ function divide(xs, ys) {
  * @param {!Function} f
  * @returns {!Array<*>|!TypedArray}
  */
-function elementWise(xs, ys, f) {
+function pairWise(xs, ys, f) {
   const l = Math.min(xs.length, ys.length);
   const newArr = getTypedArray(l);
   for (let i = 0; i < l; i++) {
@@ -416,10 +534,10 @@ function elementWise(xs, ys, f) {
 /**
  * @param {!Array<String>|!TypedArray} xs
  * @param {!Array<String>|!TypedArray} ys
- * @returns {!Number} dot product
+ * @returns {!Number} dot prod
  */
 function dot(xs, ys) {
-  return sum(multiply(xs, ys));
+  return sum(mulP(xs, ys));
 }
 
 /**
@@ -688,6 +806,7 @@ function mae(xs, ys) {
 
 /**
  * @param {!Array<!Number>|!TypedArray} xs
+ * @param {!Function} f
  * @returns {!Array<!Number>|!TypedArray} safe common dtype
  */
 function cumOp(xs, f) {
@@ -709,7 +828,7 @@ function cumOp(xs, f) {
 
 /**
  * @param {!Array<!Number>|!TypedArray} xs
- * @param {"sum"|"product"|"min"|"max"|"variance"|"stdev"|"majorityVote"|"mad"|"mean"|"mode"} functName
+ * @param {"sum"|"prod"|"min"|"max"|"variance"|"stdev"|"majorityVote"|"mad"|"mean"|"mode"} functName
  * @returns {!Array<!Number>|!TypedArray} array
  */
 function cum(xs, functName) {
@@ -722,31 +841,27 @@ function cum(xs, functName) {
  */
 function getDtypeName(alias) {
   const bits = bitsRegex.exec(alias)[0];
-  if (alias.match(/^u(int)64?/i)) {
+  if (alias.match(uint64Regex)) {
     return `BigUint64`;
-  } else if (alias.match(/^i(nt)64?/i)) {
+  } else if (alias.match(int64Regex)) {
     return `BigInt64`;
-  } else if (alias.match(/^i(nt)?/i)) {
+  } else if (alias.match(intRegex)) {
     return `Int${bits}`;
-  } else if (alias.match(/^u(int)?/i)) {
+  } else if (alias.match(uintRegex)) {
     return `Uint${bits}`;
-  } else if (alias.match(/^f(loat)?/i)) {
+  } else if (alias.match(floatRegex)) {
     return `Float${bits}`;
   } else throw new Error(`unrecognised dtype ${alias}`);
 }
 
 /**
- * @param {!TypedArray|!Array<*>} arr
+ * @param {!TypedArray} arr
  * @param {"BigUint64"|"Uint32"|"Uint16"|"Uint8"|"BigInt64"|"Int32"|"Int16"|"Int8"|"Float64"|"Float32"} toDtype
  * @returns {!TypedArray}
  */
 function cast(arr, toDtype = null) {
   if (toDtype === null) {
-    if (arr.constructor.name.indexOf('Array') < 0) {
-      return downCast(arr);
-    } else {
-      return cast(arr, 'Float64');
-    }
+    return downCast(arr);
   }
   const newArr = getTypedArray(arr.length, getDtypeName(toDtype));
   newArr.set(arr);
@@ -837,15 +952,27 @@ function toTypedArray(xs, defaultDtype = 'Float64') {
 }
 
 /**
- * @param {!TypedArray} a
- * @returns {!TypedArray} the array
+ * @param {!TypedArray|!Array<*>} a
+ * @returns {!TypedArray|!Array<*>} the array
  */
-function enhanceTypedArray(a) {
+function enhanceArray(a) {
   const defineGetter = (name, f) => Object.defineProperty(a, name, { get: f });
+  const isTyped = a.constructor.name !== 'Array';
 
   // memory & data type
-  a.print = function () { return console.table(Array.from(this.subarray(0, 10))); };
-  defineGetter('dtype', function () { return this.constructor.name.replace('Array', ''); });
+  if (isTyped) {
+    a.print = function () {
+      return console.table(this.subarray(0, 10));
+    };
+    defineGetter('dtype', function () {
+      return this.constructor.name.replace('Array', '');
+    });
+  } else {
+    a.print = function () {
+      return console.table(this.slice(0, 10));
+    };
+  }
+
   defineGetter('clone', function () { return clone(this); });
   defineGetter('isEmpty', function () { return this.length === 0; });
   defineGetter('unique', function () { return unique(this); });
@@ -855,24 +982,40 @@ function enhanceTypedArray(a) {
   };
 
   // manipulation, views and slices
-  defineGetter('tail', function (n = 10) { return this.subarray(this.length - n, this.length); });
-  defineGetter('head', function (n = 10) { return this.subarray(0, n); });
 
-  a.concat = function (other) {
-    const newArr = getTypedArray(this.length + other.length);
-    newArr.set(this);
-    newArr.set(other, this.length);
-    return newArr;
-  };
+  if (isTyped) {
+    defineGetter('tail', function (n = 10) {
+      return this.subarray(this.length - n, this.length);
+    });
+    defineGetter('head', function (n = 10) {
+      return this.subarray(0, n);
+    });
+  } else {
+    defineGetter('tail', function (n = 10) {
+      return this.slice(this.length - n, this.length);
+    });
+    defineGetter('head', function (n = 10) {
+      return this.slice(0, n);
+    });
+  }
+
+  if (isTyped) {
+    a.concat = function (other) {
+      const newArr = getTypedArray(this.length + other.length);
+      newArr.set(this);
+      newArr.set(other, this.length);
+      return newArr;
+    };
+  }
 
   defineGetter('sortedAsc', function () { return clone(this).sort((a, b) => (a > b ? 1 : a < b ? -1 : 0)); });
   defineGetter('sortedDes', function () { return clone(this).sort((a, b) => (a > b ? -1 : a < b ? 1 : 0)); });
 
   defineGetter('reversed', function () { return clone(this).reverse(); });
   defineGetter('shuffled', function () {
-    const a = clone(this);
-    shuffle(a);
-    return a;
+    const arr = clone(this);
+    shuffle(arr);
+    return arr;
   });
 
   a.nLargest = function (n = 10) { return this.sortedDes.slice(0, n); };
@@ -886,39 +1029,48 @@ function enhanceTypedArray(a) {
   a.all = function (f) { return !this.some((v, idx, arr) => !f(v, idx, arr)); };
   a.none = function (f) { return !this.some((v, idx, arr) => f(v, idx, arr)); };
   a.contains = function (v) { return this.some(x => x === v); };
-  a.pop = function (idx) {
-    const newArr = getTypedArray(this.length - 1, this.constructor.name.replace('Array', ''));
-    newArr.set(this.subarray(0, idx));
-    newArr.set(this.subarray(idx + 1), idx);
-    return newArr;
-  };
+
+  if (isTyped) {
+    a.pop = function (idx) {
+      const type = this.constructor.name.replace('Array', '');
+      const newArr = getTypedArray(this.length - 1, type);
+      newArr.set(this.subarray(0, idx));
+      newArr.set(this.subarray(idx + 1), idx);
+      return newArr;
+    };
+  } else {
+    a.pop = function (idx) {
+      this.splice(idx, 1);
+      return this;
+    };
+  }
 
   // arithmetic on self
-  defineGetter('prod', function () { return product(this); });
-  defineGetter('quot', function () { return quotient(this); });
+  defineGetter('prod', function () { return prod(this); });
+  defineGetter('quot', function () { return quot(this); });
   defineGetter('sum', function () { return sum(this); });
-  defineGetter('diff', function () { return difference(this); });
+  defineGetter('diff', function () { return diff(this); });
 
   // pair-wise arithmetic on other
-  a.addP = function (other) { return add(this, other); };
-  a.subP = function (other) { return subtract(this, other); };
-  a.mulP = function (other) { return multiply(this, other); };
-  a.divP = function (other) { return divide(this, other); };
-  a.add = function (v) {
-    if (Number.isInteger(v) || this.dtype.indexOf('Float') >= 0) {
-      return this.map(x => x + v);
-    } else {
-      return cast(this, 'Float64').map(x => x + v);
-    }
-  };
-  a.sub = function (v) { return this.sub(-v); };
-  a.mul = function (r) { return this.scale(r); };
-  a.div = function (r) { return this.scale(1/r); };
+  a.addP = function (other) { return addP(this, other); };
+  a.subP = function (other) { return subP(this, other); };
+  a.mulP = function (other) { return mulP(this, other); };
+  a.divP = function (other) { return divP(this, other); };
+  // single element ops
+  a.add = function (v) { return add(this, v); };
+  a.sub = function (v) { return add(this, -v); };
+  a.mul = function (r) { return scale(this, r); };
+  a.div = function (r) { return scale(this, 1 / r); };
 
   // basic ops
   defineGetter('abs', function () { return this.map(x => Math.abs(x)); });
   defineGetter('round', function () { return this.map(x => Math.round(x)); });
-  defineGetter('trunc', function () { return this.cast('Int32'); });
+
+  if (isTyped) {
+    defineGetter('trunc', function () { return cast(this, 'Int32'); });
+  } else {
+    defineGetter('trunc', function () { return this.map(x => Math.trunc(x)); });
+  }
 
   a.argMax = function (f) { return argMax(this, f); };
   a.argMin = function (f) { return argMin(this, f); };
@@ -945,46 +1097,16 @@ function enhanceTypedArray(a) {
   // // sampling
   a.sample = function (r, wr = false) {
     const n = Math.floor(this.length * r);
-    return toTypedArray(wr ? sampleWR(this, n) : sampleWOR(this, n));
+    return wr ? sampleWR(this, n) : sampleWOR(this, n);
   };
 
   // linear algebra
   a.dot = function (other) { return dot(this, other); };
-  a.scale = function (r) {
-    if (Number.isInteger(r) || this.dtype.indexOf('Float') >= 0) {
-      return this.map(x => x * r);
-    } else {
-      return cast(this, 'Float64').map(x => x * r);
-    }
-  };
-  defineGetter('magnitude', function () {
-    if (this.dtype.indexOf('Float') < 0) {
-      return Math.sqrt(sum(cast(this, 'Float64').map(x => x ** 2)));
-    } else {
-      return Math.sqrt(sum(this.map(x => x ** 2)));
-    }
-  });
-  a.minkDist = function (other, p = 2) {
-    if (this.dtype.indexOf('Float') >= 0) {
-      return (this.subP(other).map(x => Math.abs(x) ** p).sum)**(1/p);
-    } else {
-      return (cast(this, 'Float64').subP(other).map(x => Math.abs(x) ** p).sum)**(1/p);
-    }
-  };
-  a.euclDist = function (other) {
-    if (this.dtype.indexOf('Float') >= 0) {
-      return Math.sqrt(this.subP(other).map(x => x ** 2).sum);
-    } else {
-      return Math.sqrt(cast(this, 'Float64').subP(other).map(x => x ** 2).sum);
-    }
-  };
-  a.manhDist = function (other) {
-    if (this.dtype.indexOf('Float') >= 0) {
-      this.map((x, idx) => Math.abs(x - other[idx])).sum;
-    } else {
-      return cast(this, 'Float64').map((x, idx) => Math.abs(x - other[idx])).sum;
-    }
-  };
+  a.scale = function (r) { return scale(this, r); };
+  defineGetter('magnitude', function () { return magnitude(this); });
+  a.minkDist = function (other, p = 2) { return minkDist(this, other, p); };
+  a.euclDist = function (other) { return euclDist(this, other); };
+  a.manhDist = function (other) { return manhDist(this, other); };
 
   // pre-processing
   defineGetter('normalized', function () { return normalize(this); });
@@ -1002,22 +1124,23 @@ function enhanceTypedArray(a) {
   defineGetter('noInfinity', function () { return this.drop(Infinity); });
   defineGetter('noNaN', function () { return this.drop(NaN); });
 
-
   // hacks
   a._slice = a.slice;
-  a.slice = function (a, b) { return enhanceTypedArray(this._slice(a, b)); };
+  a.slice = function (a, b) { return enhanceArray(this._slice(a, b)); };
 
-  a._subarray = a.subarray;
-  a.subarray = function (a, b) { return enhanceTypedArray(this._subarray(a, b)); };
+  if (a.constructor.name !== 'Array') {
+    a._subarray = a.subarray;
+    a.subarray = function (a, b) { return enhanceArray(this._subarray(a, b)); };
+  }
 
   a._map = a.map;
-  a.map = function (a, b, c) { return enhanceTypedArray(this._map(a, b, c)); };
+  a.map = function (a, b, c) { return enhanceArray(this._map(a, b, c)); };
 
   a._filter = a.filter;
-  a.filter = function (a, b, c) { return enhanceTypedArray(this._filter(a, b, c)); };
+  a.filter = function (a, b, c) { return enhanceArray(this._filter(a, b, c)); };
 
   // functional programming
-  a.zipWith = function (xs, f) { return this.map((y, idx) => f(y, xs[idx])); };
+  a.zipWith = function (xs, f) { return zipWith(this, xs, f); };
   a.zipWith3 = function (xs, ys, f) { return this.map((v, idx) => f(v, xs[idx], ys[idx])); };
 
   return a;
@@ -1032,11 +1155,12 @@ function getTypedArray(len, dtype = 'Float64') {
   const match = bitsRegex.exec(dtype);
   const bytesNeeded = parseInt(match[1]) / 8;
   const constructor = eval(`${getDtypeName(dtype)}Array`);
-  return enhanceTypedArray(new constructor(new ArrayBuffer(bytesNeeded * len)));
+  return enhanceArray(new constructor(new ArrayBuffer(bytesNeeded * len)));
 }
 
 module.exports = {
   add,
+  addP,
   arange,
   argMax,
   argMin,
@@ -1044,14 +1168,16 @@ module.exports = {
   cast,
   clone,
   combinations,
+  concat,
   correlation,
   cum,
-  difference,
-  divide,
+  diff,
+  divP,
   dot,
   downCast,
-  enhanceArray: enhanceTypedArray,
+  enhanceArray,
   entropy,
+  euclDist,
   factorial,
   getTypedArray,
   guessDtype,
@@ -1061,21 +1187,24 @@ module.exports = {
   isNumCol: allNums,
   mad,
   mae,
+  magnitude,
   majorityVote,
+  manhDist,
   max,
   mean,
   median,
   min,
+  minkDist,
   mode,
   mse,
-  multiply,
+  mulP,
   nCombinations,
   nQuart,
   newtonsMethod,
   normalize,
   permutations,
-  product,
-  quotient,
+  prod,
+  quot,
   randArr,
   randArrEl,
   randBitStr,
@@ -1087,10 +1216,11 @@ module.exports = {
   rangeIter,
   sampleWOR,
   sampleWR,
+  scale,
   shuffle,
   skewness,
   stdev,
-  subtract,
+  subP,
   sum,
   swap,
   toTypedArray,
@@ -1098,4 +1228,6 @@ module.exports = {
   unifyDtype,
   unique,
   variance,
+  zipWith,
+  zipWith3,
 };
