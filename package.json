@@ -1,0 +1,61 @@
+{
+  "author": "Norbert Logiewa <norbertlogiewa96@gmail.com>",
+  "bugs": {
+    "url": "https://github.com/nl253/JS-Typed-Array-Exensions/issues"
+  },
+  "dependencies": {
+    "csv": "^5.1.1",
+    "csv-parse": "latest",
+    "winston": "^3.2.1"
+  },
+  "description": "Extensions to typed arrays",
+  "devDependencies": {
+    "eslint": "^5.15.1",
+    "eslint-config-airbnb": "^17.1.0",
+    "eslint-plugin-compat": "^2.7.0",
+    "eslint-plugin-filenames": "^1.3.2",
+    "eslint-plugin-import": "^2.16.0",
+    "eslint-plugin-jsx-a11y": "^6.2.1",
+    "eslint-plugin-node": "^8.0.1",
+    "eslint-plugin-optimize-regex": "^1.1.6",
+    "eslint-plugin-promise": "^4.0.1",
+    "eslint-plugin-react": "^7.12.4",
+    "eslint-plugin-security": "^1.4.0"
+  },
+  "engines": {
+    "node": ">=10.15.3"
+  },
+  "files": [
+    "datasets/heart/heart.csv",
+    "datasets/ukMigration/ukMigration.csv",
+    "datasets/usElections2016/usElections2016.csv",
+    "datasets/diabetes/diabetes.csv",
+    "datasets/WHOSuicide/WHOSuicide.csv",
+    "datasets/suicide/suicide.csv",
+    "datasets/iris/iris.csv"
+  ],
+  "homepage": "https://github.com/nl253/JS-Typed-Array-Exensions#readme",
+  "keywords": [
+    "array",
+    "extensions",
+    "typed",
+    "utilities",
+    "utils",
+    "math",
+    "stats",
+    "statistics"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "name": "typed_array_extensions",
+  "private": false,
+  "readme": "https://github.com/nl253/JS-Typed-Array-Exensions/blob/master/README.md",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nl253/JS-Typed-Array-Exensions"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "version": "0.0.1-alpha"
+}
