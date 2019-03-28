@@ -27,6 +27,11 @@
     "node": ">=10.15.3"
   },
   "files": [
+    "rand.js",
+    "DF.js",
+    "log.js",
+    "load.js",
+    "series.js",
     "datasets/heart/heart.csv",
     "datasets/ukMigration/ukMigration.csv",
     "datasets/usElections2016/usElections2016.csv",

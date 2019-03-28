@@ -8,6 +8,7 @@ function randInRange(a, b = null) {
     ? randInRange(0, a)
     : a + (b - a) * Math.random();
 }
+
 /**
  * @param {!Number} a min val
  * @param {!Number} [b] max val
@@ -19,5 +20,4 @@ function randInt(a, b) {
 module.exports = {
   randInRange,
   randInt,
-  rangeIter,
 };

@@ -3,37 +3,32 @@ const { gunzipSync, gzipSync } = require('zlib');
 const { mkdirSync, readdirSync, existsSync, writeFileSync, readFileSync } = require('fs');
 
 // noinspection JSUnusedLocalSymbols
-const {
-  arange,
-  bag,
-  clone,
-  concat,
-  diff,
-  dot,
-  malloc,
-  mad,
-  mae,
-  max,
-  mean,
-  median,
-  min,
-  mode,
-  normalize,
-  prod,
-  quot,
-  range,
-  shuffle,
-  skewness,
-  stdev,
-  sum,
-  toTypedArray,
-  transpose: t,
-  variance,
-  zipWith,
-} = require('.');
+const { tryConvert, empty } = require('.');
 const { readCSV } = require('./load');
 const log = require('./log');
 const { sampleWOR } = require('.');
+
+/**
+ * @param {!Array<Array<*>>|!Array<*>} xs
+ * @returns {!Array<Array<*>>|!Array<*>} transpose
+ */
+function transpose(xs) {
+  if (xs[0].constructor.name !== 'Array') {
+    return xs.map(x => [x]);
+  }
+  const colCount = xs[0].length;
+  const rowCount = xs.length;
+  const m = Array(colCount)
+    .fill(0)
+    .map(_ => Array(rowCount)
+      .fill(0));
+  for (let i = 0; i < xs.length; i++) {
+    for (let j = 0; j < xs[i].length; j++) {
+      m[j][i] = xs[i][j];
+    }
+  }
+  return m;
+}
 
 
 class DF {
@@ -58,13 +53,13 @@ class DF {
       this._cols = Array.from(data._cols);
       this.colNames = Array.from(data.colNames);
     } else if (data.constructor.name === 'Object' || what === 'dict') {
-      this._cols = Object.values(data).map(c => toTypedArray(c));
+      this._cols = Object.values(data).map(c => tryConvert(c));
       this.colNames = Object.keys(data);
     } else {
       if (what === 'rows') {
-        this._cols = t(data).map(c => toTypedArray(c));
+        this._cols = t(data).map(c => tryConvert(c));
       } else {
-        this._cols = data.map(c => toTypedArray(c));
+        this._cols = data.map(c => tryConvert(c));
       }
       if (colNames) {
         this.colNames = colNames;
@@ -234,7 +229,7 @@ class DF {
       }
       const otherCol = other._cols[c];
       const thisCol = cols[c];
-      const newArr = malloc(thisCol.length + otherCol.length);
+      const newArr = empty(thisCol.length + otherCol.length);
       newArr.set(thisCol);
       newArr.set(otherCol, thisCol.length);
       cols[c] = newArr;
@@ -257,7 +252,7 @@ class DF {
    * @param {?Function} [f2]
    * @returns {!DF} data frame
    */
-  mapCol(colId, f, f2 = toTypedArray) {
+  mapCol(colId, f, f2 = tryConvert) {
     if (this.nCols === 1) {
       return this.mapCol(0, f, f2);
     }
@@ -276,7 +271,7 @@ class DF {
   appendH(col, name = null) {
     const cols = Array.from(this._cols);
     const colNames = Array.from(this.colNames);
-    cols.push(toTypedArray(col));
+    cols.push(tryConvert(col));
     colNames.push(name || cols.length - 1);
     return new DF(cols, 'cols', colNames);
   }
@@ -574,10 +569,10 @@ class DF {
         .sort((a, b) => (a > b ? 1 : a < b ? -1 : 0));
       const binSize = Math.floor(col.length / k);
       const bitsPerVal = Math.ceil(Math.log2(k));
-      const newArr = malloc(
+      const newArr = empty(
         bitsPerVal <= 8 ? 'Uint8' : bitsPerVal <= 16 ? 'Uint16' : 'Uint32', col.length,
       );
-      const bounds = malloc('Float64', k);
+      const bounds = empty('Float64', k);
 
       // determine boundaries
       for (let rowIdx = binSize; rowIdx < col.length; rowIdx += binSize) {
@@ -718,8 +713,8 @@ class DF {
       const col = this._cols[colIdx];
       const uniqueVals = new Set(col);
       const bitsNeeded = Math.max(8, Math.ceil(Math.log2(uniqueVals.size)));
-      const newArr = malloc(
-        bitsNeeded <= 8 ? 'Uint8' : bitsNeeded <= 16 ? 'Uint16' : 'Uint32', col.length,
+      const newArr = empty(
+        bitsNeeded <= 8 ? 'u8' : bitsNeeded <= 16 ? 'u16' : 'u32', col.length,
       );
       const map = new Map();
       let i = 0;
@@ -750,7 +745,7 @@ class DF {
     const k = max(col) + 1;
     const cols = Array(k)
       .fill(0)
-      .map(_ => malloc(col.length, 'Uint8'));
+      .map(_ => empty(col.length, 'u8'));
     for (let rowIdx = 0; rowIdx < col.length; rowIdx++) {
       const val = col[rowIdx];
       cols[val][rowIdx] = 1;
@@ -767,11 +762,11 @@ class DF {
     const info = {
       column: [],
       dtype: [],
-      min: malloc(this.nCols),
-      max: malloc(this.nCols),
-      range: malloc(this.nCols),
-      mean: malloc(this.nCols),
-      stdev: malloc(this.nCols),
+      min: empty(this.nCols),
+      max: empty(this.nCols),
+      range: empty(this.nCols),
+      mean: empty(this.nCols),
+      stdev: empty(this.nCols),
     };
     for (let c = 0; c < this.nCols; c++) {
       const dtype = this.dtypes[c];
@@ -851,7 +846,7 @@ class DF {
    */
   print(n = null, m = null) {
     if (n === null) {
-      return this.print(min([25, process.stdout.rows - 1, this.length]));
+      return this.print(tryConvert([25, process.stdout.rows - 1, this.length]).min());
     } else if (m === null) {
       return this.print(0, n);
     } else if (m > this.length) {
@@ -872,14 +867,14 @@ class DF {
   /**
    * @returns {!DF} shallow copy of the data frame
    */
-  get copy() {
+  copy() {
     return new DF(Array.from(this._cols), 'cols', Array.from(this.colNames));
   }
 
   /**
    * @returns {!DF} clone (deep copy) of the data frame
    */
-  get clone() {
+  clone() {
     const newCols = [];
     for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
       const col = this._cols[cIdx];
@@ -931,7 +926,7 @@ class DF {
    * @param {?Array<!String>} colNames
    * @returns {!DF} data frame
    */
-  static loadDataSet(name = 'heart', hasHeader = true, colNames = null) {
+  static loadDataSet(name, hasHeader = true, colNames = null) {
     return DF.fromCSV(`${dirname(__filename)}/datasets/${name}/${name}.csv`, hasHeader, colNames);
   }
 
