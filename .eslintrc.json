@@ -71,7 +71,7 @@
     "array-element-newline": [
       1,
       {
-        "minItems": 4,
+        "minItems": 10,
         "multiline": true
       }
     ],
@@ -278,7 +278,7 @@
     "no-param-reassign": 2,
     "no-path-concat": 2,
     "no-plusplus": [
-      1,
+      0,
       {
         "allowForLoopAfterthoughts": true
       }

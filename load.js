@@ -16,9 +16,9 @@ function readJSON(filePath) {
  */
 function readCSV(filePath, hasHeader = false) {
   return parseCSV(readFileSync(filePath), {
-      header: hasHeader,
-      skip_empty_lines: true,
-    });
+    header: hasHeader,
+    skip_empty_lines: true,
+  });
 }
 
 module.exports = { readCSV, readJSON };

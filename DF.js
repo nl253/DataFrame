@@ -8,8 +8,9 @@ const {
   bag,
   clone,
   concat,
+  diff,
   dot,
-  getTypedArray,
+  malloc,
   mad,
   mae,
   max,
@@ -18,7 +19,8 @@ const {
   min,
   mode,
   normalize,
-  product,
+  prod,
+  quot,
   range,
   shuffle,
   skewness,
@@ -232,7 +234,7 @@ class DF {
       }
       const otherCol = other._cols[c];
       const thisCol = cols[c];
-      const newArr = getTypedArray(thisCol.length + otherCol.length);
+      const newArr = malloc(thisCol.length + otherCol.length);
       newArr.set(thisCol);
       newArr.set(otherCol, thisCol.length);
       cols[c] = newArr;
@@ -271,7 +273,7 @@ class DF {
    * @param {?String} [name]
    * @returns {!DF} data frame
    */
-  appendCol(col, name = null) {
+  appendH(col, name = null) {
     const cols = Array.from(this._cols);
     const colNames = Array.from(this.colNames);
     cols.push(toTypedArray(col));
@@ -283,7 +285,7 @@ class DF {
    * @param {!DF} other other data frame
    * @returns {!DF} data frame
    */
-  mergeV(other) {
+  concat(other) {
     const isDigit = /^\d+$/; // check if has proper column names or just indexes
     let colNames;
 
@@ -302,7 +304,7 @@ class DF {
    * @param {!DF} other data frame
    * @returns {!DF} data frame
    */
-  mergeH(other) {
+  concatH(other) {
     const cols = Array(this.nCols).fill(0);
     for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
       const col = this._cols[cIdx];
@@ -402,7 +404,7 @@ class DF {
       } else {
         memInfo.cols[colName] = col.byteLength;
       }
-      memInfo.total += memInfo[colName];
+      memInfo.total += memInfo.cols[colName];
     }
     return memInfo;
   }
@@ -422,19 +424,14 @@ class DF {
   }
 
   /**
-   * @param {'cols'|'rows'} axis
    * @returns {!DF} reversed version of the data frame
    */
-  reversed(axis = 'cols') {
-    if (axis === 'cols') {
-      const cols = Array.from(this._cols).reverse();
-      const colNames = Array.from(this.colNames).reverse();
-      return new DF(cols, 'cols', colNames);
-    }
+  get reversed() {
     // reverse rows
     const cols = [];
     for (let c = 0; c < this.nCols; c++) {
-      cols.push(Array.from(this._cols[c]).reverse());
+      const col = this._cols[c];
+      cols.push(clone(col).reverse());
     }
     return new DF(cols, 'cols', Array.from(this.colNames));
   }
@@ -443,14 +440,14 @@ class DF {
    * @param {...<!String|!Number>} cols col pairs
    * @returns {!DF} data frame
    */
-  sliceCols(...cols) {
+  sliceH(...cols) {
     if (cols.length === 0) {
-      throw new Error('no slice idxs specified (HINT: try .sliceCols(0, -1))');
+      throw new Error('no slice idxs specified (HINT: try .sliceH(0, -1))');
     } else if (cols.length % 2 !== 0) {
       cols.push(this.nCols); // odd number of idxs
       /*
-       * e.g. sliceCols(0)         -> sliceCols(0, end)
-       * e.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end)
+       * e.g. sliceH(0)         -> sliceH(0, end)
+       * e.g. sliceH(0, 10, 20) -> sliceH(0, 10, 20, end)
        */
     }
 
@@ -577,10 +574,10 @@ class DF {
         .sort((a, b) => (a > b ? 1 : a < b ? -1 : 0));
       const binSize = Math.floor(col.length / k);
       const bitsPerVal = Math.ceil(Math.log2(k));
-      const newArr = getTypedArray(
+      const newArr = malloc(
         bitsPerVal <= 8 ? 'Uint8' : bitsPerVal <= 16 ? 'Uint16' : 'Uint32', col.length,
       );
-      const bounds = getTypedArray('Float64', k);
+      const bounds = malloc('Float64', k);
 
       // determine boundaries
       for (let rowIdx = binSize; rowIdx < col.length; rowIdx += binSize) {
@@ -620,7 +617,7 @@ class DF {
    *
    * @returns {!DF} data frame with shuffled rows
    */
-  shuffle() {
+  get shuffled() {
     const rows = Array.from(this.rowIter);
     shuffle(rows);
     return new DF(rows, 'rows', this.colNames);
@@ -721,7 +718,7 @@ class DF {
       const col = this._cols[colIdx];
       const uniqueVals = new Set(col);
       const bitsNeeded = Math.max(8, Math.ceil(Math.log2(uniqueVals.size)));
-      const newArr = getTypedArray(
+      const newArr = malloc(
         bitsNeeded <= 8 ? 'Uint8' : bitsNeeded <= 16 ? 'Uint16' : 'Uint32', col.length,
       );
       const map = new Map();
@@ -753,7 +750,7 @@ class DF {
     const k = max(col) + 1;
     const cols = Array(k)
       .fill(0)
-      .map(_ => getTypedArray(col.length, 'Uint8'));
+      .map(_ => malloc(col.length, 'Uint8'));
     for (let rowIdx = 0; rowIdx < col.length; rowIdx++) {
       const val = col[rowIdx];
       cols[val][rowIdx] = 1;
@@ -770,11 +767,11 @@ class DF {
     const info = {
       column: [],
       dtype: [],
-      min: getTypedArray(this.nCols),
-      max: getTypedArray(this.nCols),
-      range: getTypedArray(this.nCols),
-      mean: getTypedArray(this.nCols),
-      stdev: getTypedArray(this.nCols),
+      min: malloc(this.nCols),
+      max: malloc(this.nCols),
+      range: malloc(this.nCols),
+      mean: malloc(this.nCols),
+      stdev: malloc(this.nCols),
     };
     for (let c = 0; c < this.nCols; c++) {
       const dtype = this.dtypes[c];
@@ -857,6 +854,8 @@ class DF {
       return this.print(min([25, process.stdout.rows - 1, this.length]));
     } else if (m === null) {
       return this.print(0, n);
+    } else if (m > this.length) {
+      return this.print(n, this.length);
     }
     const table = [];
     for (let rowIdx = n; rowIdx < m; rowIdx++) {
@@ -873,7 +872,7 @@ class DF {
   /**
    * @returns {!DF} shallow copy of the data frame
    */
-  copy() {
+  get copy() {
     return new DF(Array.from(this._cols), 'cols', Array.from(this.colNames));
   }
 

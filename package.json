@@ -20,7 +20,8 @@
     "eslint-plugin-optimize-regex": "^1.1.6",
     "eslint-plugin-promise": "^4.0.1",
     "eslint-plugin-react": "^7.12.4",
-    "eslint-plugin-security": "^1.4.0"
+    "eslint-plugin-security": "^1.4.0",
+    "jest": "^24.5.0"
   },
   "engines": {
     "node": ">=10.15.3"
@@ -49,7 +50,7 @@
     "statistics"
   ],
   "license": "MIT",
-  "main": "index.js",
+  "main": "series.js",
   "name": "typed_array_extensions",
   "private": false,
   "readme": "https://github.com/nl253/JS-Typed-Array-Exensions/blob/master/README.md",
