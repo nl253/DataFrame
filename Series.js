@@ -10,7 +10,7 @@ const isNumRegex = /^(\d+\.?\d*|\d*\.\d+)$/g;
  */
 function* rangeIter(a = 0, b = null, step = 1) {
   if (b === null) {
-    yield *rangeIter(0, a, step);
+    yield* rangeIter(0, a, step);
   }
   for (let i = a; i < b; i += step) yield i;
 }
@@ -31,74 +31,6 @@ function bag(xs, vocab = null) {
   return b;
 }
 
-// /**
-//  * @param {Array<*>} xs
-//  * @param {!Number} n
-//  */
-// function *combinations(xs, n) {
-//   if (n === 1) {
-//     for (const x of xs) yield [x];
-//     return;
-//   }
-//   for (let i = 0; i < xs.length; i++) {
-//     const prefix = [xs[i]];
-//     for (const subCombo of combinations(xs.slice(i + 1), n - 1)) {
-//       yield prefix.concat(subCombo);
-//     }
-//   }
-// }
-
-// /**
-//  * @param {Array<*>} xs
-//  */
-// function *permutations(xs, n) {
-//   if (n === undefined) n = xs.length;
-//   if (n === 1) {
-//     yield xs;
-//     return;
-//   }
-//
-//   yield *permutations(xs, n - 1);
-//
-//   for (let i = 0; i < n - 1; i++) {
-//     if (n % 2 === 0) {
-//       swap(xs, i, n - 1);
-//     } else {
-//       swap(xs, 0, n - 1);
-//     }
-//     yield *permutations(xs, n - 1);
-//   }
-// }
-
-// /**
-//  * @param {!Array<!Number>|!TypedArray} xs
-//  * @param {!Array<!Number>|!TypedArray} ys
-//  * @returns {!Number}
-//  */
-// function correlation(xs, ys) {
-//   if (xs.constructor.name === 'Array') {
-//     return correlation(from(xs), ys);
-//   } else if (ys.constructor.name === 'Array') {
-//     return correlation(xs, from(ys));
-//   }
-//   const muX = mean(xs);
-//   const muY = mean(ys);
-//   const diffXSMu = xs.map(x => x - muX);
-//   const diffYSMu = ys.map(y => y - muY);
-//   return diffXSMu.map((diff, idx) => diff * diffYSMu[idx]) / Math.sqrt(diffXSMu.map(diff => diff ** 2)) * Math.sqrt(diffYSMu.map(diff => diff ** 2));
-// }
-
-// /**
-//  * @param {!Array<*>|!TypedArray} xs
-//  * @returns {!Number}
-//  */
-// function skewness(xs) {
-//   const mu = mean(xs);
-//   const meanDiffs = xs.map(x => (x - mu));
-//   return mean(meanDiffs.map(x => x ** 3)) / (1 / (xs.length - 1) * meanDiffs.map(x => x ** 2)) ** (3 / 2);
-// }
-
-
 /**
  *
  * @param {!Number} [a]
@@ -116,24 +48,6 @@ function range(a = 0, b = null, step = 1) {
   }
   return newArr;
 }
-
-// /**
-//  * @param {!Array<!Number>} xs
-//  * @param {!Array<!Number>} ys
-//  * @returns {!Number} mean squared error
-//  */
-// function mse(xs, ys) {
-//   return mean(xs.map((v, idx) => (v - ys[idx]) ** 2));
-// }
-
-// /**
-//  * @param {!Array<!Number>} xs
-//  * @param {!Array<!Number>} ys
-//  * @returns {!Number} mean absolute error
-//  */
-// function mae(xs, ys) {
-//   return mean(xs.map((v, idx) => Math.abs(v - ys[idx])));
-// }
 
 // /**
 //  * @param {!Array<!Number>|!TypedArray} xs
@@ -177,7 +91,7 @@ function guessDtype(xs, floatSize = 64) {
     largest = Math.abs(smallest);
   }
   const isNeg = smallest < 0;
-  const bitsNeeded = Math.log2(largest);
+  const bitsNeeded = Math.ceil(Math.log2(largest + 1));
   const isFloat = xs.some(x => !Number.isInteger(x));
 
   // reals
@@ -209,8 +123,8 @@ function guessDtype(xs, floatSize = 64) {
 }
 
 /**
- * @param {!Array<!Number>|!Array<String>|!TypedArray} xs
- * @returns {!TypedArray|!Array<String>} typed array
+ * @param {!Array<*>|!TypedArray} xs
+ * @returns {!TypedArray|!Array<*>} series
  */
 function from(xs) {
   // return empty arrays
@@ -218,9 +132,9 @@ function from(xs) {
     return xs;
   }
 
-  if (xs[0].constructor.name === 'String') {
+  if (xs[0].constructor.name !== 'Number') {
     // return string cols that aren't nums
-    if (xs.find(val => !val.match(isNumRegex))) {
+    if (xs[0].constructor.name !== 'String' || xs.find(val => !val.match(isNumRegex))) {
       return enhanceArray(xs);
     }
     // parse string cols that are actually nums
@@ -235,8 +149,8 @@ function from(xs) {
 }
 
 /**
- * @param {!Array<!String>|!TypedArray} a
- * @returns {!Array<!String>|!TypedArray} a
+ * @param {!Array<*>|!TypedArray} a
+ * @returns {!Array<*>|!TypedArray} a
  */
 function enhance(a) {
   const defineGetter = (name, f) => Object.defineProperty(a, name, { get: f });
@@ -348,30 +262,15 @@ function enhance(a) {
 }
 
 /**
- * @param {!Array<!String>} a
- * @returns {!Array<!String>} the array
+ * @param {!Array<*>} a
+ * @returns {!Array<*>} the array
  */
 function enhanceArray(a) {
+
   a = enhance(a);
+
   const defineGetter = (name, f) => Object.defineProperty(a, name, { get: f });
 
-  defineGetter('memory', function () {
-    const bytes = Math.ceil(from(this.map(x => x.length)).mean());
-    const bits = bytes * 8;
-    const K = 1000;
-    const M = 1000 * K;
-    const G = 1000 * M;
-    return {
-      bytes,
-      bits,
-      Kb: bits / K,
-      Mb: bits / M,
-      Gb: bits / G,
-      KB: bytes / K,
-      MB: bytes / M,
-      GB: bytes / G,
-    };
-  });
   a.clone = function () {
     return Array.from(this);
   };
@@ -379,6 +278,7 @@ function enhanceArray(a) {
   a.unique = function () {
     return Array.from(new Set(this));
   };
+
   a.sample = function (n, wr = true) {
     if (n === null) {
       return this.sample(this.length, wr);
@@ -405,9 +305,11 @@ function enhanceArray(a) {
   a.head = function (n = 10) {
     return this.slice(0, n);
   };
+
   a.tail = function (n = 10) {
     return this.slice(this.length - n);
   };
+
   a.print = function (n = 10) {
     return console.table(this.head(n));
   };
@@ -435,6 +337,7 @@ function enhanceArray(a) {
   a.zipWith = function (other, f) {
     return Array(this.length.fill(0).map((_, idx) => f(this[idx], other[idx])));
   };
+
   a.zipWith3 = function (xs, ys, f) {
     return Array(this.length.fill(0).map((_, idx) => f(this[idx], xs[idx], ys[idx])));
   };
@@ -464,7 +367,14 @@ function enhanceTypedArray(a) {
     return newArr;
   };
   a.unique = function () {
-    return this.constructor.from(new Set(this));
+    const s = new Set(this);
+    const newArr = empty(s.size, this.dtype);
+    let i = 0;
+    for (const x of s) {
+      newArr[i] = x;
+      i++;
+    }
+    return newArr;
   };
 
   // manipulation, views and slices
@@ -520,6 +430,9 @@ function enhanceTypedArray(a) {
     let i = 0;
     while (f(this[i]) && i < this.length) i++;
     return this.subarray(0, i);
+  };
+  a.replace = function (v, y) {
+    return this.map(x => x === v ? y : x);
   };
 
   a.all = function (f) {
@@ -618,8 +531,20 @@ function enhanceTypedArray(a) {
       .map((_, idx) => this[idx] * other[idx]);
   };
 
-  a.sub = function (other, dtype) {
-    return this.add(other.mul(-1, dtype), dtype);
+  a.sub = function (other = null, dtype = null) {
+    if (other === null) {
+      return this.reduce((x, y) => x - y);
+    } else if (other.constructor.name === 'Number') {
+      if (this.dtype.startsWith('f')) {
+        return this.map(x => x - other);
+      } else if (Number.isInteger(other)) {
+        return empty(this.length, 'i32').map((_, idx) => this[idx] - other);
+      } else {
+        return empty(this.length, 'f64').map((_, idx) => this[idx] - other);
+      }
+    } else {
+      return this.add(other.mul(-1, dtype), dtype);
+    }
   };
 
   a.mul = function (other = null, dtype = null) {
@@ -757,13 +682,12 @@ function enhanceTypedArray(a) {
     }
   };
 
-  // basic ops
   a.round = function () {
     return this.map(x => Math.round(x));
   };
 
   a.trunc = function () {
-    return this.map(x => Math.abs(x));
+    return this.map(x => Math.trunc(x));
   };
 
   a.floor = function () {
@@ -772,15 +696,6 @@ function enhanceTypedArray(a) {
 
   a.ceil = function () {
     return this.map(x => Math.ceil(x));
-  };
-
-  a.mean = function () {
-    return this.add() / this.length;
-  };
-
-  // // spread
-  a.var = function (dtype = null) {
-    return this.sub(this.mean(), dtype).square(dtype).mean();
   };
   a.pow = function (n, dtype = null) {
     if (n === 0) {
@@ -793,11 +708,20 @@ function enhanceTypedArray(a) {
       return empty(this.length, dtype).map((_, idx) => this[idx] ** n);
     }
   };
+  a.cube = function (dtype = null) {
+    return this.pow(3, dtype);
+  };
   a.square = function (dtype = null) {
     return this.pow(2, dtype);
   };
-  a.cube = function (dtype = null) {
-    return this.pow(3, dtype);
+
+
+  // // spread
+  a.mean = function () {
+    return this.add() / this.length;
+  };
+  a.var = function (dtype = null) {
+    return this.sub(this.mean(), dtype).square(dtype).mean();
   };
   a.mad = function (dtype = null) {
     return this.sub(this.mean(), dtype).abs().mean();
@@ -825,14 +749,17 @@ function enhanceTypedArray(a) {
     const middle = ys.length * n / m;
     return (ys[middle] + ys[middle - 1]) / 2;
   };
-  a.median = function () {
-    return this.nQuart(2, 4);
-  };
   a.Q1 = function () {
     return this.nQuart(1, 4);
   };
+  a.median = function () {
+    return this.nQuart(2, 4);
+  };
   a.Q3 = function () {
     return this.nQuart(3, 4);
+  };
+  a.IQR = function () {
+    return this.Q3() - this.Q1();
   };
   a.mode = function () {
     if (this.length === 1) return this[0];
@@ -926,17 +853,19 @@ function enhanceTypedArray(a) {
   a.dropNaN = function () {
     return this.drop(NaN);
   };
-  a.clip = function (lBound, uBound) {
-    return this.map(v => (v < lBound ? lBound : v > uBound ? uBound : v));
-  };
-  a.trimOutliers = function (lBound, uBound) {
+  a.clip = function (lBound = null, uBound = null) {
     if (lBound !== null && uBound !== null) {
-      return this.filter(x => x > lBound && x < uBound);
+      return this.map(v => (v < lBound ? lBound : v > uBound ? uBound : v));
     } else if (lBound !== null) {
-      return this.filter(x => x > lBound);
+      return this.map(v => v < lBound ? lBound : v);
     } else {
-      return this.filter(x => x < uBound);
+      return this.map(v => v > uBound ? uBound : v);
     }
+  };
+  a.trimOutliers = function () {
+    const Q1 = this.Q1();
+    const Q3 = this.Q3();
+    return this.filter(x => x >= Q1 && x <= Q3);
   };
 
   // hacks
@@ -949,6 +878,7 @@ function enhanceTypedArray(a) {
   a.subarray = function (a, b) {
     return enhanceTypedArray(this._subarray(a, b));
   };
+
 
   a._map = a.map;
   a.map = function (f) {
@@ -967,6 +897,20 @@ function enhanceTypedArray(a) {
   a.zipWith3 = function (xs, ys, f, dtype = null) {
     return empty(this.length, dtype === null ? 'f64' : dtype).map((_, idx) => f(this[idx], xs[idx], ys[idx]));
   };
+
+  a.skewness = function () {
+    const meanDiffs = this.sub(this.mean());
+    return meanDiffs.cube().mean() / (1 / (this.length - 1) * meanDiffs.square()) ** (3 / 2);
+  };
+
+  // FIXME correlation
+  // a.correlation = function (ys) {
+    // const muX = this.mean();
+    // const muY = ys.mean();
+    // const diffXSMu = this.sub(muX);
+    // const diffYSMu = ys.sub(muY);
+    // return diffXSMu.map((diff, idx) => diff * diffYSMu[idx]) / Math.sqrt(diffXSMu.square()) * Math.sqrt(diffYSMu.square());
+  // };
 
   a.downcast = function () {
     const guess = guessDtype(this);
@@ -1062,7 +1006,7 @@ function zeros(len, dtype = null) {
 
 /**
  * @param xs
- * @returns {!Array<!String>|!TypedArray} array
+ * @returns {!Array<*>|!TypedArray} array
  */
 function of(...xs) {
   return from(xs);
@@ -1074,10 +1018,13 @@ const Series = {
   fill,
   of,
   empty,
+  guessDtype,
   ones,
   rand,
   from,
   zeros,
+  bag,
+  constFromDtype,
 };
 
 module.exports = Series;

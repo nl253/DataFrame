@@ -17,7 +17,5 @@ function randInRange(a, b = null) {
 function randInt(a, b) {
   return Math.floor(randInRange(a, b));
 }
-module.exports = {
-  randInRange,
-  randInt,
-};
+
+module.exports = { randInRange, randInt };
