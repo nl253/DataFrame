@@ -10,7 +10,7 @@ const Series = require('./Series');
 // TODO unit test for `Series.argMin`
 // TODO unit test for `Series.cast`
 // TODO unit test for `Series.ceil`
-// TODO unit test for `Series.clip`
+// [X]  unit test for `Series.clip`
 // TODO unit test for `Series.clone`
 // TODO unit test for `Series.concat`
 // TODO unit test for `Series.contains`
@@ -68,27 +68,13 @@ const Series = require('./Series');
 // Tests for Functions
 
 for (const pair of [
-    [
-      [1, 2], 'u8'
-    ],
-    [
-      [-1, 2], 'i8'
-    ],
-    [
-      [-0.99, 2], 'f64'
-    ],
-    [
-      [.8], 'f64'
-    ],
-    [
-      [2 ** 8, 0], 'u16'
-    ],
-    [
-      [2 ** 16, 0], 'u32'
-    ],
-    [
-      [-(2 ** 8), 0], 'i32'
-    ],
+    [[        1,   2],  'u8'],
+    [[       -1,   2],  'i8'],
+    [[    -0.99,   2], 'f64'],
+    [[   2 ** 8,   0], 'u16'],
+    [[  2 ** 16,   0], 'u32'],
+    [[-(2 ** 8),   0], 'i32'],
+    [[.8],             'f64'],
   ]) {
   const [arr, dtype] = pair;
   test('correct guesses dtype [-1,2] to be i8 ', () => {
@@ -120,8 +106,8 @@ test('inserting 1, 2, 3, 1, 1 into a bag has 1x3, 2x1, 3x1', () => {
 });
 
 for (const pair of [
-    [0, 10],
-    [0, 30],
+    [  0, 10],
+    [  0, 30],
     [-10, 99]
   ]) {
   const [lBound, uBound] = pair;
@@ -284,12 +270,12 @@ for (const n of [0, 1, 9, 222]) {
 }
 
 for (const pair of [
-    ['u8', 'Uint8Array'],
-    ['u16', 'Uint16Array'],
-    ['u32', 'Uint32Array'],
-    ['i8', 'Int8Array'],
-    ['i16', 'Int16Array'],
-    ['i32', 'Int32Array'],
+    [ 'u8',   'Uint8Array'],
+    ['u16',  'Uint16Array'],
+    ['u32',  'Uint32Array'],
+    [ 'i8',    'Int8Array'],
+    ['i16',   'Int16Array'],
+    ['i32',   'Int32Array'],
     ['f32', 'Float32Array'],
     ['f64', 'Float64Array'],
   ]) {
@@ -302,7 +288,7 @@ for (const pair of [
 
 // Tests for Methods
 
-test('mean of Series [1, 2, 3] is 3', () => {
+test('mean of Series [1, 2, 3] is 2', () => {
   expect(Series.of(1, 2, 3).mean()).toEqual(2);
 })
 
@@ -314,3 +300,18 @@ for (const f of ['mad', 'stdev', 'var']) {
     })
 }
 
+
+for (const pair of [
+    [    0,   1],
+    [   -5,   5],
+    [-0.99, 1.1],
+  ]) {
+  const [lBound, uBound] = pair;
+  const s = Series.rand(100, lBound - 10, uBound + 10).clip(lBound, uBound);
+  test(`after series.clip(${lBound}, ${uBound}) the series does not have any values smaller than (${lBound}) or greater than (${uBound})`, () => {
+    for (let i = 0; i < s.length; i++) {
+      expect(s[i]).toBeGreaterThanOrEqual(lBound);
+      expect(s[i]).toBeLessThanOrEqual(uBound);
+    }
+  });
+}

@@ -130,15 +130,14 @@ function from(xs) {
   // return empty arrays
   if (xs.length === 0) {
     return xs;
-  }
-
-  if (xs[0].constructor.name !== 'Number') {
+  } else if (xs[0].constructor.name !== 'Number') {
     // return string cols that aren't nums
     if (xs[0].constructor.name !== 'String' || xs.find(val => !val.match(isNumRegex))) {
       return enhanceArray(xs);
+    } else {
+      // parse string cols that are actually nums
+      xs = xs.map(parseFloat);
     }
-    // parse string cols that are actually nums
-    xs = xs.map(parseFloat);
   } else if (xs.constructor.name.indexOf('Array') >= 0 && xs.constructor.name !== 'Array') {
     // return typed arrays unchanged
     return xs;
@@ -153,6 +152,8 @@ function from(xs) {
  * @returns {!Array<*>|!TypedArray} a
  */
 function enhance(a) {
+  if (a.randEl !== undefined) return a;
+
   const defineGetter = (name, f) => Object.defineProperty(a, name, { get: f });
   defineGetter('randEl', function () {
     return this[Math.floor(randInRange(0, this.length))];
@@ -220,27 +221,16 @@ function enhance(a) {
     }
   };
 
-  a._reverse = a.reverse;
-  a.reverse = function () {
-    const cpy = empty(this.length, this.dtype);
-    let j = 0;
-    for (let i = this.length - 1; i >= 0; i--) {
-      cpy[i] = this[j];
-      j++;
-    }
-    return cpy;
-  };
-
   a._shuffle = function () {
     for (let i = this.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [this[i], this[j]] = [this[j], this[i]];
     }
+    return this;
   };
   a.shuffle = function () {
     return this.clone()._shuffle();
   };
-
 
   a.mode = function () {
     if (this.length === 1) return this[0];
@@ -266,10 +256,21 @@ function enhance(a) {
  * @returns {!Array<*>} the array
  */
 function enhanceArray(a) {
-
   a = enhance(a);
 
+  if (a.dtype !== undefined) return a;
+
   const defineGetter = (name, f) => Object.defineProperty(a, name, { get: f });
+
+  defineGetter('dtype', function () {
+    if (this.isEmpty) {
+      return 'null'
+    } else if (this[0].constructor.name === 'String') {
+      return this[0].constructor.name.toLocaleLowerCase().slice(0, 1);
+    } else {
+      return this[0].constructor.name.toLocaleLowerCase();
+    }
+  });
 
   a.clone = function () {
     return Array.from(this);
@@ -277,6 +278,17 @@ function enhanceArray(a) {
 
   a.unique = function () {
     return Array.from(new Set(this));
+  };
+
+  a._reverse = a.reverse;
+  a.reverse = function () {
+    const cpy = Array(this.length).fill(0);
+    let j = 0;
+    for (let i = this.length - 1; i >= 0; i--) {
+      cpy[i] = this[j];
+      j++;
+    }
+    return cpy;
   };
 
   a.sample = function (n, wr = true) {
@@ -323,6 +335,7 @@ function enhanceArray(a) {
   a.slice = function (n, m) {
     return enhanceArray(this._slice(n, m));
   };
+  a.subarray = a.slice;
 
   a._map = a.map;
   a.map = function (f) {
@@ -351,6 +364,8 @@ function enhanceArray(a) {
  */
 function enhanceTypedArray(a) {
   a = enhance(a);
+  if (a.dtype !== undefined) return a;
+
   const defineGetter = (name, f) => Object.defineProperty(a, name, { get: f });
 
   // memory & data type
@@ -375,6 +390,16 @@ function enhanceTypedArray(a) {
       i++;
     }
     return newArr;
+  };
+  a._reverse = a.reverse;
+  a.reverse = function () {
+    const cpy = empty(this.length, this.dtype);
+    let j = 0;
+    for (let i = this.length - 1; i >= 0; i--) {
+      cpy[i] = this[j];
+      j++;
+    }
+    return cpy;
   };
 
   // manipulation, views and slices
@@ -726,7 +751,7 @@ function enhanceTypedArray(a) {
   a.mad = function (dtype = null) {
     return this.sub(this.mean(), dtype).abs().mean();
   };
-  a.std = function (dtype = null) {
+  a.stdev = function (dtype = null) {
     return Math.sqrt(this.var(dtype));
   };
   a.max = function () {
