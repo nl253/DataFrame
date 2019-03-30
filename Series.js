@@ -4,6 +4,7 @@ const dtypeRegex = /([a-z]+)(8|16|32|64)/i;
 const isNumRegex = /^(\d+\.?\d*|\d*\.\d+)$/g;
 
 const HEAD_LEN = 5;
+const PRECISION = 2;
 
 /**
  *
@@ -168,7 +169,7 @@ function enhance(a) {
       const s = val.toString();
       if (val.constructor.name === 'Number' && s.match(/\./)) {
         const [p1, p2] = s.split('.');
-        parts.push(`${p1}.${p2.slice(0, 2)}`);
+        parts.push(`${p1}.${p2.slice(0, PRECISION)}`);
       } else {
         parts.push(s);
       }

@@ -2,7 +2,7 @@
  * TODO the API with appendCol / appendH / append(axis = 0) is very inconsistent and confusing
  * TODO there is no good map (all rows) / map (all cols) API
  * TODO fix kBins (it's too complicated & it doesn't work and the API is weird)
- * TODO fix labelEncode
+ * TODO fix labelEncode (do it via Series)
  */
 const util = require('util');
 const { dirname, join } = require('path');
@@ -717,7 +717,7 @@ module.exports = class DataFrame {
       tests[i] = f(col[i]);
     }
     const cols = Array.from(this._cols);
-    for (let i = 0; i < this.length; i++) {
+    for (let i = 0; i < this.nCols; i++) {
       cols[i] = cols[i].filter((_, idx) => tests[idx]);
     }
     return new DataFrame(cols, 'cols', Array.from(this.colNames));
@@ -728,23 +728,23 @@ module.exports = class DataFrame {
    * @param {...<!Number|!String>} colIds
    * @returns {!DataFrame} data frame without val in colIds
    */
-  drop(val, ...colIds) {
-    const tests = Array(col.length).fill(true);
+  removeAll(val, ...colIds) {
+    const tests = Array(this.length).fill(true);
 
     if (colIds.length === 0) {
       if (this.nCols === 0) {
         throw new Error('no columns to delete');
       } else {
-        return this.drop(val, ...this.colNames);
+        return this.removeAll(val, ...this.colNames);
       }
     }
 
     const colIdxs = colIds.map(id => this._resolveCol(id));
 
-    for (const cIdx of colIdxs) {
-      const col = this._cols[cIdx];
-      for (let i = 0; i < this.length; i++) {
-        if (col[i] === val) {
+    for (let i = 0; i < this.length; i++) {
+      for (const cIdx of colIdxs) {
+        const col = this._cols[cIdx];
+        if (Object.is(col[i], val)) {
           tests[i] = false;
           break;
         }
@@ -1094,7 +1094,13 @@ module.exports = class DataFrame {
       rows.push(row);
     }
 
-    const lens = Array(this.nCols).fill(0).map((_, idx) => Math.max(header[idx].length, rows.map(r => r[idx].toString().length).reduce((x, y) => Math.max(x, y), 0)));
+    const lens = Array(this.nCols)
+      .fill(0)
+      .map((_, idx) => 
+        Math.max(
+          header[idx].toString().length, 
+          rows.map(r => r[idx].toString().length)
+              .reduce((x, y) => Math.max(x, y), 1)));
 
     parts.push(header.map((h, cIdx) => h.toString().padStart(lens[cIdx], ' ')).join(' '));
 
@@ -1104,11 +1110,10 @@ module.exports = class DataFrame {
       parts.push(rows[i].map((val, cIdx) => val.toString().padStart(lens[cIdx], ' ')).join(' '));
     }
 
-    if (this.length > 0) {
-      parts[parts.length - 1] += '\n' + lens.map(l => '-'.repeat(l)).join(' ')
+    if (this.length > n) {
+      parts.push(` ... ${this.length - n} more`);
+      parts[parts.length - 2] += '\n' + lens.map(l => '-'.repeat(l)).join(' ')
     }
-
-    parts.push(`${this.constructor.name} with ${this.length} rows`);
 
     return parts.join('\n');
   }
