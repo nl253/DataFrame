@@ -15,6 +15,7 @@ const { randInt } = require('./rand');
 const { readCSV } = require('./load');
 const log = require('./log');
 
+const PRECISION = 2;
 const HEAD_LEN = 5;
 
 /**
@@ -399,18 +400,6 @@ module.exports = class DataFrame {
     // cols[cIdx] = mappedCol;
     // return new DataFrame(cols, 'cols', Array.from(this.colNames));
   // }
-
-  parse(...colIds) {
-    if (colIds.length === 0 && this.nCols === 1) {
-      return this.parse(0);
-    }
-    const cols = Array.from(this._cols);
-    const colNames = Array.from(this.colNames);
-    for (const cIdx of colIds.map(id => this._resolveCol(id))) {
-      cols[cIdx] = Series.from(cols[cIdx]);
-    }
-    return new DataFrame(cols, 'cols', colNames);
-  }
 
   /**
    * @param {!Array<!String>|!Array<!Number>|TypedArray} col
@@ -919,6 +908,7 @@ module.exports = class DataFrame {
     for (let c = 0; c < this.nCols; c++) {
       info.column.push(this.colNames[c]);
       info.dtype.push(this.dtypes[c]);
+      debugger;
 
       if (numCols.has(c)) {
         const col = this._cols[c];
@@ -928,7 +918,7 @@ module.exports = class DataFrame {
         info.mean[c] = col.mean();
         info.stdev[c] = col.stdev();
       } else {
-        for (const k in ['min', 'max', 'range', 'mean', 'stdev']) {
+        for (const k of ['min', 'max', 'range', 'mean', 'stdev']) {
           info[k][c] = NaN;
         }
       }
@@ -1094,7 +1084,14 @@ module.exports = class DataFrame {
     const parts = [];
 
     for (let i = 0; i < nRows; i++) {
-      rows.push(this.row(i));
+      const row = this.row(i);
+      for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
+        if (row[cIdx].constructor.name === 'Number' && row[cIdx].toString().match(/\./)) {
+          const [p1, p2] = row[cIdx].toString().split('.');
+          row[cIdx] = p1 + '.' + p2.slice(0, PRECISION);
+        }
+      }
+      rows.push(row);
     }
 
     const lens = Array(this.nCols).fill(0).map((_, idx) => Math.max(header[idx].length, rows.map(r => r[idx].toString().length).reduce((x, y) => Math.max(x, y), 0)));

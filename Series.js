@@ -1,3 +1,4 @@
+const util = require("util");
 const { randInRange, randInt } = require('./rand');
 const dtypeRegex = /([a-z]+)(8|16|32|64)/i;
 const isNumRegex = /^(\d+\.?\d*|\d*\.\d+)$/g;
@@ -92,20 +93,21 @@ function guessDtype(xs, floatSize = 64) {
   if (smallest < 0 && Math.abs(smallest) > largest) {
     largest = Math.abs(smallest);
   }
+  let bitsNeeded = Math.ceil(Math.log2(largest + 1));
   const isNeg = smallest < 0;
-  const bitsNeeded = Math.ceil(Math.log2(largest + 1));
   const isFloat = xs.some(x => !Number.isInteger(x));
+  if (isNeg) bitsNeeded++;
 
   // reals
   if (isFloat) return `f${floatSize}`;
 
   // integers
   if (isNeg) {
-    if (bitsNeeded <= 4) {
+    if (bitsNeeded <= 8) {
       return 'i8';
-    } else if (bitsNeeded <= 8) {
-      return 'i16';
     } else if (bitsNeeded <= 16) {
+      return 'i16';
+    } else if (bitsNeeded <= 32) {
       return 'i32';
     } else {
       throw new Error('numbers to large to represent');
@@ -154,7 +156,32 @@ function from(xs) {
  * @returns {!Array<*>|!TypedArray} a
  */
 function enhance(a) {
-  if (a.randEl !== undefined) return a;
+  if (a.randEl !== undefined) {
+    return a;
+  }
+
+  a.toString = function() {
+    const parts = ['Series ' + (this.dtype === undefined ? '' : this.dtype + ' ') + '['];
+    const n = Math.min(HEAD_LEN, this.length); 
+    for (let i = 0; i < n; i++) {
+      const val = this[i];
+      const s = val.toString();
+      if (val.constructor.name === 'Number' && s.match(/\./)) {
+        const [p1, p2] = s.split('.');
+        parts.push(`${p1}.${p2.slice(0, 2)}`);
+      } else {
+        parts.push(s);
+      }
+    }
+    if (n < this.length)  {
+      parts.push(`... ${this.length - n} more`);
+    }
+    return parts[0] + parts.slice(1).join(', ') + ']';
+  };
+
+  a[util.inspect.custom] = function (depth, options) {
+    return this.toString();
+  };
 
   const defineGetter = (name, f) => Object.defineProperty(a, name, { get: f });
   defineGetter('randEl', function () {
@@ -163,6 +190,10 @@ function enhance(a) {
   defineGetter('isEmpty', function () {
     return this.length === 0;
   });
+
+  a.replace = function (v, y) {
+    return this.map((x, idx) => x === v ? y : x);
+  };
 
   a.argMax = function (f) {
     let best = this[0];
@@ -325,7 +356,7 @@ function enhanceArray(a) {
   };
 
   a.print = function (n = HEAD_LEN) {
-    return console.table(this.head(n));
+    return console.log(this.toString());
   };
 
   a._concat = a.concat;
@@ -372,7 +403,7 @@ function enhanceTypedArray(a) {
 
   // memory & data type
   a.print = function (n = HEAD_LEN) {
-    return console.table(Array.from(this.head(n)));
+    return console.log(this.toString());
   };
   defineGetter('dtype', function () {
     const match = dtypeRegex.exec(this.constructor.name);
@@ -457,9 +488,6 @@ function enhanceTypedArray(a) {
     let i = 0;
     while (f(this[i]) && i < this.length) i++;
     return this.subarray(0, i);
-  };
-  a.replace = function (v, y) {
-    return this.map(x => x === v ? y : x);
   };
 
   a.all = function (f) {
