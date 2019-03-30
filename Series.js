@@ -2,6 +2,8 @@ const { randInRange, randInt } = require('./rand');
 const dtypeRegex = /([a-z]+)(8|16|32|64)/i;
 const isNumRegex = /^(\d+\.?\d*|\d*\.\d+)$/g;
 
+const HEAD_LEN = 5;
+
 /**
  *
  * @param {!Number} [a]
@@ -314,15 +316,15 @@ function enhanceArray(a) {
     return sample;
   };
 
-  a.head = function (n = 10) {
+  a.head = function (n = HEAD_LEN) {
     return this.slice(0, n);
   };
 
-  a.tail = function (n = 10) {
+  a.tail = function (n = HEAD_LEN) {
     return this.slice(this.length - n);
   };
 
-  a.print = function (n = 10) {
+  a.print = function (n = HEAD_LEN) {
     return console.table(this.head(n));
   };
 
@@ -338,7 +340,7 @@ function enhanceArray(a) {
   a.subarray = a.slice;
 
   a._map = a.map;
-  a.map = function (f) {
+  a.map = function (f, dtype = null) {
     return enhanceArray(this._map(f));
   };
 
@@ -369,7 +371,7 @@ function enhanceTypedArray(a) {
   const defineGetter = (name, f) => Object.defineProperty(a, name, { get: f });
 
   // memory & data type
-  a.print = function (n = 10) {
+  a.print = function (n = HEAD_LEN) {
     return console.table(Array.from(this.head(n)));
   };
   defineGetter('dtype', function () {
@@ -403,10 +405,10 @@ function enhanceTypedArray(a) {
   };
 
   // manipulation, views and slices
-  a.head = function (n = 10) {
+  a.head = function (n = HEAD_LEN) {
     return this.subarray(0, n);
   };
-  a.tail = function (n = 10) {
+  a.tail = function (n = HEAD_LEN) {
     return this.subarray(this.length - n);
   };
 
@@ -445,10 +447,10 @@ function enhanceTypedArray(a) {
     };
   });
 
-  a.nLargest = function (n = 10) {
+  a.nLargest = function (n = HEAD_LEN) {
     return this.sort('des').subarray(0, n);
   };
-  a.nSmallest = function (n = 10) {
+  a.nSmallest = function (n = HEAD_LEN) {
     return this.sort('asc').subarray(0, n);
   };
   a.takeWhile = function (f) {
@@ -887,7 +889,7 @@ function enhanceTypedArray(a) {
       return this.map(v => v > uBound ? uBound : v);
     }
   };
-  a.trimOutliers = function () {
+  a.dropOutliers = function () {
     const Q1 = this.Q1();
     const Q3 = this.Q3();
     return this.filter(x => x >= Q1 && x <= Q3);

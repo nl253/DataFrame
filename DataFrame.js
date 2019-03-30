@@ -1,11 +1,10 @@
 /**
- *
  * TODO the API with appendCol / appendH / append(axis = 0) is very inconsistent and confusing
- * TODO arithmetic on cols is problematic (you want to take a single num OR anoter column)
  * TODO there is no good map (all rows) / map (all cols) API
  * TODO fix kBins (it's too complicated & it doesn't work and the API is weird)
  * TODO fix labelEncode
  */
+const util = require('util');
 const { dirname, join } = require('path');
 const { gunzipSync, gzipSync } = require('zlib');
 const { mkdirSync, readdirSync, existsSync, writeFileSync, readFileSync } = require('fs');
@@ -44,14 +43,6 @@ module.exports = class DataFrame {
    * @param {?Array<!String>} [colNames]
    */
   constructor(data = [], what = 'rows', colNames = null) {
-    /*
-     * accept data in 3 modes:
-     * - list of columns Array<Array<*>>,
-     * - list of rows Array<Array<*>,
-     * - null OR undefined data (create an empty DataFrame)
-     * - Object<!String, !Array<*>> (dict key => col)
-     * - a DataFrame (just shallow clone it)
-     */
     if (data.length === 0) {
       this._cols = [];
       this.colNames = [];
@@ -67,10 +58,10 @@ module.exports = class DataFrame {
       } else {
         this._cols = data.map(c => Series.from(c));
       }
-      if (colNames) {
-        this.colNames = colNames;
-      } else {
+      if (colNames === null) {
         this.colNames = Array(this.nCols).fill(0).map((_, idx) => idx);
+      } else {
+        this.colNames = colNames;
       }
     }
 
@@ -100,15 +91,21 @@ module.exports = class DataFrame {
       });
     }
 
-    function* iterator() {
+    this.irow =  function* (rIdx) {
+      for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
+        yield this.val(rIdx, cIdx);
+      }
+    }
+
+    function* rowsIter() {
       for (let r = 0; r < this.length; r++) {
         yield this.row(r);
       }
     }
 
-    // make this.rowIter a getter
-    Object.defineProperty(this, 'rowIter', { get: iterator });
-    this[Symbol.iterator] = iterator;
+    // make this.rowsIter a getter
+    Object.defineProperty(this, 'rowsIter', { get: rowsIter });
+    this[Symbol.iterator] = rowsIter;
 
     // each produces a number from an array
     const aggOps = [
@@ -128,6 +125,8 @@ module.exports = class DataFrame {
       'magnitude',
     ];
 
+    // each aggregare op is a function (Series => Number)
+    // it changes the shape of the data frame from n x m => m x 2
     for (const agg of aggOps) {
       if (this[agg] === undefined) {
         this[agg] = function (...args) {
@@ -142,12 +141,14 @@ module.exports = class DataFrame {
       };
     }
 
-    // each is Series (len = n) => Series (len = n)
+    // each forward function is forwarded to the underlying series 
+    // type: Series (len = n) => Series (len = n)
     const forwardFuncts = [
       'abs',
       'add',
       'cast',
       'ceil',
+      'clip',
       'cube',
       'div',
       'floor',
@@ -163,10 +164,12 @@ module.exports = class DataFrame {
       'zipWith3',
     ];
 
+    // each call function is a function (Series => Series)
+    // it preserves the shape of the data frame
     for (const fName of forwardFuncts) {
       if (this[fName] !== undefined) continue;
       this[fName] = function (colId = null, ...args) {
-        return this.call(colId, fName, ...args);
+        return this._call(colId, fName, ...args);
       };
     }
   }
@@ -224,26 +227,22 @@ module.exports = class DataFrame {
    */
   _resolveCol(colId) {
     // resolve named column
-    if (colId.constructor.name === 'String') {
+    if (Number.isInteger(colId)) {
+      // resolve negative idx
+      if (colId < 0) {
+        return this._resolveCol(this.nCols + colId);
+      } else if (colId >= this.nCols) {
+        throw new Error(`there is no column #${colId}, out of bounds`);
+      } else {
+        return colId;
+      }
+    } else {
       const idx = this.colNames.findIndex(colName => colName === colId);
       if (idx < 0) {
         throw new Error(`failed to find matching column for "${colId}"`);
       }
       return idx;
     }
-
-    // int idx
-
-    // resolve negative idx
-    if (colId < 0) {
-      return this._resolveCol(this.nCols + colId);
-    }
-
-    if (colId >= this.nCols) {
-      throw new Error(`there is no column #${colId}, out of bounds`);
-    }
-
-    return colId;
   }
 
   /**
@@ -279,9 +278,11 @@ module.exports = class DataFrame {
     }
   }
 
+  /**
+   * @returns {!DataFrame} a data frame with numeric cols
+   */
   get numeric() {
-    const numCols = this._numColIdxs;
-    return this.select(...numCols);
+    return this.select(...this._numColIdxs);
   }
 
   /**
@@ -299,7 +300,7 @@ module.exports = class DataFrame {
   row(idx) {
     return Array(this.nCols)
       .fill(0)
-      .map((_, colIdx) => this.val(idx, colIdx));
+      .map((_, cIdx) => this.val(idx, cIdx));
   }
 
   /**
@@ -341,6 +342,7 @@ module.exports = class DataFrame {
 
   /**
    * @param {!Number} n ratio or number of elements
+   * @param {?Boolean} wr with replacement
    * @returns {!DataFrame} data frame
    */
   sample(n = 0.1, wr = true) {
@@ -380,21 +382,21 @@ module.exports = class DataFrame {
     // if (colId === null && this.nCols === 1) {
       // return this.mapCol(0, f, dtype);
     // }
-    // const colIdx = this._resolveCol(colId);
+    // const cIdx = this._resolveCol(colId);
     // const cols = Array.from(this._cols);
     // const numCols = this._numColIdxs;
     // let mappedCol;
-    // if (numCols.has(colIdx)) {
-      // const col = cols[colIdx];
+    // if (numCols.has(cIdx)) {
+      // const col = cols[cIdx];
       // if (col.dtype === dtype || dtype === null) {
         // mappedCol = col.map(f);
       // } else {
         // mappedCol = col.cast(dtype).map(f);
       // }
     // } else {
-      // mappedCol = cols[colIdx].map(f);
+      // mappedCol = cols[cIdx].map(f);
     // }
-    // cols[colIdx] = mappedCol;
+    // cols[cIdx] = mappedCol;
     // return new DataFrame(cols, 'cols', Array.from(this.colNames));
   // }
 
@@ -404,8 +406,8 @@ module.exports = class DataFrame {
     }
     const cols = Array.from(this._cols);
     const colNames = Array.from(this.colNames);
-    for (const colIdx of colIds.map(id => this._resolveCol(id))) {
-      cols[colIdx] = Series.from(cols[colIdx]);
+    for (const cIdx of colIds.map(id => this._resolveCol(id))) {
+      cols[cIdx] = Series.from(cols[cIdx]);
     }
     return new DataFrame(cols, 'cols', colNames);
   }
@@ -415,12 +417,15 @@ module.exports = class DataFrame {
    * @param {?String} [name]
    * @returns {!DataFrame} data frame
    */
-  appendCol(col, name = null, axis = 0) {
-    const cols = Array.from(this._cols);
-    const colNames = Array.from(this.colNames);
-    cols.push(Series.from(col));
-    colNames.push(name || cols.length - 1);
-    return new DataFrame(cols, 'cols', colNames);
+  appendCol(col, name = null) {
+    const cpy = this.copy();
+    cpy._cols.push(col);
+    if (name === null) {
+      cpy.colNames.push(name);
+    } else {
+      cpy.colNames.push(cpy.colNames.length);
+    }
+    return cpy;
   }
 
   /**
@@ -484,12 +489,12 @@ module.exports = class DataFrame {
   memory() {
     const memInfo = Array(this.nCols).fill(0).map((_, cIdx) => [this.colNames[cIdx], NaN]);
     const numCols = this._numColIdxs;
-    for (let colIdx = 0; colIdx < this.nCols; colIdx++) {
-      const col = this._cols[colIdx];
-      if (numCols.has(colIdx)) {
-        memInfo[colIdx][1] = col.byteLength * this.length;
+    for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
+      const col = this._cols[cIdx];
+      if (numCols.has(cIdx)) {
+        memInfo[cIdx][1] = col.byteLength;
       } else {
-        const colName = this.colNames[colIdx];
+        const colName = this.colNames[cIdx];
         log.warn(`column ${colName} not numeric so impossible to determine size`);
       }
     }
@@ -544,29 +549,30 @@ module.exports = class DataFrame {
     return new DataFrame(cols, 'cols', colNames);
   }
 
+
   /**
    * @param {...<!String|!Number>} cols col pairs
    * @returns {!DataFrame} data frame
    */
-  sliceH(...cols) {
-    if (cols.length === 0) {
-      throw new Error('no slice idxs specified (e.g. df.sliceH(0, -1))');
-    } else if (cols.length % 2 !== 0) {
-      cols.push(this.nCols); // odd number of idxs
+  sliceCols(...slices) {
+    if (slices.length === 0) {
+      throw new Error('no slice idxs specified (e.g. df.sliceCols(0, -1))');
+    } else if (slices.length % 2 !== 0) {
+      slices.push(this.nCols); // odd number of idxs
       /*
-       * e.g. sliceH(0)         -> sliceH(0, end)
-       * e.g. sliceH(0, 10, 20) -> sliceH(0, 10, 20, end)
+       * e.g. sliceCols(0)         -> sliceCols(0, end)
+       * e.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end)
        */
     }
 
     // collect column idxs
     const colIds = new Set();
 
-    for (let i = 1; i < cols.length; i += 2) {
-      const lBound = this._resolveCol(cols[i - 1]);
-      const rBound = this._resolveCol(cols[i]);
-      for (let colIdx = lBound; colIdx < rBound; colIdx++) {
-        colIds.add(colIdx);
+    for (let i = 1; i < slices.length; i += 2) {
+      const lBound = this._resolveCol(slices[i - 1]);
+      const rBound = this._resolveCol(slices[i]);
+      for (let cIdx = lBound; cIdx < rBound; cIdx++) {
+        colIds.add(cIdx);
       }
     }
 
@@ -595,9 +601,9 @@ module.exports = class DataFrame {
     for (let i = 1; i < idxs.length; i += 2) {
       const lBound = idxs[i - 1];
       const rBound = idxs[i];
-      for (let colIdx = 0; colIdx < this.nCols; colIdx++) {
-        const col = this._cols[colIdx];
-        cols[colIdx] = col.subarray(lBound, rBound);
+      for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
+        const col = this._cols[cIdx];
+        cols[cIdx] = col.subarray(lBound, rBound);
       }
     }
 
@@ -609,21 +615,21 @@ module.exports = class DataFrame {
    * @param {'asc'|'des'|!Function} [ord]
    * @returns {DataFrame}
    */
-  orderBy(colId = null, ord = 'asc') {
+  sort(colId = null, ord = 'asc') {
     if (colId === null) {
       if (this.nCols === 1) {
-        return this.orderBy(0, ord);
+        return this.sort(0, ord);
       } else {
-        throw new Error('you need to select a column (e.g. df.orderBy(0))');
+        throw new Error('you need to select a column (e.g. df.sort(0))');
       }
     } 
-    const colIdx = this._resolveCol(colId);
+    const cIdx = this._resolveCol(colId);
     if (ord.constructor.name === 'Function') {
-      return new DataFrame(Array.from(this.rowIter).sort(ord), 'rows', Array.from(this.colNames));
+      return new DataFrame(Array.from(this.rowsIter).sort(ord), 'rows', Array.from(this.colNames));
     } else if (ord === 'asc') {
-      return this.orderBy(colIdx, (r1, r2) => r1[colIdx] > r2[colIdx] ? 1 : r1[colIdx] < r2[colIdx] ? -1 : 0);
+      return this.sort(cIdx, (r1, r2) => r1[cIdx] > r2[cIdx] ? 1 : r1[cIdx] < r2[cIdx] ? -1 : 0);
     } else {
-      return this.orderBy(colIdx, (r1, r2) => r1[colIdx] > r2[colIdx] ? -1 : r1[colIdx] < r2[colIdx] ? 1 : 0);
+      return this.sort(cIdx, (r1, r2) => r1[cIdx] > r2[cIdx] ? -1 : r1[cIdx] < r2[cIdx] ? 1 : 0);
     }
   }
 
@@ -638,7 +644,8 @@ module.exports = class DataFrame {
     const toDelete = new Set(colIds.map(id => this._resolveCol(id)));
     const neededCols = this.colNames
       .map((_, idx) => idx)
-      .filter(colIdx => !toDelete.has(colIdx));
+      .filter(cIdx => !toDelete.has(cIdx));
+
     return this.select(...neededCols);
   }
 
@@ -664,10 +671,10 @@ module.exports = class DataFrame {
     // // kBins(colId_1, nBins_1, colId_2, nBins_2, ...)
     // for (let i = 1; i < params.length; i += 2) {
       // const colId = params[i - 1];
-      // const colIdx = this._resolveCol(colId);
+      // const cIdx = this._resolveCol(colId);
       // const k = params[i];
       // const binSize = Math.floor(this.length / k);
-      // const col = cols[colIdx];
+      // const col = cols[cIdx];
       // const colSorted = col.clone().sort()
       // const bitsPerVal = Math.ceil(Math.log2(k));
       // const newArr = Series.empty(
@@ -695,18 +702,73 @@ module.exports = class DataFrame {
         // }
       // }
 
-      // cols[colIdx] = newArr;
+      // cols[cIdx] = newArr;
     // }
 
     // return new DataFrame(cols, 'cols', Array.from(this.colNames));
   // }
 
   /**
-   * @param {!Function} f predicate (row => Boolean)
+   * @param {!Function} f
+   * @param {?String|?Number} [colId] 
    * @returns {!DataFrame} data frame
    */
-  filter(f = (_row, _idx) => true) {
-    return new DataFrame(Array.from(this.rowIter).filter(f), 'rows', Array.from(this.colNames));
+  filter(f = (_row, _idx) => true, colId = null) {
+    if (colId === null) {
+      const rows = [];
+      for (const r of this.rowsIter) {
+        if (f(r)) rows.push(r);
+      }
+      return new DataFrame(rows, 'rows', Array.from(this.colNames));
+    } 
+    // else focus on one column
+    const col = this.col(colId);
+    const tests = Array(col.length).fill(false);
+    for (let i = 0; i < col.length; i++) {
+      tests[i] = f(col[i]);
+    }
+    const cols = Array.from(this._cols);
+    for (let i = 0; i < this.length; i++) {
+      cols[i] = cols[i].filter((_, idx) => tests[idx]);
+    }
+    return new DataFrame(cols, 'cols', Array.from(this.colNames));
+  }
+
+  /**
+   * @param {*} val
+   * @param {...<!Number|!String>} colIds
+   * @returns {!DataFrame} data frame without val in colIds
+   */
+  drop(val, ...colIds) {
+    const tests = Array(col.length).fill(true);
+
+    if (colIds.length === 0) {
+      if (this.nCols === 0) {
+        throw new Error('no columns to delete');
+      } else {
+        return this.drop(val, ...this.colNames);
+      }
+    }
+
+    const colIdxs = colIds.map(id => this._resolveCol(id));
+
+    for (const cIdx of colIdxs) {
+      const col = this._cols[cIdx];
+      for (let i = 0; i < this.length; i++) {
+        if (col[i] === val) {
+          tests[i] = false;
+          break;
+        }
+      }
+    }
+
+    const cols = Array.from(this._cols);
+
+    for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
+      cols[cIdx] = cols[cIdx].filter((_, idx) => tests[idx])
+    }
+
+    return new DataFrame(cols, 'cols', Array.from(this.colNames));
   }
 
   /**
@@ -715,34 +777,9 @@ module.exports = class DataFrame {
    * @returns {!DataFrame} data frame with shuffle rows
    */
   shuffle() {
-    const rows = Series.from(Array.from(this.rowIter)).shuffle();
+    const rows = Series.from(Array.from(this.rowsIter)).shuffle();
     return new DataFrame(rows, 'rows', Array.from(this.colNames));
   }
-
-  /**
-   * @param {!String|!Number} colId
-   * @param {!Function} [f]
-   * @param {!String} [colName]
-   * @returns {!DataFrame} data frame
-   */
-  // groupBy(colId, f = xs => mean(xs), colName = 'AggregateFunction') {
-  // const colIdx = this._resolveCol(colId);
-  // const index = {};
-  // for (const r of this.rowIter) {
-  // const val = r[colIdx];
-  // const row = r.slice(0, colIdx)
-  // .concat(r.slice(colIdx + 1));
-  // if (index[val] === undefined) {
-  // index[val] = [row];
-  // } else {
-  // index[val].push(row);
-  // }
-  // }
-  // for (const k of Object.keys(index)) {
-  // index[k] = f(index[k]);
-  // }
-  // return new DataFrame(Object.entries(index), 'rows', [this.colNames[colIdx], colName]);
-  // }
 
   /**
    * Produce a count table for values of a column.
@@ -760,11 +797,11 @@ module.exports = class DataFrame {
         throw new Error('you need to select a column (e.g. `df.counts(0)`)');
       }
     } 
-    const colIdx = this._resolveCol(colId);
+    const cIdx = this._resolveCol(colId);
     return new DataFrame(
-      Array.from(this._cols[colIdx].counts().entries()),
+      Array.from(this._cols[cIdx].counts().entries()),
       'rows',
-      [this.colNames[colIdx], 'count'],
+      [this.colNames[cIdx], 'count'],
     );
   }
 
@@ -774,31 +811,6 @@ module.exports = class DataFrame {
    */
   get _numColIdxs() {
     return new Set(Array(this.nCols).fill(0).map((_, idx) => idx).filter(cIdx => this._cols[cIdx].dtype.match(/8|16|32|64/)));
-  }
-
-  /**
-   * @param {...<!String|!Number>} [colIds]
-   * @return {!DataFrame} normalized data frame
-   */
-  normalize(...colIds) {
-    if (colIds.length === 0) {
-      log.info('normalizing all columns');
-      return this.normalize(...this.colNames);
-    }
-    const toDo = new Set(colIds.map(id => this._resolveCol(id)));
-    const numCols = this._numColIdxs;
-    const cols = [];
-    const colNames = [];
-    for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
-      colNames.push(this.colNames[cIdx]);
-      const col = this._cols[cIdx];
-      if (numCols.has(cIdx) && toDo.has(cIdx)) {
-        cols.push(col.normalize());
-      } else {
-        cols.push(col);
-      }
-    }
-    return new DataFrame(cols, 'cols', colNames);
   }
 
   /**
@@ -812,8 +824,8 @@ module.exports = class DataFrame {
   // colIds = [0];
   // }
   // const cols = Array.from(this._cols);
-  // for (const colIdx of colIds.map(id => this._resolveCol(id))) {
-  // const col = this._cols[colIdx];
+  // for (const cIdx of colIds.map(id => this._resolveCol(id))) {
+  // const col = this._cols[cIdx];
   // const uniqueVals = new Set(col);
   // const bitsNeeded = Math.max(8, Math.ceil(Math.log2(uniqueVals.size)));
   // const newArr = Series.empty(
@@ -829,7 +841,7 @@ module.exports = class DataFrame {
   // const val = col[rowIdx];
   // newArr[rowIdx] = map.get(val);
   // }
-  // cols[colIdx] = newArr;
+  // cols[cIdx] = newArr;
   // }
   // return new DataFrame(cols, 'cols', Array.from(this.colNames));
   // }
@@ -839,23 +851,23 @@ module.exports = class DataFrame {
    * @param {!String} fname
    * @returns {!DataFrame} data frame with fName applied to colId
    */
-  call(colId = null, fName, ...args) {
+  _call(colId = null, fName, ...args) {
     if (colId === null) {
       if (this.nCols === 1) {
         log.info(`colId not specified for ${fName}, but there is only 1 col`);
-        return this.call(0, fName, ...args);
+        return this._call(0, fName, ...args);
       } else {
         log.info(`colId not specified for ${fName}, running for all cols`);
         let df = this;
         for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
-          df = df.call(cIdx, fName, ...args);
+          df = df._call(cIdx, fName, ...args);
         }
         return df;
       }
     }
     const cols = Array.from(this._cols);
-    const colIdx = this._resolveCol(colId);
-    cols[colIdx] = cols[colIdx][fName](...args);
+    const cIdx = this._resolveCol(colId);
+    cols[cIdx] = cols[cIdx][fName](...args);
     return new DataFrame(cols, 'cols', Array.from(this.colNames));
   }
 
@@ -942,7 +954,7 @@ module.exports = class DataFrame {
    */
   toArray(mode = 'rows') {
     return mode === 'rows'
-      ? Array.from(this.rowIter)
+      ? Array.from(this.rowsIter)
       : this._cols.map(c => Array.from(c));
   }
 
@@ -980,16 +992,7 @@ module.exports = class DataFrame {
     } else if (m > this.length) {
       return this.print(n, this.length);
     }
-    const table = [];
-    for (let rowIdx = n; rowIdx < m; rowIdx++) {
-      const namedRow = {};
-      for (let colIdx = 0; colIdx < this.nCols; colIdx++) {
-        const colName = this.colNames[colIdx];
-        namedRow[colName] = this.val(rowIdx, colIdx);
-      }
-      table.push(namedRow);
-    }
-    console.table(table);
+    console.log(this.slice(n, m).toString(m - n));
   }
 
   /**
@@ -1072,10 +1075,44 @@ module.exports = class DataFrame {
     return readdirSync(DataFrame.dataSetsPath).filter(node => !node.match(/\.w+$/));
   }
 
+  static of(...cols) {
+    return new DataFrame(cols, 'cols');
+  }
+
+  [util.inspect.custom](depth, options) {
+    return this.toString();
+  }
+
   /**
    * @returns {!String} string representation of the data frame
    */
-  toString() {
-    return `${this.constructor.name} ${this.nCols}x${this.length} { ${this.dtypes.map((dt, idx) => `${this.colNames[idx]}  ${dt}`).join(', ')} }`;
+  toString(n = HEAD_LEN) {
+    const header = this.colNames;
+    const rows = []
+    const nRows = Math.min(this.length, n);
+
+    const parts = [];
+
+    for (let i = 0; i < nRows; i++) {
+      rows.push(this.row(i));
+    }
+
+    const lens = Array(this.nCols).fill(0).map((_, idx) => Math.max(header[idx].length, rows.map(r => r[idx].toString().length).reduce((x, y) => Math.max(x, y), 0)));
+
+    parts.push(header.map((h, cIdx) => h.toString().padStart(lens[cIdx], ' ')).join(' '));
+
+    parts.push(lens.map(l => '-'.repeat(l)).join(' '));
+
+    for (let i = 0; i < nRows; i++) {
+      parts.push(rows[i].map((val, cIdx) => val.toString().padStart(lens[cIdx], ' ')).join(' '));
+    }
+
+    if (this.length > 0) {
+      parts[parts.length - 1] += '\n' + lens.map(l => '-'.repeat(l)).join(' ')
+    }
+
+    parts.push(`${this.constructor.name} with ${this.length} rows`);
+
+    return parts.join('\n');
   }
 };
