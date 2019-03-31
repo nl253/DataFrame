@@ -286,7 +286,7 @@ module.exports = class DataFrame {
   /**
    * @returns {!DataFrame} a correlation matrix
    */
-  correlations() {
+  correlations(withNames = true) {
     const colNames = Array.from(this.colNames);
     const numCols = this._numColIdxs;
     const rows = [];
@@ -309,7 +309,17 @@ module.exports = class DataFrame {
         }
       }
     }
-    return new DataFrame(rows, 'rows', colNames);
+
+    if (withNames) {
+      for (let rIdx = 0; rIdx < rows.length; rIdx++) {
+        const colName = this.colNames[rIdx]
+        const row = rows[rIdx];
+        rows[rIdx] = [colName].concat(row);
+      }
+      return new DataFrame(rows, 'rows', ['column'].concat(colNames));
+    } else {
+      return new DataFrame(rows, 'rows', colNames);
+    }
   }
 
   /**
@@ -508,9 +518,9 @@ module.exports = class DataFrame {
     const cols = Array.from(this._cols);
     cols.push(col);
     if (name === null) {
-      colNames.push(name);
+      colNames.push(colNames.length);
     } else {
-      colNames.push(cpy.colNames.length);
+      colNames.push(name);
     }
     return new DataFrame(cols, 'cols', colNames);
   }
