@@ -985,18 +985,21 @@ function enhanceTypedArray(a) {
   };
 
   a.skewness = function () {
-    const meanDiffs = this.sub(this.mean());
-    return meanDiffs.cube().mean() / (1 / (this.length - 1) * meanDiffs.square()) ** (3 / 2);
+    return this.cast('f64').sub(this.mean()).cube().mean() / (this.var()**(3/2));
   };
 
-  // FIXME correlation
-  // a.correlation = function (ys) {
-    // const muX = this.mean();
-    // const muY = ys.mean();
-    // const diffXSMu = this.sub(muX);
-    // const diffYSMu = ys.sub(muY);
-    // return diffXSMu.map((diff, idx) => diff * diffYSMu[idx]) / Math.sqrt(diffXSMu.square()) * Math.sqrt(diffYSMu.square());
-  // };
+  a.correlation = function (other) {
+    const muX = this.mean();
+    const muY = other.mean();
+    return this.cast('f64').map((x, idx) => (x - muX) * (other[idx] - muY)).add() / (Math.sqrt(this.cast('f64').map(x => (x - muX)**2).add()) * Math.sqrt(other.cast('f64').map(y => (y - muY)**2).add()));
+  };
+
+  a.kurosis = function () {
+    const mu = this.mean();
+    const numerator = this.cast('f64').map(x => (x - mu)**4).add() / this.length;
+    const denominator = (this.cast('f64').map(x => (x - mu)**2).add() / this.length)**2;
+    return (numerator/denominator) - 3;
+  };
 
   a.downcast = function () {
     const guess = guessDtype(this);

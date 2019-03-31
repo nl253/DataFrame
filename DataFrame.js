@@ -124,6 +124,7 @@ module.exports = class DataFrame {
       'memory',
       'skewness',
       'magnitude',
+      'kurosis',
     ];
 
     // each aggregare op is a function (Series => Number)
@@ -282,6 +283,35 @@ module.exports = class DataFrame {
       }
       return idx;
     }
+  }
+
+  /**
+   * @returns {!DataFrame} a correlation matrix
+   */
+  correlations() {
+    const colNames = Array.from(this.colNames);
+    const numCols = this._numColIdxs;
+    const rows = [];
+    for (let yIdx = 0; yIdx < this.nCols; yIdx++) {
+      rows.push([]);
+      if (numCols.has(yIdx))  {
+        for (let xIdx = 0; xIdx < this.nCols; xIdx++) {
+          if (numCols.has(xIdx)) {
+            const col = this._cols[yIdx];
+            const other = this._cols[xIdx];
+            const corr = col.correlation(other);
+            rows[yIdx].push(corr);
+          } else {
+            rows[yIdx].push(NaN);
+          }
+        }
+      } else {
+        for (let xIdx = 0; xIdx < this.nCols; xIdx++) {
+          rows[yIdx].push(NaN);
+        }
+      }
+    }
+    return new DataFrame(rows, 'rows', colNames);
   }
 
   /**
@@ -590,7 +620,7 @@ module.exports = class DataFrame {
 
   /**
    * @param {!Number|!String} colId
-   * @param {!String} f
+   * @param {!String|!Function} f
    * @returns {!DataFrame} data frame with f applied to colId
    */
   callNum(colId = null, f, ...args) {
@@ -627,7 +657,7 @@ module.exports = class DataFrame {
 
   /**
    * @param {!Number|!String} colId
-   * @param {!String} f
+   * @param {!String|!Function} f
    * @returns {!DataFrame} data frame with f applied to colId
    */
   callStr(colId = null, f, ...args) {
