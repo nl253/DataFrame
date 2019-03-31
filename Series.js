@@ -1026,19 +1026,22 @@ function enhanceTypedArray(a) {
   };
 
   a.skewness = function () {
-    return this.cast('f64').sub(this.mean()).cube().mean() / (this.var()**(3/2));
+    const xs = this.cast('f64');
+    return xs.sub(this.mean()).cube().mean() / (xs.var()**(3/2));
   };
 
-  a.correlation = function (other) {
-    const muX = this.mean();
-    const muY = other.mean();
-    return this.cast('f64').map((x, idx) => (x - muX) * (other[idx] - muY)).add() / (Math.sqrt(this.cast('f64').map(x => (x - muX)**2).add()) * Math.sqrt(other.cast('f64').map(y => (y - muY)**2).add()));
+  a.corr = function (other) {
+    const muDiffX = this.cast('f64').sub(this.mean());
+    const muDiffY = other.cast('f64').sub(other.mean());
+    return muDiffX.mul(muDiffY).add() / (Math.sqrt(muDiffX.square().add()) * Math.sqrt(muDiffY.square().add()));
   };
 
   a.kurosis = function () {
     const mu = this.mean();
-    const numerator = this.cast('f64').map(x => (x - mu)**4).add() / this.length;
-    const denominator = (this.cast('f64').map(x => (x - mu)**2).add() / this.length)**2;
+    const xs = this.cast('f64');
+    const subMu = xs.sub(mu);
+    const numerator = subMu.pow(4).add() / this.length;
+    const denominator = (subMu.square().add() / this.length)**2;
     return (numerator/denominator) - 3;
   };
 

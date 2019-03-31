@@ -297,7 +297,7 @@ module.exports = class DataFrame {
           if (numCols.has(xIdx)) {
             const col = this._cols[yIdx];
             const other = this._cols[xIdx];
-            const corr = col.correlation(other);
+            const corr = col.corr(other);
             rows[yIdx].push(corr);
           } else {
             rows[yIdx].push(NaN);
@@ -1109,6 +1109,16 @@ module.exports = class DataFrame {
 
   [util.inspect.custom](depth, options) {
     return this.toString();
+  }
+
+  toHTML() {
+    return `
+    <table>
+      <tr>
+        ${this.colNames.map(name => '<th>' + name.toString() + '</th>').join('\n        ')}
+      </tr>
+      ${Array.from(this.rowsIter).map(r => '<tr>\n        ' + r.map(x => "<td>" + x.toString() + "</td>").join('\n        ') + '\n      </tr>').join('\n      ')}
+    </table>`
   }
 
   /**
