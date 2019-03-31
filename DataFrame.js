@@ -1,8 +1,5 @@
 /**
- * TODO the API with appendCol / appendH / append(axis = 0) is very inconsistent and confusing
  * TODO there is no good map (all rows) / map (all cols) API
- * TODO fix kBins (it's too complicated & it doesn't work and the API is weird)
- * TODO fix labelEncode (do it via Series)
  * TODO mode is broken
  */
 const util = require('util');
@@ -166,9 +163,10 @@ module.exports = class DataFrame {
       'ceil',
       'clip',
       'cube',
-      'downcast',
       'div',
+      'downcast',
       'floor',
+      'kBins',
       'mul',
       'normalize',
       'round',
@@ -791,65 +789,6 @@ module.exports = class DataFrame {
 
     return this.select(...neededCols);
   }
-
-  /**
-   * @param {...<!Number|!String>} [params]
-   */
-  // kBins(...params) {
-  // if (params.length === 0) {
-  // log.warn('nBins not specified, defaulting to 6 bins');
-  // params = [6];
-  // } else if (params.length === 1) {
-  // // if 1 param assume it 's the bin size
-  // // and k - bin all columns
-  // const k = params[0];
-  // log.info(`not selected specific cols so binning all attrs with k = ${k}`);
-  // return this.kBins(this.colNames
-  // .map((_, idx) => [idx, k])
-  // .reduce((a1, a2) => a1.concat(a2), []));
-  // }
-
-  // const cols = Array.from(this._cols);
-
-  // // kBins(colId_1, nBins_1, colId_2, nBins_2, ...)
-  // for (let i = 1; i < params.length; i += 2) {
-  // const colId = params[i - 1];
-  // const cIdx = this.colIdx(colId);
-  // const k = params[i];
-  // const binSize = Math.floor(this.length / k);
-  // const col = cols[cIdx];
-  // const colSorted = col.clone().sort()
-  // const bitsPerVal = Math.ceil(Math.log2(k));
-  // const newArr = Series.empty(
-  // bitsPerVal <= 8 ? 'u8' : bitsPerVal <= 16 ? 'u16' : 'u32', col.length,
-  // );
-  // const bounds = Series.empty('f64', k);
-
-  // // determine boundaries
-  // for (let rowIdx = binSize; rowIdx < col.length; rowIdx += binSize) {
-  // bounds[rowIdx / binSize] = colSorted[rowIdx];
-  // }
-
-  // // last bin captures all
-  // bounds[bounds.length - 1] = Infinity;
-
-  // log.debug(`bounds: [${bounds.join(', ')}]`);
-
-  // for (let rowIdx = 0; rowIdx < col.length; rowIdx++) {
-  // const val = col[rowIdx];
-  // for (let b = 0; b < bounds.length; b++) {
-  // if (val <= bounds[b]) {
-  // newArr[rowIdx] = b;
-  // break;
-  // }
-  // }
-  // }
-
-  // cols[cIdx] = newArr;
-  // }
-
-  // return new DataFrame(cols, 'cols', Array.from(this.colNames));
-  // }
 
   /**
    * @param {!Function} f

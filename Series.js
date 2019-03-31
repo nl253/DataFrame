@@ -2,6 +2,7 @@ const util = require("util");
 const { randInRange, randInt } = require('./rand');
 const dtypeRegex = /([a-z]+)(8|16|32|64)/i;
 const isNumRegex = /^(\d+\.?\d*|\d*\.\d+)$/g;
+const log = require('./log');
 
 const HEAD_LEN = 5;
 const PRECISION = 2;
@@ -161,8 +162,10 @@ function enhance(a) {
     return a;
   }
 
-
   a.toString = function(len = HEAD_LEN) {
+    if (len > this.length) {
+      log.warn(`len = ${len}, but there is ${this.length} items`);
+    }
     const parts = ['Series ' + (this.dtype === undefined ? '' : this.dtype + ' ') + '['];
     const n = Math.min(len, this.length); 
     for (let i = 0; i < n; i++) {
@@ -199,6 +202,64 @@ function enhance(a) {
   defineGetter('isEmpty', function () {
     return this.length === 0;
   });
+
+  // INPUT: 
+  // a = [2, 3, 1, 4, 5, 6]
+  // k = 2
+  //
+  // 1. Sort:
+  //
+  //  [1, 2, 3, 4, 5, 6]
+  //
+  // 2. Determine bin size:
+  //
+  //  binSize = a.length / k = 6 / 2 = 3
+  //
+  // 3. Determine boundaries:
+  //
+  //  bounds = [_, Infinity]
+  //
+  // 4. Bound 1 is in place binSize i.e. sortedA[3] = 4
+  //    meaning all less than 4 are in bin #0
+  //  
+  //  bounds = [4, Infinity]
+  //
+  // 5. Try to advance to next bin: 3 + binSize = 6. Out of bounds!
+  //
+  a.kBins = function (k = 5, dtype = null) {
+    if (dtype === null) {
+      return this.kBins(k, 'u8');
+    }
+    const sorted = this.sort();
+    const bounds = Array(k).fill(0);
+    bounds[bounds.length - 1] = Infinity;
+    const binSize = Math.floor(this.length / k);
+
+    let boundIdx = 0;
+
+    for (let i = binSize; i < this.length; i += binSize) {
+      bounds[boundIdx] = sorted[i];
+      boundIdx++;
+    }
+
+    const s = Series.empty(binSize, dtype);
+
+    for (let i = 0; i < this.length; i++) {
+      const val = this[i];
+      for (let boundIdx = 0; boundIdx < k; boundIdx++) {
+        const boundVal = bounds[boundIdx];
+        if (val < boundVal) {
+          s[i] = boundIdx;
+          break;
+        }
+      }
+    }
+
+    s.kBinsBounds = bounds;
+
+    return s;
+  };
+
 
   a.replace = function (v, y) {
     return this.map((x, idx) => x === v ? y : x);
@@ -342,26 +403,6 @@ function enhanceArray(a) {
 
   a.unique = function () {
     return Array.from(new Set(this));
-  };
-
-  a.kBins = function (k = 5) {
-    let K = 0;
-    const clone = this.clone();
-    const cpy = this.sort();
-    const bounds = Array(k).fill(0).map()
-    bounds[bounds.length - 1] = Infinity;
-    const binSize = Math.floor(this.length / k);
-    const map = new Map();
-    for (let i = binSize; i < this.length; i+=binSize) {
-      bounds[i] = cpy[i];
-      map.set(K, Series.empty(binSize, 'u32'));
-      K++;
-    }
-    const s = Series.empty(binSize, 'u32');
-    s.set(this.subarray(k * binSize));
-    map.set(K, s);
-    clone.kBinsMap = map;
-    
   };
 
   a._reverse = a.reverse;
