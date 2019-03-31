@@ -161,16 +161,22 @@ function enhance(a) {
     return a;
   }
 
-  a.toString = function() {
+
+  a.toString = function(len = HEAD_LEN) {
     const parts = ['Series ' + (this.dtype === undefined ? '' : this.dtype + ' ') + '['];
-    const n = Math.min(HEAD_LEN, this.length); 
+    const n = Math.min(len, this.length); 
     for (let i = 0; i < n; i++) {
       const val = this[i];
       const s = val.toString();
-      if (val.constructor.name === 'Number' && s.match(/\./)) {
+      const isStr = val.constructor.name === 'String';
+      const isNum = !isStr && val.constructor.name === 'Number';
+      const isFloat = isNum && s.match(/\./);
+      if (isFloat) {
         const [p1, p2] = s.split('.');
         parts.push(`${p1}.${p2.slice(0, PRECISION)}`);
-      } else {
+      // } else if (isStr) {
+        // parts.push('"' + s + '"');
+      } else /* int */ {
         parts.push(s);
       }
     }
@@ -179,9 +185,11 @@ function enhance(a) {
     }
     return parts[0] + parts.slice(1).join(', ') + ']';
   };
-
-  a[util.inspect.custom] = function (depth, options) {
-    return this.toString();
+  a.print = function (n = HEAD_LEN) {
+    return console.log(this.toString(n));
+  };
+  a[util.inspect.custom] = function (depth = HEAD_LEN, options) {
+    return this.toString(depth);
   };
 
   const defineGetter = (name, f) => Object.defineProperty(a, name, { get: f });
@@ -306,12 +314,54 @@ function enhanceArray(a) {
     }
   });
 
+  a.labelEncode = function (dtype = null) {
+    if (dtype === null) {
+      return this.labelEncode('u8');
+    }
+    const newArr = empty(this.length, dtype);
+    const map = new Map();
+    let label = 0;
+    for (let i = 0; i < this.length; i++) {
+      const val = this[i];
+      const maybe = map.get(val);
+      if (maybe === undefined) {
+        map.set(val, label);
+        newArr[i] = label;
+        label++;
+      } else {
+        newArr[i] = maybe;
+      }
+    }
+    newArr.labelMap = map;
+    return newArr;
+  };
+
   a.clone = function () {
     return Array.from(this);
   };
 
   a.unique = function () {
     return Array.from(new Set(this));
+  };
+
+  a.kBins = function (k = 5) {
+    let K = 0;
+    const clone = this.clone();
+    const cpy = this.sort();
+    const bounds = Array(k).fill(0).map()
+    bounds[bounds.length - 1] = Infinity;
+    const binSize = Math.floor(this.length / k);
+    const map = new Map();
+    for (let i = binSize; i < this.length; i+=binSize) {
+      bounds[i] = cpy[i];
+      map.set(K, Series.empty(binSize, 'u32'));
+      K++;
+    }
+    const s = Series.empty(binSize, 'u32');
+    s.set(this.subarray(k * binSize));
+    map.set(K, s);
+    clone.kBinsMap = map;
+    
   };
 
   a._reverse = a.reverse;
@@ -356,9 +406,6 @@ function enhanceArray(a) {
     return this.slice(this.length - n);
   };
 
-  a.print = function (n = HEAD_LEN) {
-    return console.log(this.toString());
-  };
 
   a._concat = a.concat;
   a.concat = function(other) {
@@ -403,9 +450,6 @@ function enhanceTypedArray(a) {
   const defineGetter = (name, f) => Object.defineProperty(a, name, { get: f });
 
   // memory & data type
-  a.print = function (n = HEAD_LEN) {
-    return console.log(this.toString());
-  };
   defineGetter('dtype', function () {
     const match = dtypeRegex.exec(this.constructor.name);
     return match[1].slice(0, 1).toLocaleLowerCase() + match[2];
@@ -461,23 +505,9 @@ function enhanceTypedArray(a) {
     return newArr;
   };
 
-  defineGetter('memory', function () {
-    const bytes = this.BYTES_PER_ELEMENT * this.length;
-    const bits = bytes * 8;
-    const K = 1000;
-    const M = 1000 * K;
-    const G = 1000 * M;
-    return {
-      bytes,
-      bits,
-      Kb: bits / K,
-      Mb: bits / M,
-      Gb: bits / G,
-      KB: bytes / K,
-      MB: bytes / M,
-      GB: bytes / G,
-    };
-  });
+  a.memory = function() {
+    return this.BYTES_PER_ELEMENT * this.length;
+  };
 
   a.nLargest = function (n = HEAD_LEN) {
     return this.sort('des').subarray(0, n);
