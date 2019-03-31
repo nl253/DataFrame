@@ -286,7 +286,7 @@ module.exports = class DataFrame {
   /**
    * @returns {!DataFrame} a correlation matrix
    */
-  correlations(withNames = true) {
+  corr(withNames = true) {
     const colNames = Array.from(this.colNames);
     const numCols = this._numColIdxs;
     const rows = [];
