@@ -11,6 +11,8 @@ const { randInt } = require('./rand');
 const { readCSV } = require('./load');
 const log = require('./log');
 
+const bitRegex = /8|16|32|64/;
+
 let PRECISION = 2;
 let HEAD_LEN = 5;
 
@@ -222,28 +224,38 @@ module.exports = class DataFrame {
    */
   agg(f = xs => xs.length, filter = 'all', ...args) {
     if (filter === 'num') {
-      return this.agg(f, cIdx => this.numCols.has(cIdx), ...args);
+      return this.agg(f, cIdx => this._numColIdxs.has(cIdx), ...args);
     } else if (filter === 'str') {
-      return this.agg(f, cIdx => !this.numCols.has(cIdx), ...args);
+      return this.agg(f, cIdx => !this._numColIdxs.has(cIdx), ...args);
     } else if (filter === 'all') {
       return this.agg(f, cIdx => true, ...args);
     }
     const colNames = [];
     const aggResults = [];
-    for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
-      if (filter(cIdx)) {
-        continue;
-      }
-      const col = this._cols[cIdx];
-      const colName = this.colNames[cIdx];
-      colNames.push(colName);
-      if (f.constructor.name === 'String') {
+    if (f.constructor.name === 'String') {
+      for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
+        if (!filter(cIdx)) {
+          continue;
+        }
+        const col = this._cols[cIdx];
+        const colName = this.colNames[cIdx];
+        colNames.push(colName);
         aggResults.push(col[f]());
-      } else {
+      }
+    } else {
+      for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
+        if (!filter(cIdx)) {
+          continue;
+        }
+        const col = this._cols[cIdx];
+        const colName = this.colNames[cIdx];
+        colNames.push(colName);
         aggResults.push(f(col));
       }
     }
-    return new DataFrame([colNames, aggResults], 'cols', ['column', f.constructor.name === 'String' ? f : 'agg']);
+    return new DataFrame([colNames, aggResults], 
+                         'cols', 
+                         ['column', f.constructor.name === 'String' ? f : 'agg']);
   }
 
   /**
@@ -551,7 +563,14 @@ module.exports = class DataFrame {
    * @private
    */
   get _numColIdxs() {
-    return new Set(Array(this.nCols).fill(0).map((_, idx) => idx).filter(cIdx => this._cols[cIdx].dtype.match(/8|16|32|64/)));
+    const dtypes = this.dtypes;
+    const colIdxs = new Set();
+    for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
+      if (dtypes[cIdx] !== 's' && dtypes[cIdx] !== 'null') {
+        colIdxs.add(cIdx);
+      }
+    }
+    return colIdxs;
   }
 
   /**
@@ -580,18 +599,18 @@ module.exports = class DataFrame {
       }
     }
     if (filter === 'num') {
-      return this.call(colId, f, cIdx => this.numCols.has(cIdx), ...args);
+      return this.call(colId, f, cIdx => this._numColIdxs.has(cIdx), ...args);
     } else if (filter === 'str') {
-      return this.call(colId, f, cIdx => !this.numCols.has(cIdx), ...args);
+      return this.call(colId, f, cIdx => !this._numColIdxs.has(cIdx), ...args);
     } else if (filter === 'all') {
-      return this.call(f, cIdx => true, ...args);
+      return this.call(colId, f, cIdx => true, ...args);
     }
     const dtypes = this.dtypes;
     const cols = Array.from(this._cols);
     const colIdxs = (colId === null ? this.colNames : [colId]).map(id => this.colIdx(id));
     if (f.constructor.name === 'String') {
       for (const cIdx of colIdxs) {
-        if (filter(cIdx)) {
+        if (!filter(cIdx)) {
           log.warn(`tried running op col #${cIdx}`);
         } else {
           cols[cIdx] = cols[cIdx][f](...args);
@@ -599,7 +618,7 @@ module.exports = class DataFrame {
       }
     } else {
       for (const cIdx of colIdxs) {
-        if (filter(cIdx)) {
+        if (!filter(cIdx)) {
           log.warn(`tried running op col #${cIdx}`);
         } else {
           cols[cIdx] = f(cols[cIdx], ...args);
