@@ -54,35 +54,6 @@ function range(a = 0, b = null, step = 1) {
   return newArr;
 }
 
-// /**
-//  * @param {!Array<!Number>|!TypedArray} xs
-//  * @returns {!Array<!Number>|!TypedArray} safe common dtype
-//  */
-// function cumOp(xs, f) {
-//   if (xs.length === 0) return xs;
-//   const newArr = empty(xs.length);
-//   newArr[0] = xs[0];
-//   if (xs.length === 1) return newArr;
-//   if (xs.constructor.name === 'Array') {
-//     for (let i = xs.length - 1; i >= 0; i--) {
-//       newArr[i] = f(xs.subarray(0, i + 1));
-//     }
-//   } else {
-//     for (let i = xs.length - 1; i >= 0; i--) {
-//       newArr[i] = f(xs.slice(0, i + 1));
-//     }
-//   }
-//   return newArr;
-// }
-
-// /**
-//  * @param {!Array<!Number>|!TypedArray} xs
-//  * @param {"sum"|"product"|"min"|"max"|"variance"|"stdev"|"majorityVote"|"mad"|"mean"|"mode"} functName
-//  * @returns {!Array<!Number>|!TypedArray} array
-//  */
-// function cum(xs, functName) {
-//   return cumOp(xs, eval(functName));
-// }
 
 /**
  * @param {!Array<!Number>|!TypedArray} xs
@@ -195,6 +166,34 @@ function enhance(a) {
     return this.toString(depth);
   };
 
+  a.cum = function (f = 'add', dtype = null) {
+    if (xs.length === 0) {
+      return xs;
+    } else if (dtype === null) {
+      return this.cum(f, this.dtype);
+    }
+    let newArr;
+    if (dtype === 's') {
+      newArr = Array(this.length).fill(0);
+    } else {
+      newArr = empty(this.length, dtype);
+    }
+    newArr[0] = xs[0];
+    if (xs.length === 1) {
+      return newArr;
+    }
+    if (f.constructor.name === 'String') {
+      for (let i = xs.length - 1; i >= 0; i--) {
+        newArr[i] = f(xs.subarray(0, i + 1));
+      }
+    } else {
+      for (let i = xs.length - 1; i >= 0; i--) {
+        newArr[i] = xs.subarray(0, i + 1)[f]();
+      }
+    }
+    return newArr;
+  };
+
   const defineGetter = (name, f) => Object.defineProperty(a, name, { get: f });
   defineGetter('randEl', function () {
     return this[Math.floor(randInRange(0, this.length))];
@@ -300,7 +299,7 @@ function enhance(a) {
   };
 
   a.drop = function (v) {
-    return this.filter(a => a === v);
+    return this.filter(a => !Object.is(a, v));
   };
 
   a.all = function (f) {
@@ -369,11 +368,12 @@ function enhanceArray(a) {
     if (this.isEmpty) {
       return 'null'
     } else if (this[0].constructor.name === 'String') {
-      return this[0].constructor.name.toLocaleLowerCase().slice(0, 1);
+      return this[0].constructor.name.slice(0, 1).toLocaleLowerCase();
     } else {
       return this[0].constructor.name.toLocaleLowerCase();
     }
   });
+
 
   a.labelEncode = function (dtype = null) {
     if (dtype === null) {
@@ -904,36 +904,9 @@ function enhanceTypedArray(a) {
   };
 
   // linear algebra
-  a.magnitude = function () {
-    return Math.sqrt(this.square().add());
-  };
   a.dot = function (other) {
     return this.mul(other).add();
   };
-
-  /*
-   * a.minkDist = function (other, p = 2) {
-   *   if (this.dtype.indexOf('Float') >= 0) {
-   *     return (this.diff(other).map(x => Math.abs(x) ** p).sum) ** (1 / p);
-   *   } else {
-   *     return (cast(this, 'Float64').subP(other).map(x => Math.abs(x) ** p).sum) ** (1 / p);
-   *   }
-   * };
-   * a.euclDist = function (other) {
-   *   if (this.dtype.indexOf('f') >= 0) {
-   *     return Math.sqrt(this.sub(other).square().add());
-   *   } else {
-   *     return Math.sqrt(cast(this, 'Float64').subP(other).map(x => x ** 2).sum);
-   *   }
-   * };
-   * a.manhDist = function (other) {
-   *   if (this.dtype.indexOf('Float') >= 0) {
-   *     this.map((x, idx) => Math.abs(x - other[idx])).sum;
-   *   } else {
-   *     return cast(this, 'Float64').map((x, idx) => Math.abs(x - other[idx])).sum;
-   *   }
-   * };
-   */
 
   a.cast = function (toDtype) {
     if (toDtype === this.dtype) {
