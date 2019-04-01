@@ -14,8 +14,35 @@ const log = require('./log');
 
 const bitRegex = /8|16|32|64/;
 
-let PRECISION = 2;
+let PRINT_PRECISION = 2;
 let HEAD_LEN = 5;
+let FLOAT_PRECISION = 64;
+
+/**
+ * @param {"f32"|"f64"|"i8"|"16"|"i32"|"u8"|"u16"|"u32"} dt1
+ * @param {"f32"|"f64"|"i8"|"16"|"i32"|"u8"|"u16"|"u32"} dt2
+ * @returns {"f32"|"f64"|"i8"|"16"|"i32"|"u8"|"u16"|"u32"} dtype
+ */
+function unify(dt1, dt2) {
+  if (dt1[0] === 's' || dt2[0] === 's') {
+    return 's';
+  } else if (dt1[0] === dt2[0]) {
+    const nBits = Math.max(bitRegex.exec(dt1)[0], bitRegex.exec(dt2)[0]);
+    return dt1[0] + nBits.toString();
+  } else if (dt1[0] === 'f') {
+    return dt1;
+  } else if (dt2[0] === 'f') {
+    return dt2;
+  } else if (dt1[0] === 'i') {
+    const bits1 = bitRegex.exec(dt1)[0];
+    const bits2 = bitRegex.exec(dt2)[0];
+    return `i${Math.min(32, Math.max(bits1, bits2 * 2))}`;
+  } else if (dt2[0] === 'i') {
+    const bits1 = bitRegex.exec(dt1)[0];
+    const bits2 = bitRegex.exec(dt2)[0];
+    return `i${Math.min(32, Math.max(bits1 * 2, bits2))}`;
+  }
+}
 
 /**
  * @param {!Array<Array<*>>|!Array<*>} xs
@@ -43,21 +70,27 @@ module.exports = class DataFrame {
    * @param {?Array<!String>} [colNames]
    */
   constructor(data = [], what = 'rows', colNames = null) {
+    // empty
     if (data.length === 0) {
       this._cols = [];
       this.colNames = [];
+      // another data frame, clone it
     } else if (data.constructor.name === this.constructor.name) {
       this._cols = Array.from(data._cols);
       this.colNames = Array.from(data.colNames);
-    } else if (data.constructor.name === 'Object' || what === 'obj') {
+      // object { colName => col, ... }
+    } else if (data.constructor.name === 'Object' || what.startsWith('obj')) {
       this._cols = Object.values(data).map(c => Series.from(c));
       this.colNames = Object.keys(data);
-    } else if (data.constructor.name === 'Map' || what === 'map') {
+      // map { colName => col, ... }
+    } else if (data.constructor.name === 'Map' || what.startsWith('map')) {
       this._cols = Array.from(data.values()).map(c => Series.from(c));
       this.colNames = Array.from(data.keys());
     } else {
+      // array of rows
       if (what.startsWith('row')) {
         this._cols = transpose(data).map(c => Series.from(c));
+      // array of cols
       } else {
         this._cols = data.map(c => Series.from(c));
       }
@@ -94,11 +127,11 @@ module.exports = class DataFrame {
       });
     }
 
-    this.irow =  function* (rIdx) {
+    this.irow = function* (rIdx) {
       for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
         yield this.val(rIdx, cIdx);
       }
-    }
+    };
 
     function* rowsIter() {
       for (let r = 0; r < this.length; r++) {
@@ -128,8 +161,10 @@ module.exports = class DataFrame {
       'kurosis',
     ];
 
-    // each aggregare op is a function (Series => Number)
-    // it changes the shape of the data frame from n x m => m x 2
+    /*
+     * each aggregare op is a function (Series => Number)
+     * it changes the shape of the data frame from n x m => m x 2
+     */
     for (const agg of aggsNum) {
       if (this[agg] === undefined) {
         this[agg] = function (...args) {
@@ -144,9 +179,13 @@ module.exports = class DataFrame {
       };
     }
 
-    // each forward function is forwarded to the underlying series 
-    // ForwardFunct :: Series (len = n) => Series (len = n)
-    for (const f of ['head', 'tail', 'map', 'reverse', 'zipWith', 'zipWith3']) {
+    /*
+     * each forward function is forwarded to the underlying series
+     * ForwardFunct :: Series (len = n) => Series (len = n)
+     */
+    for (const f of [
+      'head', 'tail', 'map', 'reverse', 'zipWith', 'zipWith3',
+    ]) {
       if (this[f] !== undefined) continue;
       this[f] = function (colId = null, ...args) {
         return this.call(colId, f, 'all', ...args);
@@ -161,7 +200,7 @@ module.exports = class DataFrame {
     }
 
     const functsNum = [
-      'abs',          
+      'abs',
       'add',
       'cast',
       'ceil',
@@ -186,22 +225,28 @@ module.exports = class DataFrame {
       };
     }
 
-    for (const pair of [['add', 'sum'], ['sub', 'diff'], ['mul', 'prod'], ['div', 'quot']]) {
+    for (const pair of [
+      ['add', 'sum'], ['sub', 'diff'], ['mul', 'prod'], ['div', 'quot'],
+    ]) {
       const [op, name] = pair;
       if (this[name] === undefined) {
         this[name] = function (...args) {
-          return this.agg(op,  'num', ...args);
+          return this.agg(op, 'num', ...args);
         };
       }
     }
   }
 
   /**
-   * @param {...<?String|?Number>} params pairs of colId, newName
+   * @param {...!String|...!Number|Array<!Number|!String>} params pairs of colId, newName
    * @returns {!DataFrame} data frame with renamed col
    */
   rename(...params) {
-    if (params.length === 1 && this.nCols === 1) {
+    if (params.length === 1 && params[0].constructor.name === 'Array') {
+      const pairs = params[0].map((newName, cIdx) => [cIdx, newName]);
+      const args = pairs.reduce((pair1, pair2) => pair1.concat(pair2), []);
+      return this.rename(...args);
+    } else if (params.length === 1 && this.nCols === 1) {
       log.info('colId not specified for rename');
       return this.rename(0, params[0]);
     } else if (params.length % 2 !== 0) {
@@ -224,10 +269,11 @@ module.exports = class DataFrame {
    * @returns {!DataFrame} data frame
    */
   agg(f = xs => xs.length, filter = 'all', ...args) {
+    const numCols = this._numColIdxs;
     if (filter === 'num') {
-      return this.agg(f, cIdx => this._numColIdxs.has(cIdx), ...args);
+      return this.agg(f, cIdx => numCols.has(cIdx), ...args);
     } else if (filter === 'str') {
-      return this.agg(f, cIdx => !this._numColIdxs.has(cIdx), ...args);
+      return this.agg(f, cIdx => !numCols.has(cIdx), ...args);
     } else if (filter === 'all') {
       return this.agg(f, cIdx => true, ...args);
     }
@@ -254,15 +300,14 @@ module.exports = class DataFrame {
         aggResults.push(f(col));
       }
     }
-    return new DataFrame([colNames, aggResults], 
-                         'cols', 
-                         ['column', f.constructor.name === 'String' ? f : 'agg']);
+    return new DataFrame([colNames, aggResults],
+      'cols',
+      ['column', f.constructor.name === 'String' ? f : 'agg']);
   }
 
   /**
    * @param {!String|!Number} colId
    * @returns {!Number} column index
-   * @private
    */
   colIdx(colId) {
     // resolve named column
@@ -285,6 +330,48 @@ module.exports = class DataFrame {
   }
 
   /**
+   * @param {!String|!Number} axisId
+   * @returns {!Number} axis index
+   */
+  // axisIdx(axisId) {
+    // if (axisId === 0 || axisId === 1) {
+      // return axisId;
+    // } else if (axisId < 0) {
+      // return this.axisIdx(axisId + 2);
+    // } else if (axisId.constructor.name === 'String') {
+      // const fst = axisId.slice(0, 1);
+      // if (fst.toLocaleLowerCase() !== fst) {
+        // return this.axisId(fst.toLocaleLowerCase());
+      // } else if (axisId.startsWith('col')) {
+        // return 0;
+      // } else if (axisId.startsWith('row')) {
+        // return 1;
+      // }
+    // }
+    // throw new Error(`unrecognised axis ${axisId}`);
+  // }
+
+  /**
+   * @param {"f32"|"f64"|"i8"|"16"|"i32"|"u8"|"u16"|"u32"|"s"|null} [dtype]
+   * @param {?Array<!Number|!String>} [colNames]
+   */
+  transpose(dtype = null, colNames = null) {
+    if (dtype === null) {
+      const dt = this.dtypes.reduce((dt1, dt2) => unify(dt1, dt2));
+      log.info(`inferred dtype = ${dt}`);
+      return this.transpose(dt, colNames);
+    }
+    const cols = Array(this.length).fill(0).map(_ => Series.empty(this.nCols, dtype));
+    for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
+      for (let rIdx = 0; rIdx < this.length; rIdx++) {
+        cols[rIdx][cIdx] = this._cols[cIdx][rIdx];
+      }
+    }
+    debugger;
+    return new DataFrame(cols, 'cols', colNames);
+  }
+
+  /**
    * @returns {!DataFrame} a correlation matrix
    */
   corr(withNames = true) {
@@ -292,7 +379,7 @@ module.exports = class DataFrame {
     const colIdxs = [];
     const rows = [];
     for (let yIdx = 0; yIdx < this.nCols; yIdx++) {
-      if (numCols.has(yIdx))  {
+      if (numCols.has(yIdx)) {
         colIdxs.push(yIdx);
         rows.push([]);
         for (let xIdx = 0; xIdx < this.nCols; xIdx++) {
@@ -312,20 +399,22 @@ module.exports = class DataFrame {
     // numeric col names in the order of appearing in the matrix
     const colNames = this.colNames.filter((_, cIdx) => colIdxs.indexOf(cIdx) >= 0);
 
-    // prepend a col with colum names to the left
-    //    A1 A2 A3
-    // A1   
-    // A2
-    // A3
+    /*
+     * prepend a col with colum names to the left
+     *    A1 A2 A3
+     * A1
+     * A2
+     * A3
+     */
     if (withNames) {
       for (let rIdx = 0; rIdx < rows.length; rIdx++) {
-        const colName = this.colNames[colIdxs[rIdx]]
+        const colName = this.colNames[colIdxs[rIdx]];
         const row = rows[rIdx];
         rows[rIdx] = [colName].concat(row);
       }
       return new DataFrame(rows, 'rows', ['column'].concat(colNames));
-    } 
-    // else 
+    }
+    // else
     return new DataFrame(rows, 'rows', colNames);
   }
 
@@ -347,7 +436,7 @@ module.exports = class DataFrame {
       bestCols = this._cols.map((col, idx) => ({ idx, name: this.colNames[idx], score: col[agg]() }));
     }
 
-    bestCols = bestCols.sort((o1, o2) => o1.score > o2.score ? -1 : o1.score < o2.score ? 1 : 0).slice(0, n);
+    bestCols = bestCols.sort((o1, o2) => (o1.score > o2.score ? -1 : o1.score < o2.score ? 1 : 0)).slice(0, n);
 
     if (bestCols.some(({ name }) => !name.toString().match(/\d+/))) {
       const colNames = [];
@@ -367,9 +456,8 @@ module.exports = class DataFrame {
    */
   get numeric() {
     return this.select(...this._numColIdxs);
-
   }
-  
+
   /**
    * @returns {!DataFrame} a data frame with numeric cols
    */
@@ -418,7 +506,7 @@ module.exports = class DataFrame {
         cols[c] = cols[c].concat(other._cols[c]);
       }
       return new DataFrame(cols, 'cols', colNames);
-    } 
+    }
 
     // else if concat HORIZONTALLY {
     const isDigit = /^\d+$/; // check if has proper column names or just indexes
@@ -433,8 +521,10 @@ module.exports = class DataFrame {
 
     let renamed;
 
-    // deal with duplicate col names (add a num to the -- e.g.: Age, Salary, Age2 ...)
-    // make sure that name clash didn't arise as a result of previous renaming {
+    /*
+     * deal with duplicate col names (add a num to the -- e.g.: Age, Salary, Age2 ...)
+     * make sure that name clash didn't arise as a result of previous renaming {
+     */
     do {
       renamed = false; // clear
       for (let cIdx = 0; cIdx < colNames.length; cIdx++) {
@@ -449,7 +539,7 @@ module.exports = class DataFrame {
           }
         }
       }
-    } while (renamed); 
+    } while (renamed);
 
     const cols = this._cols.concat(other._cols);
     return new DataFrame(cols, 'cols', colNames);
@@ -564,7 +654,7 @@ module.exports = class DataFrame {
    * @private
    */
   get _numColIdxs() {
-    const dtypes = this.dtypes;
+    const { dtypes } = this;
     const colIdxs = new Set();
     for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
       if (dtypes[cIdx] !== 's' && dtypes[cIdx] !== 'null') {
@@ -590,7 +680,7 @@ module.exports = class DataFrame {
    * @param args
    * @returns {!DataFrame} data frame with f applied to colId
    */
-  call(colId = null, f, filter = 'all',...args) {
+  call(colId = null, f, filter = 'all', ...args) {
     if (colId === null) {
       log.info('colId not specified');
       if (this.nCols === 1) {
@@ -606,7 +696,7 @@ module.exports = class DataFrame {
     } else if (filter === 'all') {
       return this.call(colId, f, cIdx => true, ...args);
     }
-    const dtypes = this.dtypes;
+    const { dtypes } = this;
     const cols = Array.from(this._cols);
     const colIdxs = (colId === null ? this.colNames : [colId]).map(id => this.colIdx(id));
     if (f.constructor.name === 'String') {
@@ -701,14 +791,14 @@ module.exports = class DataFrame {
       } else {
         throw new Error('you need to select a column (e.g. df.sort(0))');
       }
-    } 
+    }
     const cIdx = this.colIdx(colId);
     if (ord.constructor.name === 'Function') {
       return new DataFrame(Array.from(this.rowsIter).sort(ord), 'rows', Array.from(this.colNames));
     } else if (ord === 'asc') {
-      return this.sort(cIdx, (r1, r2) => r1[cIdx] > r2[cIdx] ? 1 : r1[cIdx] < r2[cIdx] ? -1 : 0);
+      return this.sort(cIdx, (r1, r2) => (r1[cIdx] > r2[cIdx] ? 1 : r1[cIdx] < r2[cIdx] ? -1 : 0));
     } else {
-      return this.sort(cIdx, (r1, r2) => r1[cIdx] > r2[cIdx] ? -1 : r1[cIdx] < r2[cIdx] ? 1 : 0);
+      return this.sort(cIdx, (r1, r2) => (r1[cIdx] > r2[cIdx] ? -1 : r1[cIdx] < r2[cIdx] ? 1 : 0));
     }
   }
 
@@ -725,18 +815,18 @@ module.exports = class DataFrame {
 
     const cols = Array.from(this._cols);
     const numCols = this._numColIdxs;
-    
+
     // indexes of *NUMERIC* columns
     const numColIdxs = new Set(colIds.map(id => this.colIdx(id)).filter(cIdx => numCols.has(cIdx)));
 
     // store {Q1, Q3, idx} for every *NUMERIC* column
     const IQRs = this.colNames
-       // get column indexes
-      .map((_, idx) => idx) 
-       // and now get all NUMERIC columns while leaving gaps to preserve indexing
-      .map(idx => numColIdxs.has(idx) ? this._cols[idx] : null) 
-       // and now computer IQ1 and IQ3 for all NUMERIC columns while leaving gaps to preserve indexing
-      .map(maybeCol => maybeCol === null ? null : ({Q1: maybeCol.Q1(), Q3: maybeCol.Q3()}));
+    // get column indexes
+      .map((_, idx) => idx)
+    // and now get all NUMERIC columns while leaving gaps to preserve indexing
+      .map(idx => (numColIdxs.has(idx) ? this._cols[idx] : null))
+    // and now computer IQ1 and IQ3 for all NUMERIC columns while leaving gaps to preserve indexing
+      .map(maybeCol => (maybeCol === null ? null : ({ Q1: maybeCol.Q1(), Q3: maybeCol.Q3() })));
 
     // store results of testing for all rows
     const tests = Array(this.length).fill(true);
@@ -781,7 +871,7 @@ module.exports = class DataFrame {
 
   /**
    * @param {!Function} f
-   * @param {?String|?Number} [colId] 
+   * @param {?String|?Number} [colId]
    * @returns {!DataFrame} data frame
    */
   filter(f = (_row, _idx) => true, colId = null) {
@@ -791,7 +881,7 @@ module.exports = class DataFrame {
         if (f(r)) rows.push(r);
       }
       return new DataFrame(rows, 'rows', Array.from(this.colNames));
-    } 
+    }
     // else focus on one column
     const col = this.col(colId);
     const tests = Array(col.length).fill(false);
@@ -863,7 +953,7 @@ module.exports = class DataFrame {
     const cols = Array.from(this._cols);
 
     for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
-      cols[cIdx] = cols[cIdx].filter((_, idx) => tests[idx])
+      cols[cIdx] = cols[cIdx].filter((_, idx) => tests[idx]);
     }
 
     return new DataFrame(cols, 'cols', Array.from(this.colNames));
@@ -894,7 +984,7 @@ module.exports = class DataFrame {
       } else {
         throw new Error('you need to select a column (e.g. `df.counts(0)`)');
       }
-    } 
+    }
     const cIdx = this.colIdx(colId);
     return new DataFrame(
       Array.from(this._cols[cIdx].counts().entries()),
@@ -952,7 +1042,6 @@ module.exports = class DataFrame {
     for (let c = 0; c < this.nCols; c++) {
       info.column.push(this.colNames[c]);
       info.dtype.push(this.dtypes[c]);
-      debugger;
 
       if (numCols.has(c)) {
         const col = this._cols[c];
@@ -962,7 +1051,9 @@ module.exports = class DataFrame {
         info.mean[c] = col.mean();
         info.stdev[c] = col.stdev();
       } else {
-        for (const k of ['min', 'max', 'range', 'mean', 'stdev']) {
+        for (const k of [
+          'min', 'max', 'range', 'mean', 'stdev',
+        ]) {
           info[k][c] = NaN;
         }
       }
@@ -1037,17 +1128,19 @@ module.exports = class DataFrame {
   }
 
   /**
-   * @param {"headLen"|"precison"} k
+   * @param {"len"|"print"|"float"} k
    * @param {!Number} v
    */
   static set(k, v) {
     if (k.toLocaleLowerCase() !== k) {
       return DF.set(k.toLocaleLowerCase(), v);
     }
-    if (k.startsWith('precision')) {
-      PRECISION = v;
-    } else if (k.startsWith('headlen')) {
+    if (k.match('print')) {
+      PRINT_PRECISION = v;
+    } else if (k.match('len')) {
       HEAD_LEN = v;
+    } else if (k.match('float')) {
+      FLOAT_PRECISION = v;
     } else {
       throw new Error(`unrecognised option "${k}"`);
     }
@@ -1136,12 +1229,12 @@ module.exports = class DataFrame {
 
   toHTML(indent = 2) {
     return `
-<table>
-${' '.repeat(indent)}<tr>
-${' '.repeat(indent * 2)}${this.colNames.map(name => '<th>' + name.toString() + '</th>').join('\n' + ' '.repeat(indent * 2))}
-${' '.repeat(indent)}</tr>
-${' '.repeat(indent * 2)}${Array.from(this.rowsIter).map(r => '<tr>\n' + ' '.repeat(indent * 2) + r.map(x => "<td>" + x.toString() + "</td>").join('\n' + ' '.repeat(indent * 2)) + '\n' + ' '.repeat(indent) + '</tr>').join('\n' + ' '.repeat(indent))}
-</table>`
+      <table>
+      ${' '.repeat(indent)}<tr>
+      ${' '.repeat(indent * 2)}${this.colNames.map(name => `<th>${name.toString()}</th>`).join(`\n${' '.repeat(indent * 2)}`)}
+    ${' '.repeat(indent)}</tr>
+      ${' '.repeat(indent * 2)}${Array.from(this.rowsIter).map(r => `<tr>\n${' '.repeat(indent * 2)}${r.map(x => `<td>${x.toString()}</td>`).join(`\n${' '.repeat(indent * 2)}`)}\n${' '.repeat(indent)}</tr>`).join(`\n${' '.repeat(indent)}`)}
+      </table>`;
   }
 
   toCSV(header = false) {
@@ -1163,7 +1256,7 @@ ${' '.repeat(indent * 2)}${Array.from(this.rowsIter).map(r => '<tr>\n' + ' '.rep
       return 'Empty DataFrame';
     }
     const header = this.colNames;
-    const rows = []
+    const rows = [];
     const nRows = Math.min(this.length, n);
 
     const numCols = this._numColIdxs;
@@ -1179,8 +1272,8 @@ ${' '.repeat(indent * 2)}${Array.from(this.rowsIter).map(r => '<tr>\n' + ' '.rep
         const maybePointIdx = s.indexOf('.');
         const hasRadixPoint = isNum && maybePointIdx >= 0;
         if (hasRadixPoint) {
-          row[cIdx] = s.slice(0, maybePointIdx + PRECISION + 1);
-          if ((s.length - PRECISION) === maybePointIdx) {
+          row[cIdx] = s.slice(0, maybePointIdx + PRINT_PRECISION + 1);
+          if ((s.length - PRINT_PRECISION) === maybePointIdx) {
             row[cIdx] += '0';
           }
         } else if (!Object.is(val, NaN) && isNum && this.dtypes[cIdx].startsWith('f')) {
@@ -1192,11 +1285,11 @@ ${' '.repeat(indent * 2)}${Array.from(this.rowsIter).map(r => '<tr>\n' + ' '.rep
 
     const lens = Array(this.nCols)
       .fill(0)
-      .map((_, idx) => 
-        Math.max(
-          header[idx].toString().length, 
-          rows.map(r => r[idx].toString().length)
-          .reduce((x, y) => Math.max(x, y), 1)));
+      .map((_, idx) => Math.max(
+        header[idx].toString().length,
+        rows.map(r => r[idx].toString().length)
+          .reduce((x, y) => Math.max(x, y), 1),
+      ));
 
     parts.push(header.map((h, cIdx) => h.toString().padStart(lens[cIdx], ' ')).join(' '));
 
@@ -1208,10 +1301,9 @@ ${' '.repeat(indent * 2)}${Array.from(this.rowsIter).map(r => '<tr>\n' + ' '.rep
 
     if (this.length > n) {
       parts.push(` ... ${this.length - n} more`);
-      parts[parts.length - 2] += '\n' + lens.map(l => '-'.repeat(l)).join(' ')
+      parts[parts.length - 2] += `\n${lens.map(l => '-'.repeat(l)).join(' ')}`;
     }
 
     return parts.join('\n');
   }
 };
-
