@@ -1020,7 +1020,7 @@ module.exports = class DataFrame {
    * @returns {!DataFrame} data frame
    */
   static fromCSV(filePath, hasHeader = true, colNames = null) {
-    if (!filePath.match(/\.csv/i)) {
+    if (!filePath.endsWith('.csv')) {
       log.warn('not a *.csv file');
     }
     const rows = readCSV(filePath, false); // assume for now it doesn't
