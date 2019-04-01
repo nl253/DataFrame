@@ -10,7 +10,7 @@ const log = createLogger({
   format: format.combine(
     format.splat(),
     format.printf(
-      ({ level, message }) => `[${level.toUpperCase()}]: ${message}`,
+      ({ level, message }) => `[${level.toLocaleUpperCase()}] ${message}`,
     ),
   ),
   transports: [new transports.File({ filename: 'error.log', level: 'error' }), new transports.File({ filename: 'log.log' })],

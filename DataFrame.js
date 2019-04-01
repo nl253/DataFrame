@@ -1,3 +1,4 @@
+// vim:hlsearch:nu:
 /**
  * TODO mode is broken
  */
@@ -297,12 +298,12 @@ module.exports = class DataFrame {
         for (let xIdx = 0; xIdx < this.nCols; xIdx++) {
           // every col is perfectrly correlated with itself (save some computation time)
           if (xIdx === yIdx) {
-            rows[yIdx].push(1);
+            rows[rows.length - 1].push(1);
           } else if (numCols.has(xIdx)) {
             const col = this._cols[yIdx];
             const other = this._cols[xIdx];
             const corr = col.corr(other);
-            rows[yIdx].push(corr);
+            rows[rows.length - 1].push(corr);
           }
         }
       }
@@ -649,7 +650,7 @@ module.exports = class DataFrame {
     for (let i = 1; i < slices.length; i += 2) {
       const lBound = this.colIdx(slices[i - 1]);
       const rBound = this.colIdx(slices[i]);
-      for (let cIdx = lBound; cIdx < rBound; cIdx++) {
+      for (let cIdx = lBound; cIdx <= rBound; cIdx++) {
         colIds.add(cIdx);
       }
     }
@@ -709,6 +710,57 @@ module.exports = class DataFrame {
     } else {
       return this.sort(cIdx, (r1, r2) => r1[cIdx] > r2[cIdx] ? -1 : r1[cIdx] < r2[cIdx] ? 1 : 0);
     }
+  }
+
+  /**
+   * @param {...<!String|!Number>} colIds
+   * @returns {!DataFrame} data frame
+   */
+  dropOutliers(...colIds) {
+    // by default compute for all (numeric) columns
+    if (colIds.length === 0) {
+      log.info('running dropOutliers for all cols');
+      return this.dropOutliers(...this.colNames);
+    }
+
+    const cols = Array.from(this._cols);
+    const numCols = this._numColIdxs;
+    
+    // indexes of *NUMERIC* columns
+    const numColIdxs = new Set(colIds.map(id => this.colIdx(id)).filter(cIdx => numCols.has(cIdx)));
+
+    // store {Q1, Q3, idx} for every *NUMERIC* column
+    const IQRs = this.colNames
+       // get column indexes
+      .map((_, idx) => idx) 
+       // and now get all NUMERIC columns while leaving gaps to preserve indexing
+      .map(idx => numColIdxs.has(idx) ? this._cols[idx] : null) 
+       // and now computer IQ1 and IQ3 for all NUMERIC columns while leaving gaps to preserve indexing
+      .map(maybeCol => maybeCol === null ? null : ({Q1: maybeCol.Q1(), Q3: maybeCol.Q3()}));
+
+    // store results of testing for all rows
+    const tests = Array(this.length).fill(true);
+
+    // see if this row is an outlier by looking at each numeric column
+    for (let rIdx = 0; rIdx < this.length; rIdx++) {
+      for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
+        if (!numColIdxs.has(cIdx)) continue;
+        const col = cols[cIdx];
+        const val = col[rIdx];
+        // if value is in Q1 .. Q3 then accept
+        if (val < IQRs[cIdx].Q1 || val > IQRs[cIdx].Q3) {
+          tests[rIdx] = false;
+          break;
+        }
+      }
+    }
+
+    for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
+      // filter every col according to pre-computed boolean vals above
+      cols[cIdx] = cols[cIdx].filter((_, rIdx) => tests[rIdx]);
+    }
+
+    return new DataFrame(cols, 'cols', Array.from(this.colNames));
   }
 
   /**
@@ -1162,3 +1214,4 @@ ${' '.repeat(indent * 2)}${Array.from(this.rowsIter).map(r => '<tr>\n' + ' '.rep
     return parts.join('\n');
   }
 };
+
