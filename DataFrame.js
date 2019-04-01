@@ -275,39 +275,45 @@ module.exports = class DataFrame {
    * @returns {!DataFrame} a correlation matrix
    */
   corr(withNames = true) {
-    const colNames = Array.from(this.colNames);
     const numCols = this._numColIdxs;
+    const colIdxs = [];
     const rows = [];
     for (let yIdx = 0; yIdx < this.nCols; yIdx++) {
-      rows.push([]);
       if (numCols.has(yIdx))  {
+        colIdxs.push(yIdx);
+        rows.push([]);
         for (let xIdx = 0; xIdx < this.nCols; xIdx++) {
-          if (numCols.has(xIdx)) {
+          // every col is perfectrly correlated with itself (save some computation time)
+          if (xIdx === yIdx) {
+            rows[yIdx].push(1);
+          } else if (numCols.has(xIdx)) {
             const col = this._cols[yIdx];
             const other = this._cols[xIdx];
             const corr = col.corr(other);
             rows[yIdx].push(corr);
-          } else {
-            rows[yIdx].push(NaN);
           }
-        }
-      } else {
-        for (let xIdx = 0; xIdx < this.nCols; xIdx++) {
-          rows[yIdx].push(NaN);
         }
       }
     }
 
+    // numeric col names in the order of appearing in the matrix
+    const colNames = this.colNames.filter((_, cIdx) => colIdxs.indexOf(cIdx) >= 0);
+
+    // prepend a col with colum names to the left
+    //    A1 A2 A3
+    // A1   
+    // A2
+    // A3
     if (withNames) {
       for (let rIdx = 0; rIdx < rows.length; rIdx++) {
-        const colName = this.colNames[rIdx]
+        const colName = this.colNames[colIdxs[rIdx]]
         const row = rows[rIdx];
         rows[rIdx] = [colName].concat(row);
       }
       return new DataFrame(rows, 'rows', ['column'].concat(colNames));
-    } else {
-      return new DataFrame(rows, 'rows', colNames);
-    }
+    } 
+    // else 
+    return new DataFrame(rows, 'rows', colNames);
   }
 
   /**
