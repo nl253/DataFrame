@@ -264,6 +264,20 @@ row
   'Iris-setosa' ]
 ```
 
+#### Iterating Over Values in a Single Row
+
+```javascript
+const irow = iris.irow(10);
+
+Array.from(irow)
+
+[ 5.400000095367432,
+  3.700000047683716,
+  1.5,
+  0.20000000298023224,
+  'Iris-setosa' ]
+```
+
 #### Iterating Over Many Rows
 
 If you want to iterate over all the rows (this isn't very efficient) try:
@@ -296,6 +310,60 @@ for (const r of rowIt) {
 ```
 
 ### Manipulation
+
+#### In-Place Modification of Columns
+
+Just assign:
+
+```javascript
+// 2nd col
+iris[1] = iris[1].map(s => s >= 5 ? 0 : 1)
+
+// equivalent to:
+iris.SepalLengthCm = iris.SepalLengthCm.map(s => s >= 5 ? 0 : 1)
+```
+
+**NOTE** this might have to be `dataset[' Col With Spaces'] = newCol`.
+
+#### Mapping Columns 
+
+Apply function to each element is selected column:
+
+```javascript
+iris.map(-1, label => {
+  // there is an easier way to do this (see `labelEncode()`)
+  if (label === 'Iris-versi') {
+    return 0;
+  } else if (label === 'Iris-virgi') {
+    return 1;
+  } else {
+    return 2;
+  }
+});
+```
+
+**NOTE** use `iris.map(null, f)` to apply to all columns.
+
+#### Mapping Shortcuts
+
+`null` means it will be applied to all.
+
+- `.trunc(colId | null)`
+- `.floor(colId | null)`
+- `.ceil(colId | null)`
+- `.round(colId | null)`
+- `.abs(colId | null)`
+- `.sqrt(colId | null)`
+- `.cbrt(colId | null)`
+- `.square(colId | null)`
+- `.cube(colId | null)`
+- `.add(colId | null, n)`
+- `.sub(colId | null, n)`
+- `.mul(colId | null, n)`
+- `.div(colId | null, n)`
+
+It's smart enough to know not to `.abs()`, for example. String cols will be
+ignored if this is not a compatible operation.
 
 #### Rename Columns
 
@@ -386,7 +454,7 @@ iris.numeric.transpose().sum()
 
 ### Statistics & Math
 
-Aggregate operations, each is `DataFrame -> DataFrame`:
+#### Aggregate operations, each is `DataFrame -> DataFrame`:
 
 **MATH**
 
@@ -429,14 +497,14 @@ iris.IQR()
             NaN     20B
 ```
 
-#### Sample (get a random subset of rows)
+##### Sample (get a random subset of rows)
 
 Signature: `iris.sample(0.15)` for random 15% of the dataset. <br>
 Signature: `iris.sample(30)` for random 30 sample of the dataset. <br>
 Signature: `iris.sample(0.5, true)` (with replacement -- default) <br>
 Signature: `iris.sample(100, false)` (**without** replacement)
 
-#### Summary
+##### Summary
 
 ```javascript
 iris.summary() // this will produce a summary data frame with info for every column
@@ -502,6 +570,22 @@ iris.removeAll(NaN) // from all cols
 // from 1th and 3rd cols and from col 'PetalLengthCm'
 iris.removeAll(NaN, 0, 2, 'PetalLengthCm') 
 ```
+
+#### Discretized (Bin)
+
+```javascript
+iris.kBins('SepalLengthCm', 5); // 5 bins for this column
+
+iris.kBins(null, 3); // 3 bins for all columns
+
+iris.kBins(2, 3).col(2).print(10) // 3rd (2 idx) col, 3 bins
+```
+
+```
+Series u8[2, 1, 2, 1, 2, 2, 2, 2, 1, 1, ... 40 more]
+```
+
+**NOTE** this is smart enough only to target numeric attributes so string columns will be ignored (no need to run `.numeric`).
 
 #### Feature (Column) Selection
 

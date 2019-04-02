@@ -23,9 +23,9 @@ let HEAD_LEN = 5;
 let PRINT_WIDTH = 10;
 
 /**
- * @param {"f32"|"f64"|"i8"|"16"|"i32"|"u8"|"u16"|"u32"} dt1
- * @param {"f32"|"f64"|"i8"|"16"|"i32"|"u8"|"u16"|"u32"} dt2
- * @returns {"f32"|"f64"|"i8"|"16"|"i32"|"u8"|"u16"|"u32"} dtype
+ * @param {"f32"|"f64"|"i8"|"16"|"i32"|"u8"|"u16"|"u32"|"s"} dt1
+ * @param {"f32"|"f64"|"i8"|"16"|"i32"|"u8"|"u16"|"u32"|"s"} dt2
+ * @returns {"f32"|"f64"|"i8"|"16"|"i32"|"u8"|"u16"|"u32"|"s"} dtype
  * @private
  */
 function unify(dt1, dt2) {
@@ -50,15 +50,21 @@ function unify(dt1, dt2) {
 }
 
 /**
- * @param {!Array<Array<*>>|!Array<*>} xs
- * @returns {!Array<Array<*>>|!Array<*>} transpose
+ * @param {!Array<Array<*>>} xs
+ * @returns {!Array<Array<*>>} xs^T
  * @private
  */
 function transpose(xs) {
+  // from [1, 2 , 3] to:
+  //
+  // [[1],
+  //  [2],
+  //  [3]]
+  //
   if (xs[0].constructor.name !== 'Array') {
     return xs.map(x => [x]);
   }
-  const colCount = xs[0].length;
+  const colCount = xs[0].length; // assume equi-sized
   const rowCount = xs.length;
   const m = Array(colCount).fill(0).map(_ => Array(rowCount).fill(0));
   for (let i = 0; i < xs.length; i++) {
@@ -72,12 +78,11 @@ function transpose(xs) {
 class DataFrame {
   /**
    * @param {!DataFrame|!Object<!Array<!String>|!Array<!Number>>|!Array<!Array<!Number|!String>>|!Array<!TypedArray|!Array<!Number>|!Array<!String>>|!Map<!Array<!Number>|!Array<!String>>} data
-   * @param {'cols'|'rows'|'col'|'row'|'map'|'obj'} [what]
-   * @param {?Array<!String>} [colNames]
+   * @param {'cols'|'rows'|'map'|'obj'} [what]
+   * @param {?Array<!String>} [colNames] labels for every column (#cols === #labels)
    */
   constructor(data = [], what = 'rows', colNames = null) {
-    what = what.toLocaleLowerCase()
-    // empty
+      // empty
     if (data.length === 0) {
       this._cols = [];
       this.colNames = [];
@@ -86,16 +91,16 @@ class DataFrame {
       this._cols = Array.from(data._cols);
       this.colNames = Array.from(data.colNames);
       // object { colName => col, ... }
-    } else if (data.constructor.name === 'Object' || what.startsWith('obj')) {
+    } else if (data.constructor.name === 'Object' || what.match(/^obj/i)) {
       this._cols = Object.values(data).map(c => Series.from(c));
       this.colNames = Object.keys(data);
       // map { colName => col, ... }
-    } else if (data.constructor.name === 'Map' || what.startsWith('map')) {
+    } else if (data.constructor.name === 'Map' || what.match(/^map/i)) {
       this._cols = Array.from(data.values()).map(c => Series.from(c));
       this.colNames = Array.from(data.keys());
     } else {
       // array of rows
-      if (what.startsWith('row')) {
+      if (what.match(/^row/i)) {
         this._cols = transpose(data).map(c => Series.from(c));
       // array of cols
       } else {
