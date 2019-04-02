@@ -1310,12 +1310,24 @@ class DataFrame {
       return 'Empty DataFrame';
     }
 
+    let width = PRINT_WIDTH;
+
+    if (this.nCols <= 1) {
+      width += 15;
+    } else if (this.nCols <= 2) {
+      width += 10;
+    } else if (this.nCols <= 3) {
+      width += 7;
+    } else if (this.nCols <= 3) {
+      width += 3;
+    }
+
     const rows = [];
 
     // print index column
     rows.push(['#'].concat(this.colNames
       // trunc column headings
-      .map(h => h.length > PRINT_WIDTH - 3 ? h.slice(0, PRINT_WIDTH - 3) + '...' : h)
+      .map(h => h.length > width - 3 ? h.slice(0, width - 3) + '...' : h)
       // pad to reserve space for dtypes (injected later)
       .map((h, cIdx) => ' '.repeat(this.dtypes[cIdx].length + 1) + h.toString())));
 
@@ -1328,10 +1340,10 @@ class DataFrame {
         const s = val.toString();
         const isNum = numCols.has(cIdx);
         const isStr = !isNum && val.constructor.name === 'String';
-        const isTooLong = isStr && s.length > PRINT_WIDTH;
+        const isTooLong = isStr && s.length > width;
 
         if (isTooLong) {
-          row[cIdx] = `${s.slice(0, PRINT_WIDTH)}...`;
+          row[cIdx] = `${s.slice(0, width)}...`;
           continue;
         } 
 

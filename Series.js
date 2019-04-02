@@ -23,8 +23,10 @@ function enhance(a) {
 
   // printing
 
-  a.toString = function (len = HEAD_LEN) {
-    if (len > this.length) {
+  a.toString = function (len = null) {
+    if (len === null) {
+      return this.toString(HEAD_LEN);
+    } else if (len > this.length) {
       log.warn(`len = ${len}, but there is ${this.length} items`);
     }
     const parts = [`Series ${this.dtype === undefined ? '' : this.dtype}[`];
@@ -32,6 +34,7 @@ function enhance(a) {
     for (let i = 0; i < n; i++) {
       const val = this[i];
       const s = val.toString();
+      // TODO use fmtFloat
       const isStr = val.constructor.name === 'String';
       const isNum = !isStr && val.constructor.name === 'Number';
       const isFloat = isNum && s.match(/\./);
@@ -48,12 +51,15 @@ function enhance(a) {
     return `${parts[0] + parts.slice(1).join(', ')}]`;
   };
 
-  a.print = function (n = HEAD_LEN) {
+  a.print = function (n = null) {
+    if (n === null) {
+      return this.print(HEAD_LEN);
+    }
     return console.log(this.toString(n));
   };
 
-  a[util.inspect.custom] = function (depth = HEAD_LEN, options) {
-    return this.toString(depth);
+  a[util.inspect.custom] = function (depth, options) {
+    return this.toString(HEAD_LEN);
   };
 
   // cumulative operations
