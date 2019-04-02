@@ -1067,7 +1067,7 @@ Id,SepalLengthCm,SepalWidthCm,PetalLengthCm,PetalWidthCm,Species
   </tr>
   <tr>
     <td>`headlen`</td>
-    <td>5<td>
+    <td>5</td>
     <td>7, 10, 20</td>
     <td>by default print this number of rows when running `.head()`, `.tail()` etc.</td>
   </tr>
