@@ -70,7 +70,8 @@
   },
   "scripts": {
     "doc": "jsdoc -d ./docs -R ./README.md -r ./DataFrame.js Series.js rand.js utils.js",
+    "loc": "tokei -- $(git ls-files | grep -E '\\.js$' | grep -v docs | grep -v bin)",
     "test": "jest"
   },
-  "version": "0.0.9-alpha"
+  "version": "0.0.10-alpha"
 }

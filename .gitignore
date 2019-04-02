@@ -1,5 +1,4 @@
 # JetBrains template
-.idea
 .idea_modules/
 out/
 
@@ -172,9 +171,6 @@ instance/
 # Scrapy stuff:
 .scrapy
 
-# Sphinx documentation
-docs/_build/
-
 # PyBuilder
 target/
 
@@ -272,4 +268,8 @@ flycheck_*.el
 .dir-locals.el
 bower_components/
 
-./bin
+bin
+datasets/sentiment*
+datasets/mall
+datasets/superHeroInfo
+datasets/lifting

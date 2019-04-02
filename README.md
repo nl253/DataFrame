@@ -103,7 +103,7 @@ iris.slice(10, 20).print() // can be .slice(5) for .slice(5, end)
 
 #### Getting a Column (Series)
 
-We know that there are 6 columns (try running `iris.nCols`).  To get all column names run: 
+We know that there are 6 columns (try running `iris.nCols`).  To get all column names run:
 
 ```javascript
 iris.colNames
@@ -130,7 +130,7 @@ Series s[Iris-setosa, Iris-setosa, Iris-setosa, Iris-setosa, Iris-setosa, ... 14
 
 Here `s` stands for STRING. You may also see:  `f64`, `f32`, `i32`, `i16`, `i8`, `u32`, `u16` and `u8`.
 
-**NOTE** some column names will have spaces or/and will clash with the API and you will have to use `iris.col(2)` OR `iris.col('SepalWidthCm')`. 
+**NOTE** some column names will have spaces or/and will clash with the API and you will have to use `iris.col(2)` OR `iris.col('SepalWidthCm')`.
 **Columns can always be referred to by their index OR name**.
 
 #### Selecting columns (Data Frame)
