@@ -187,9 +187,7 @@ class DataFrame {
      * each forward function is forwarded to the underlying series
      * ForwardFunct :: Series (len = n) => Series (len = n)
      */
-    for (const f of [
-      'head', 'tail', 'map', 'reverse', 'zipWith', 'zipWith3',
-    ]) {
+    for (const f of ['map', 'reverse', 'zipWith', 'zipWith3']) {
       if (this[f] !== undefined) continue;
       this[f] = function (colId = null, ...args) {
         return this.call(colId, f, 'all', ...args);
@@ -239,6 +237,28 @@ class DataFrame {
         };
       }
     }
+  }
+
+  /**
+   * @param {?Number} [n]
+   * @returns {!DataFrame} data frame
+   */
+  head(n = null) {
+    if (n === null) {
+      return this.tail(HEAD_LEN);
+    }
+    return this.slice(0, n);
+  }
+
+  /**
+   * @param {?Number} [n]
+   * @returns {!DataFrame} data frame
+   */
+  tail(n = null) {
+    if (n === null) {
+      return this.tail(HEAD_LEN);
+    }
+    return this.slice(this.length - n, this.length);
   }
 
   /**
@@ -638,20 +658,13 @@ class DataFrame {
    * @returns {!DataFrame} data frame
    */
   dtype(...colIds) {
+    if (colIds.length === 0) {
+      return this.dtype(...this.colNames);
+    }
     const colIdxs = colIds.map(id => this.colIdx(id));
-    const df = this.agg(col => col.dtype, cIdx => colIdxs.indexOf(cIdx) < 0).rename(1, 'dtype');
+    const df = this.agg(col => col.dtype, cIdx => colIdxs.indexOf(cIdx) >= 0).rename(1, 'dtype');
+    return df;
   }
-
-  /**
-   * @param {!Array<!String>} newDtypes
-   */
-  // set dtypes(newDtypes) {
-    // let cIdx = 0; 
-    // for (const dt of newDtypes) {
-      // this._cols[cIdx] = this._cols[cIdx].cast(dt);
-      // cIdx++;
-    // }
-  // }
 
   /**
    * @returns {!Array<!String>} data types for all columns
@@ -787,6 +800,9 @@ class DataFrame {
        * e.g. slice(0)         -> slice(0, end)
        * e.g. slice(0, 10, 20) -> slice(0, 10, 20, end)
        */
+    } else if (idxs.some(idx => idx < 0)) {
+      // resolve negative indexes
+      return this.slice(...(idxs.map(idx => idx < 0 ? idx + this.length : idx)));
     }
 
     const cols = Array(this.nCols).fill(0);
