@@ -570,7 +570,8 @@ class DataFrame {
    * @returns {!DataFrame} data frame
    */
   sample(n = 0.1, wr = true) {
-    if (n <= 1) {
+    // TODO optimize DF.sample(n, wr)
+    if (n < 1) {
       return this.sample(Math.floor(n * this.length));
     } else if (n >= this.length) {
       log.warn('sample size >= nRows');
@@ -1251,6 +1252,10 @@ class DataFrame {
     return readdirSync(DataFrame.dataSetsPath).filter(node => !node.match(/\.w+$/));
   }
 
+  /**
+   * @param cols columns
+   * @returns {!DataFrame}
+   */
   static of(...cols) {
     return new DataFrame(cols, 'cols');
   }
@@ -1259,6 +1264,9 @@ class DataFrame {
     return this.toString();
   }
 
+  /**
+   * @returns {!String}
+   */
   toHTML(indent = 2) {
     return `
       <table>
@@ -1269,15 +1277,14 @@ class DataFrame {
       </table>`;
   }
 
-  toCSV(header = false) {
-    const rows = [];
-    if (header) {
-      rows.push(this.colNames.join(','));
-    }
-    for (const r of this.rowsIter) {
-      rows.push(r.map(x => x.toString()).join(','));
-    }
-    return rows.join('\n');
+  /**
+   * @returns {!String}
+   */
+  toCSV() {
+    const stringify = require('csv-stringify/lib/sync');
+    const arr = Array.from(this.rowsIter);
+    arr.unshift(this.colNames);
+    return stringify(arr);
   }
 
   /**

@@ -362,8 +362,8 @@ iris.map(-1, label => {
 - `.mul(colId | null, n)`
 - `.div(colId | null, n)`
 
-It's smart enough to know not to `.abs()`, for example. String cols will be
-ignored if this is not a compatible operation.
+It's smart enough to know not to apply them to string columns if they don't
+make sense (e.g. `.abs()`). String columns are ignored.
 
 #### Rename Columns
 
@@ -499,10 +499,30 @@ iris.IQR()
 
 ##### Sample (get a random subset of rows)
 
-Signature: `iris.sample(0.15)` for random 15% of the dataset. <br>
-Signature: `iris.sample(30)` for random 30 sample of the dataset. <br>
-Signature: `iris.sample(0.5, true)` (with replacement -- default) <br>
-Signature: `iris.sample(100, false)` (**without** replacement)
+Signatures:
+
+<table>
+  <tr>
+    <th>Signature</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td>`.sample(0.15)`</td>
+    <td>for random 15% of the dataset</td>
+  </tr>
+  <tr>
+    <td>`iris.sample(30)`</td>
+    <td>for random 30 sample of the dataset</td>
+  </tr>
+  <tr>
+    <td>`iris.sample(0.5, true)`</td>
+    <td>with replacement (default)</td>
+  </tr>
+  <tr>
+    <td>`iris.sample(100, false)`</td>
+    <td>**without** replacement</td>
+  </tr>
+</table>
 
 ##### Summary
 
@@ -541,10 +561,12 @@ iris.counts(-1) // for the last column
             NaN       3B
 ```
 
-#### Correlations (Matrix)
+#### Correlations 
+
+For a correlation of each column with each other column (matrix):
 
 ```javascript
-iris.corr()
+iris.corr() // .corr(false) to *not* print the first column
 ```
 
 ```
@@ -566,17 +588,19 @@ iris.corr()
 To remove all rows that have some value:
 
 ```javascript
-iris.removeAll(NaN) // from all cols
+// from all cols i.e. remove all rows where any of the value is NaN
+iris.removeAll(NaN) 
+
 // from 1th and 3rd cols and from col 'PetalLengthCm'
 iris.removeAll(NaN, 0, 2, 'PetalLengthCm') 
 ```
 
-#### Discretized (Bin)
+#### Discretize (Bin)
 
 ```javascript
 iris.kBins('SepalLengthCm', 5); // 5 bins for this column
 
-iris.kBins(null, 3); // 3 bins for all columns
+iris.kBins(null, 3);            // 3 bins for all columns
 
 iris.kBins(2, 3).col(2).print(10) // 3rd (2 idx) col, 3 bins
 ```
@@ -589,12 +613,29 @@ Series u8[2, 1, 2, 1, 2, 2, 2, 2, 1, 1, ... 40 more]
 
 #### Feature (Column) Selection
 
-Signature: `iris.nBest(n, metric)` where metric is one of `{"var", "stdev", "mean", "mad", "IQR", "median", "Q1", "Q3", "skewness", "minimum", "range", "maximum"}` OR a function from Series (one column) to a number (`Series -> Num`). <br>
+Feature selection (i.e. select best columns, by default uses `"var"` -- variance):
 
-Feature selection (i.e. select best columns, by default uses "var" -- variance):
+Signature: `iris.nBest(n, metric)` where metric is one of:
+
+- `"var"`
+- `"stdev"`
+- `"mean"`
+- `"mad"`
+- `"IQR"`
+- `"median"`
+- `"Q1"`
+- `"Q3"`
+- `"skewness"`
+- `"min"`
+- `"range"`
+- `"max"`
+
+OR a function from Series (one column) to a number (`Series -> Num`). <br>
 
 ```javascript
 iris.drop('Id').numeric.nBest(2).print(3) // note the numeric
+
+// try: iris.drop('Id').numeric.nBest(2, 'mad').print(3)
 ```
 
 ```
@@ -610,7 +651,7 @@ iris.drop('Id').numeric.nBest(2).print(3) // note the numeric
 
 #### Normalization
 
-However, this is very naive and you might want to normalize (scale to the same range) the values:
+However, using `.nBest()` in this way is very naive and you might want to normalize (scale to the same range) the values:
 
 ```javascript
 iris.drop('Id').numeric.normalize().nBest(2).print(3)
@@ -631,49 +672,49 @@ As you can see you might get different results:
 
 #### Label Encoding
 
-It's a bit awkward for us to constantly have to drop the 'Species' column because it's a string column...
+It's a bit awkward to constantly have to drop the `'Species'` column because it's a string column...
 
 You can easily convert it to a numeric column:
 
 From:
 
 ```javascript
-iris.print(48, 52)
+iris.select(-2, -1).print(48, 52)
 ```
 
 ```
-  # u8 Id f32 SepalLe... f32 SepalWi... f32 PetalLe... f32 PetalWi... s     Species
---- ----- -------------- -------------- -------------- -------------- -------------
-...   ...            ...      (48 more)            ...            ...           ...
- 48    49           5.30           3.70           1.50           0.20 Iris-setos...
- 49    50           5.00           3.29           1.39           0.20 Iris-setos...
- 50    51           7.00           3.20           4.69           1.39 Iris-versi...
- 51    52           6.40           3.20           4.50           1.50 Iris-versi...
-...   ...            ...      (98 more)            ...            ...           ...
---- ----- -------------- -------------- -------------- -------------- -------------
-     150B           600B           600B           600B           600B           NaN
+  # f32 PetalWi... s     Species
+--- -------------- -------------
+...      (48 more)           ...
+ 48           0.20 Iris-setos...
+ 49           0.20 Iris-setos...
+ 50           1.39 Iris-versi...
+ 51           1.50 Iris-versi...
+...      (98 more)           ...
+--- -------------- -------------
+              600B           NaN
 ```
 
 To:
 
 ```javascript
-iris.labelEncode().print(48, 52)
+iris.select(-2, -1).labelEncode().print(48, 52)
 ```
 
 ```
-  # u8 Id f32 SepalLe... f32 SepalWi... f32 PetalLe... f32 PetalWi... u8 Species
---- ----- -------------- -------------- -------------- -------------- ----------
-...   ...            ...      (48 more)            ...            ...        ...
- 48    49           5.30           3.70           1.50           0.20          0
- 49    50           5.00           3.29           1.39           0.20          0
- 50    51           7.00           3.20           4.69           1.39          1
- 51    52           6.40           3.20           4.50           1.50          1
-...   ...            ...      (98 more)            ...            ...        ...
---- ----- -------------- -------------- -------------- -------------- ----------
-     150B           600B           600B           600B           600B       150B
+  # f32 PetalWi... u8 Species
+--- -------------- ----------
+...      (48 more)        ...
+ 48           0.20          0
+ 49           0.20          0
+ 50           1.39          1
+ 51           1.50          1
+...      (98 more)        ...
+--- -------------- ----------
+              600B       150B
 ```
 
-By default all string columns will be label encoded (numeric columns will be ignored). You may specify the colIds e.g. `df.labelEncode(0, -3, 'Target')`.
+By default all string columns will be label encoded (numeric columns will be ignored). You may specify the `colIds` e.g. `df.labelEncode(0, -3, 'Target')`.
 
 #### One-Hot Encoding
 
@@ -702,9 +743,7 @@ iris.labelEncode('Species').oneHot('Species').print(48, 52)
 For demonstration let's make a 1-col data frame:
 
 ```javascript
-iris.select(1)
-
-// print with iris.select(1).head(3)
+iris.select(1).print(3)
 ```
 
 ```
@@ -720,18 +759,22 @@ iris.select(1)
 To clip:
 
 ```javascript
-iris.select(1).clip(null, 4, 5).print(3) // null == all cols
+// null == all cols
+iris.select(1).clip(null, 4.88, 5).print(3)
 ```
 
 ```
-# f32 SepalLe...
-- --------------
-0           5.00
-1           4.90
-2           4.69
-- --------------
-             12B
+  # f32 SepalLe...
+--- --------------
+  0           5.00
+  1           4.90
+  2           4.88
+...     (147 more)
+--- --------------
+              600B
 ```
+
+Notice that `5.09` got clipped to `5.00`!
 
 ### Outliers
 
@@ -753,39 +796,39 @@ iris.dropOutliers(0, -2) // consider just 1st and second to last cols
   </tr>
   <tr>
     <td>string</td>
-    <td>"s"</td>
+    <td>s</td>
   </tr>
   <tr>
     <td>32-bit signed integer</td>
-    <td>"i32"</td>
+    <td>i32</td>
   </tr>
   <tr>
     <td>16-bit signed integer</td>
-    <td>"i16"</td>
+    <td>i16</td>
   </tr>
   <tr>
     <td>8-bit signed integer</td>
-    <td>"i8"</td>
+    <td>i8</td>
   </tr>
   <tr>
     <td>32-bit unsigned integer</td>
-    <td>"u32"</td>
+    <td>u32</td>
   </tr>
   <tr>
     <td>16-bit unsigned integer</td>
-    <td>"u16"</td>
+    <td>u16</td>
   </tr>
   <tr>
     <td>8-bit unsigned integer</td>
-    <td>"u8"</td>
+    <td>u8</td>
   </tr>
   <tr>
     <td>32-bit float (single precision)</td>
-    <td>"f32"</td>
+    <td>f32</td>
   </tr>
   <tr>
     <td>64-bit float (double precision)</td>
-    <td>"f64"</td>
+    <td>f64</td>
   </tr>
 </table>
 
@@ -804,7 +847,7 @@ previous data frame!
 iris.dtype() // note difference between `iris.dtype()` (method) and `iris.dtypes` (getter)
 ```
 
-**SIDENOTE** .dtype() is an aggregate!  this means it produces a data frame from applying a `Series -> *` operation to all columns.
+**SIDENOTE** `.dtype()` is an aggregate! This means it produces a data frame from applying a `Series -> *` operation to all columns.
 
 ```
 # s      column s dtype
@@ -831,7 +874,7 @@ iris.cast(2, 'u8')
 ### Down-Casting
 
 You can also run `iris.downcast()` and let the library figure out the most efficient data type for each column so that data is not lost.
-This is especially useful after truncating (floats are converted to ints).
+This is especially useful after truncating (floats are converted to integers).
 
 Default:
 
@@ -896,7 +939,7 @@ iris.memory().col(-1).add()
 
 #### Deep Copy
 
-If for some reason you need a deep-copy try:
+If for some reason you need a deep-copy try (expensive):
 
 ```javascript
 iris.clone()
@@ -942,7 +985,7 @@ iris.sliceCols(-3, -2, 0, 2)
 
 #### Array
 
-#### Array of Columns
+##### Array of Columns
 
 ```javascript
 iris.head(2).toArray('col')
@@ -955,7 +998,7 @@ iris.head(2).toArray('col')
   [ 'Iris-setosa', 'Iris-setosa' ] ]
 ```
 
-#### Array of Rows
+##### Array of Rows
 
 ```javascript
 iris.head(2).toArray()
@@ -1029,7 +1072,7 @@ iris.head(2).toJSON()
 #### CSV
 
 ```javascript
-iris.head(2).toCSV(true) // hasHeader = true
+iris.head(2).toCSV() 
 ```
 
 ```csv
