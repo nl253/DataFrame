@@ -60,7 +60,7 @@
     "statistics"
   ],
   "license": "MIT",
-  "main": "series.js",
+  "main": "DataFrame.js",
   "name": "dataf",
   "private": false,
   "readme": "https://github.com/nl253/DataFrame/blob/master/README.md",
@@ -72,5 +72,5 @@
     "doc": "jsdoc -d ./docs -R ./README.md -r ./DataFrame.js Series.js rand.js utils.js",
     "test": "jest"
   },
-  "version": "0.0.2-alpha"
+  "version": "0.0.3-alpha"
 }

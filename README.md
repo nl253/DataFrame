@@ -1,6 +1,6 @@
 # DataFrame 
 
-See [gh-pages](https://nl253.github.io/DataFrame/DataFrame.html).
+See API in [gh-pages](https://nl253.github.io/DataFrame/DataFrame.html).
 
 ## Examples
 
