@@ -162,7 +162,7 @@ class DataFrame {
       'IQR',
       'memory',
       'skewness',
-      'kurosis',
+      'kurtosis',
     ];
 
     /*

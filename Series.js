@@ -820,7 +820,7 @@ function enhanceTypedArray(a) {
     return muDiffX.mul(muDiffY).add() / (Math.sqrt(muDiffX.square().add()) * Math.sqrt(muDiffY.square().add()));
   };
 
-  a.kurosis = function () {
+  a.kurtosis = function () {
     const mu = this.mean();
     const xs = this.cast(`f${FLOAT_PRECISION}`);
     const subMu = xs.sub(mu);

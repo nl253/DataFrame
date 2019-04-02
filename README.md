@@ -86,13 +86,6 @@ iris.head().print()
 
 Note the data types next to column names and memory indicators for every column.
 
-#### Rename Columns
-
-```javascript
-iris.rename(0, 'First').rename(-2, 'Second to Last')
-// or just
-iris.rename(0, 'First', -2, 'Second to Last')
-```
 
 #### Slicing
 
@@ -305,6 +298,14 @@ for (const r of rowIt) {
 
 ### Manipulation
 
+#### Rename Columns
+
+```javascript
+iris.rename(0, 'First').rename(-2, 'Second to Last')
+// or just
+iris.rename(0, 'First', -2, 'Second to Last')
+```
+
 #### Merging Data Frames
 
 ```javascript
@@ -348,7 +349,7 @@ iris.reverse()
 Signature: `iris.sort(colId, 'asc' (default) | 'des' )`. <br>
 
 ```javascript
-iris.sort('SepalWidthCm') // default is iris.sort('asc')
+iris.sort('SepalWidthCm') // default is iris.sort(colId, 'asc')
 ```
 
 ```javascript
@@ -380,7 +381,48 @@ iris.numeric.transpose().sum()
 
 ### Statistics & Math
 
-TODO
+Aggregate operations, each is `DataFrame -> DataFrame`:
+
+**MATH**
+
+- `.sum()`
+- `.diff()`
+- `.prod()`
+- `.quot()`
+
+**STATS**
+
+- `.min()`
+- `.max()`
+- `.range()`
+- `.mean()`
+- `.var()` variance
+- `.stdev()` standard deviation
+- `.median()`
+- `.Q3()`
+- `.Q1()`
+- `.IQR()` inter-quartile range
+- `.skewness()`
+- `.kurtosis()`
+- `.mad()` mean absolute deviation
+
+E.g.:
+
+```javascript
+iris.IQR()
+```
+
+```
+# s      column f32 IQR
+- ------------- -------
+0            Id   75.00
+1 SepalLengt...    1.30
+2 SepalWidth...    0.50
+3 PetalLengt...    3.50
+4 PetalWidth...    1.50
+- ------------- -------
+            NaN     20B
+```
 
 #### Sample (get a random subset of rows)
 
@@ -392,7 +434,7 @@ Signature: `iris.sample(100, false)` (**without** replacement)
 #### Summary
 
 ```javascript
-iris.summary() // this will produce a summary dataframe with info for every column
+iris.summary() // this will produce a summary data frame with info for every column
 ```
 
 ```
@@ -652,7 +694,9 @@ iris.select(1).clip(null, 4, 5).print(3) // null == all cols
 If you want to get the data type for all columns try:
 
 ```javascript
-iris.dtypes // list of string data types (getter) 
+iris.dtypes 
+
+[ 'u8', 'f32', 'f32', 'f32', 'f32', 's' ]
 ```
 
 Or for a prettier output make a meta data frame with information about the
@@ -742,6 +786,14 @@ iris.memory()
 
 **NOTE** it's not calculated for string columns (notice that "Species" is missing).
 
+To figure out how much your data frame is taking in total try:
+
+```javascript
+iris.memory().col(-1).add()
+
+2550 // bytes
+```
+
 ### Copies
 
 #### Deep Copy
@@ -762,11 +814,31 @@ iris.copy()
 
 ### Generalized Row Slicing
 
-TODO
+Sometimes you may want to get rows from 10th to 20th and e.g. 50th to 65th:
+
+```javascript
+//         [F, T],[F,  T] // FROM - TO
+iris.slice(9, 19, 49, 64)
+```
 
 ### Generalized Column Slicing
 
-TODO
+The same applies to column slices:
+
+```javascript
+iris.sliceCols(-3, -2, 0, 2)
+
+```
+
+```
+# f32 PetalLe... f32 PetalWi... u8 Id f32 SepalLe... f32 SepalWi...
+- -------------- -------------- ----- -------------- --------------
+0           1.39           0.20     1           5.09           3.50
+1           1.39           0.20     2           4.90           3.00
+2           1.29           0.20     3           4.69           3.20
+- -------------- -------------- ----- -------------- --------------
+             12B            12B    3B            12B            12B
+```
 
 ### Exporting 
 
@@ -867,6 +939,10 @@ Id,SepalLengthCm,SepalWidthCm,PetalLengthCm,PetalWidthCm,Species
 1,5.099999904632568,3.5,1.399999976158142,0.20000000298023224,Iris-setosa
 2,4.900000095367432,3,1.399999976158142,0.20000000298023224,Iris-setosa
 ```
+
+### Series Human-Friendly API
+
+TODO
 
 ### Settings
 
