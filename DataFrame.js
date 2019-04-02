@@ -1,6 +1,7 @@
 // vim:hlsearch:nu:
 /**
  * TODO mode is broken
+ * TODO slice cols is broken (doesn't include the last col)
  */
 const util = require('util');
 const { dirname, join } = require('path');
@@ -10,13 +11,14 @@ const { mkdirSync, readdirSync, existsSync, writeFileSync, readFileSync } = requ
 const Series = require('./Series');
 const { randInt } = require('./rand');
 const { readCSV } = require('./load');
+const { fmtFloat } = require('./utils');
 const log = require('./log');
 
 const bitRegex = /8|16|32|64/;
 
 let PRINT_PRECISION = 2;
 let HEAD_LEN = 5;
-let FLOAT_PRECISION = 64;
+let PRINT_WIDTH = 10;
 
 /**
  * @param {"f32"|"f64"|"i8"|"16"|"i32"|"u8"|"u16"|"u32"} dt1
@@ -367,7 +369,6 @@ module.exports = class DataFrame {
         cols[rIdx][cIdx] = this._cols[cIdx][rIdx];
       }
     }
-    debugger;
     return new DataFrame(cols, 'cols', colNames);
   }
 
@@ -501,11 +502,12 @@ module.exports = class DataFrame {
       return this.concat(other, axis + 2);
     } else if (axis === 0) {
       const cols = Array.from(this._cols);
-      const colNames = Array.from(this.colNames);
       for (let c = 0; c < this.nCols; c++) {
-        cols[c] = cols[c].concat(other._cols[c]);
+        const myCol = cols[c];
+        const otherCol = other._cols[c];
+        cols[c] = myCol.concat(otherCol);
       }
-      return new DataFrame(cols, 'cols', colNames);
+      return new DataFrame(cols, 'cols', Array.from(this.colNames));
     }
 
     // else if concat HORIZONTALLY {
@@ -630,23 +632,43 @@ module.exports = class DataFrame {
 
   /**
    * @param {...!String} colIds
-   * @returns {!Array<!String>|!String} data type for the column
+   * @returns {!DataFrame} data frame
    */
   dtype(...colIds) {
-    if (colIds.length === 1) {
-      return this._cols[this.colIdx(colIds[0])].dtype;
-    } else if (colIds.length === 0) {
-      return this.dtypes;
-    } else {
-      return colIds.map(c => this._cols[this.colIdx(c)].dtype);
-    }
+    const colIdxs = colIds.map(id => this.colIdx(id));
+    const df = this.agg(col => col.dtype, cIdx => colIdxs.indexOf(cIdx) < 0).rename(1, 'dtype');
   }
+
+  /**
+   * @param {!Array<!String>} newDtypes
+   */
+  // set dtypes(newDtypes) {
+    // let cIdx = 0; 
+    // for (const dt of newDtypes) {
+      // this._cols[cIdx] = this._cols[cIdx].cast(dt);
+      // cIdx++;
+    // }
+  // }
 
   /**
    * @returns {!Array<!String>} data types for all columns
    */
   get dtypes() {
-    return this._cols.map(c => c.dtype);
+    const dtArr = this._cols.map(c => c.dtype);
+    // for (let i = 0; i < this.nCols; i++) {
+      // Object.defineProperty(dtArr, i, { 
+        // set: (newDt) => {
+          // this._cols[i] = this._cols[i].cast(newDt);
+        // }});
+    // }
+    // for (const cName of this.colNames) {
+      // Object.defineProperty(dtArr, cName, { 
+        // set: (newDt) => {
+          // const cIdx = this.colIdx(cName);
+          // this._cols[cIdx] = this._cols[cIdx].cast(newDt);
+        // }});
+    // }
+    return dtArr;
   }
 
   /**
@@ -654,7 +676,7 @@ module.exports = class DataFrame {
    * @private
    */
   get _numColIdxs() {
-    const { dtypes } = this;
+    const dtypes = this.dtypes;
     const colIdxs = new Set();
     for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
       if (dtypes[cIdx] !== 's' && dtypes[cIdx] !== 'null') {
@@ -720,6 +742,9 @@ module.exports = class DataFrame {
   }
 
   /**
+   * e.g. sliceCols(0)         -> sliceCols(0, end)
+   * e.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end)
+   *
    * @param {...<!String|!Number>} cols col pairs
    * @returns {!DataFrame} data frame
    */
@@ -727,12 +752,9 @@ module.exports = class DataFrame {
     if (slices.length === 0) {
       throw new Error('no slice idxs specified (e.g. df.sliceCols(0, -1))');
     } else if (slices.length % 2 !== 0) {
-      slices.push(this.nCols - 1); // odd number of idxs
-      /*
-       * e.g. sliceCols(0)         -> sliceCols(0, end)
-       * e.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end)
-       */
-    }
+      // odd number of idxs
+      return this.sliceCols(...slices, this.nCols - 1);
+    } 
 
     // collect column idxs
     const colIds = new Set();
@@ -1109,15 +1131,7 @@ module.exports = class DataFrame {
    * @param {?Number} [m]
    */
   print(n = null, m = null) {
-    if (n === null) {
-      const nRows = [HEAD_LEN, process.stdout.rows - 1 || HEAD_LEN, this.length].reduce((x, y) => Math.min(x, y));
-      return this.print(nRows);
-    } else if (m === null) {
-      return this.print(0, n);
-    } else if (m > this.length) {
-      return this.print(n, this.length);
-    }
-    console.log(this.slice(n, m).toString(m - n));
+    console.log(this.toString(n, m));
   }
 
   /**
@@ -1136,11 +1150,11 @@ module.exports = class DataFrame {
       return DF.set(k.toLocaleLowerCase(), v);
     }
     if (k.match('print')) {
+      Series.set(k, v);
       PRINT_PRECISION = v;
     } else if (k.match('len')) {
+      Series.set(k, v);
       HEAD_LEN = v;
-    } else if (k.match('float')) {
-      FLOAT_PRECISION = v;
     } else {
       throw new Error(`unrecognised option "${k}"`);
     }
@@ -1251,59 +1265,147 @@ module.exports = class DataFrame {
   /**
    * @returns {!String} string representation of the data frame
    */
-  toString(n = HEAD_LEN) {
-    if (this.nCols === 0) {
+  toString(n = null, m = null) {
+    if (n === null) {
+      const n = Math.min(this.length, process.stdout.rows - 12);
+      return this.toString(n);
+    } else if (m === null) {
+      return this.toString(0, n);
+    } else if (n < 0) {
+      return this.toString(n + this.length, m);
+    } else if (m < 0) {
+      return this.toString(n, m + this.length);
+    } else if (n > this.length) {
+      log.warn(`n = ${n}, but there is ${this.length} rows`);
+      return this.toString(this.length - n, this.length);
+    } else if (m > this.length) {
+      log.warn(`m = ${m}, but there is ${this.length} rows`);
+      return this.toString(Math.max(0, this.length - (m - n)), this.length);
+    } else if (this.nCols === 0) {
       return 'Empty DataFrame';
     }
-    const header = this.colNames;
+
+    debugger;
+
     const rows = [];
-    const nRows = Math.min(this.length, n);
+
+    // print index column
+    rows.push(['#'].concat(this.colNames
+      // trunc column headings
+      .map(h => h.length > PRINT_WIDTH - 3 ? h.slice(0, PRINT_WIDTH - 3) + '...' : h)
+      // pad to reserve space for dtypes (injected later)
+      .map((h, cIdx) => ' '.repeat(this.dtypes[cIdx].length + 1) + h.toString())));
 
     const numCols = this._numColIdxs;
 
-    const parts = [];
-
-    for (let i = 0; i < nRows; i++) {
+    for (let i = n; i < m; i++) {
       const row = this.row(i);
       for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
         const val = row[cIdx];
         const s = val.toString();
         const isNum = numCols.has(cIdx);
+        const isStr = !isNum && val.constructor.name === 'String';
+        const isTooLong = isStr && s.length > PRINT_WIDTH;
+
+        if (isTooLong) {
+          row[cIdx] = `${s.slice(0, PRINT_WIDTH)}...`;
+          continue;
+        } 
+
+        const isFloat = isNum && this.dtypes[cIdx].startsWith('f');
+
+        if (!isFloat) {
+          continue;
+        }
+
         const maybePointIdx = s.indexOf('.');
-        const hasRadixPoint = isNum && maybePointIdx >= 0;
+        const hasRadixPoint = maybePointIdx >= 0;
+
         if (hasRadixPoint) {
           row[cIdx] = s.slice(0, maybePointIdx + PRINT_PRECISION + 1);
           if ((s.length - PRINT_PRECISION) === maybePointIdx) {
             row[cIdx] += '0';
           }
-        } else if (!Object.is(val, NaN) && isNum && this.dtypes[cIdx].startsWith('f')) {
+          continue;
+        } 
+        
+        if (!Object.is(val, NaN)) {
           row[cIdx] = `${s}.00`;
         }
       }
-      rows.push(row);
+      rows.push([i].concat(row));
     }
 
-    const lens = Array(this.nCols)
-      .fill(0)
-      .map((_, idx) => Math.max(
-        header[idx].toString().length,
+    if (this.length === 0) {
+      rows.push([''].concat(Array(this.nCols).fill('empty')));
+    }
+
+    rows.push([''].concat(Array(this.nCols).fill(0).map((_, cIdx) => {
+      const col = this._cols[cIdx];
+
+      // string column
+      if (col.memory === undefined) {
+        return NaN;
+      }
+
+      let size = col.memory();
+      let unit = 'B';
+
+      if (size >= 1e9) {
+        size /= 1e9;
+        unit = 'GB'; 
+      } else if (size >= 1e6) {
+        size /= 1e6;
+        unit = 'MB';
+      } else if (size >= 1e3) {
+        size /= 1e3;
+        unit = 'KB';
+      }
+      return fmtFloat(size, PRINT_PRECISION) + unit;
+    })));
+
+    // const midCol = Math.floor(this.nCols / 2);
+    const midCol = Math.floor(rows[0].length / 2);
+
+    if (n > 0) {
+      const arr = Array(this.nCols + 1).fill('...');
+      arr[midCol] = `(${n} more)`;
+      rows.splice(1, 0, arr);
+    }
+
+    if (m < this.length) {
+      const arr = Array(this.nCols + 1).fill('...');
+      arr[midCol] = `(${this.length - m} more)`;
+      rows.splice(rows.length - 1, 0, arr);
+    }
+
+    // lengths of each column
+    const lens = Array(this.nCols + 1).fill(0).map((_, idx) => 
         rows.map(r => r[idx].toString().length)
-          .reduce((x, y) => Math.max(x, y), 1),
-      ));
+            .reduce((x, y) => Math.max(x, y), 1));
 
-    parts.push(header.map((h, cIdx) => h.toString().padStart(lens[cIdx], ' ')).join(' '));
+    // inject underlining `-------`
+    rows.splice(1, 0, lens.map(l => '-'.repeat(l)));
 
-    parts.push(lens.map(l => '-'.repeat(l)).join(' '));
+    debugger;
 
-    for (let i = 0; i < nRows; i++) {
-      parts.push(rows[i].map((val, cIdx) => val.toString().padStart(lens[cIdx], ' ')).join(' '));
+    // inject dtypes for all headings
+    rows[0] = rows[0].slice(0, 1).concat(rows[0].slice(1, rows[0].length).map((h, cIdx) => {
+      const len = lens[cIdx + 1];
+      const dtype = this.dtypes[cIdx];
+      const heading = h.trim()
+      return dtype + ' '.repeat(len - heading.length - dtype.length) + heading;
+    }));
+
+    // inject underlining `-------`
+    rows.splice(rows.length - 1, 0, lens.map(l => '-'.repeat(l)));
+
+
+    // pad start with ' '
+    for (let i = 0; i < rows.length; i++) {
+      rows[i] = rows[i].map((val, cIdx) => val.toString().padStart(lens[cIdx], ' ')).join(' ');
     }
 
-    if (this.length > n) {
-      parts.push(` ... ${this.length - n} more`);
-      parts[parts.length - 2] += `\n${lens.map(l => '-'.repeat(l)).join(' ')}`;
-    }
-
-    return parts.join('\n');
+    return rows.join('\n');
   }
 };

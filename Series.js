@@ -6,7 +6,7 @@ const dtypeRegex = /([a-z]+)(8|16|32|64)/i;
 const isNumRegex = /^(\d+\.?\d*|\d*\.\d+)(e-?\d+)?$/i;
 const log = require('./log');
 
-let FLOAT_PRECISION = 64;
+let FLOAT_PRECISION = 32;
 let HEAD_LEN = 5;
 let PRINT_PRECISION = 2;
 
@@ -281,7 +281,7 @@ function enhanceArray(a) {
     if (this.isEmpty) {
       return 'null';
     } else if (this[0].constructor.name === 'String') {
-      return this[0].constructor.name.slice(0, 1).toLocaleLowerCase();
+      return this[0].constructor.name[0].toLocaleLowerCase();
     } else {
       return this[0].constructor.name.toLocaleLowerCase();
     }
@@ -488,7 +488,7 @@ function enhanceTypedArray(a) {
 
   a.concat = function (other) {
     let dtype = `f${FLOAT_PRECISION}`;
-    if (this.dtype.slice(0, 1) === other.dtype.slice(0, 1)) {
+    if (this.dtype[0] === other.dtype[0]) {
       dtype = this.BYTES_PER_ELEMENT >= other.BYTES_PER_ELEMENT ? this.dtype : other.dtype;
     } else if ((other.dtype.startsWith('u') && this.dtype.startsWith('i')) || (this.dtype.startsWith('u') && other.dtype.startsWith('i'))) {
       dtype = 'i32';
@@ -540,11 +540,9 @@ function enhanceTypedArray(a) {
       if (amFloat || (isInt && (!isNeg || amInt))) {
         return this.map(x => x + other);
       } else if (amUint && isInt && isNeg) {
-        return empty(this.length, 'i32')
-          .map((_, idx) => this[idx] * other);
+        return empty(this.length, 'i32').map((_, idx) => this[idx] * other);
       } else {
-        return empty(this.length, `f${FLOAT_PRECISION}`)
-          .map((_, idx) => this[idx] * other);
+        return empty(this.length, `f${FLOAT_PRECISION}`).map((_, idx) => this[idx] * other);
       }
     }
 
@@ -691,8 +689,7 @@ function enhanceTypedArray(a) {
           .map((_, idx) => this[idx] * other[idx]);
       }
     }
-    return empty(len, `f${FLOAT_PRECISION}`)
-      .map((_, idx) => this[idx] * other[idx]);
+    return empty(len, `f${FLOAT_PRECISION}`).map((_, idx) => this[idx] * other[idx]);
   };
 
   a.div = function (other = null, dtype = null) {
@@ -707,8 +704,7 @@ function enhanceTypedArray(a) {
         return empty(this.length, dtype)
           .map(x => x / other);
       }
-      return empty(this.length, `f${FLOAT_PRECISION}`)
-        .map((_, idx) => this[idx] / other);
+      return empty(this.length, `f${FLOAT_PRECISION}`).map((_, idx) => this[idx] / other);
     }
 
     // else if other is enhanced array
@@ -980,7 +976,10 @@ function enhanceTypedArray(a) {
  * @param {!Number} [floatSize]
  * @returns {'i8'|'i16'|'i32'|'u8'|'u16'|'u32'|'f32'|'f64'} dtype
  */
-function guessDtype(xs, floatSize = 64) {
+function guessDtype(xs, floatSize = null) {
+  if (floatSize === null) {
+    return guessDtype(xs, FLOAT_PRECISION);
+  }
   let largest = xs.reduce((a, b) => Math.max(a, b));
   const smallest = xs.reduce((a, b) => Math.min(a, b));
   if (smallest < 0 && Math.abs(smallest) > largest) {
@@ -992,7 +991,14 @@ function guessDtype(xs, floatSize = 64) {
   if (isNeg) bitsNeeded++;
 
   // reals
-  if (isFloat) return `f${floatSize}`;
+  if (isFloat) {
+    debugger;
+    if (smallest <= 1.23e-38 || largest >= 3.4e38) {
+      return 'f64';
+    } else {
+      return 'f32';
+    }
+  }
 
   // integers
   if (isNeg) {
