@@ -30,6 +30,8 @@
 /**
  * TODO mode is broken
  * TODO slice cols is broken (doesn't include the last col)
+ * TODO loading (g)zipped csv
+ * TODO saving
  */
 const util = require('util');
 const { dirname, join } = require('path');
@@ -49,9 +51,9 @@ let HEAD_LEN = 5;
 let PRINT_WIDTH = 10;
 
 /**
- * @param {"f32"|"f64"|"i8"|"16"|"i32"|"u8"|"u16"|"u32"} dt1
- * @param {"f32"|"f64"|"i8"|"16"|"i32"|"u8"|"u16"|"u32"} dt2
- * @returns {"f32"|"f64"|"i8"|"16"|"i32"|"u8"|"u16"|"u32"} dtype
+ * @param {"f32"|"f64"|"i8"|"16"|"i32"|"u8"|"u16"|"u32"|"s"} dt1
+ * @param {"f32"|"f64"|"i8"|"16"|"i32"|"u8"|"u16"|"u32"|"s"} dt2
+ * @returns {"f32"|"f64"|"i8"|"16"|"i32"|"u8"|"u16"|"u32"|"s"} dtype
  * @private
  */
 function unify(dt1, dt2) {
@@ -76,15 +78,21 @@ function unify(dt1, dt2) {
 }
 
 /**
- * @param {!Array&lt;Array&lt;*>>|!Array&lt;*>} xs
- * @returns {!Array&lt;Array&lt;*>>|!Array&lt;*>} transpose
+ * @param {!Array&lt;Array&lt;*>>} xs
+ * @returns {!Array&lt;Array&lt;*>>} xs^T
  * @private
  */
 function transpose(xs) {
+  // from [1, 2 , 3] to:
+  //
+  // [[1],
+  //  [2],
+  //  [3]]
+  //
   if (xs[0].constructor.name !== 'Array') {
     return xs.map(x => [x]);
   }
-  const colCount = xs[0].length;
+  const colCount = xs[0].length; // assume equi-sized
   const rowCount = xs.length;
   const m = Array(colCount).fill(0).map(_ => Array(rowCount).fill(0));
   for (let i = 0; i &lt; xs.length; i++) {
@@ -99,10 +107,10 @@ class DataFrame {
   /**
    * @param {!DataFrame|!Object&lt;!Array&lt;!String>|!Array&lt;!Number>>|!Array&lt;!Array&lt;!Number|!String>>|!Array&lt;!TypedArray|!Array&lt;!Number>|!Array&lt;!String>>|!Map&lt;!Array&lt;!Number>|!Array&lt;!String>>} data
    * @param {'cols'|'rows'|'map'|'obj'} [what]
-   * @param {?Array&lt;!String>} [colNames]
+   * @param {?Array&lt;!String>} [colNames] labels for every column (#cols === #labels)
    */
   constructor(data = [], what = 'rows', colNames = null) {
-    // empty
+      // empty
     if (data.length === 0) {
       this._cols = [];
       this.colNames = [];
@@ -111,16 +119,16 @@ class DataFrame {
       this._cols = Array.from(data._cols);
       this.colNames = Array.from(data.colNames);
       // object { colName => col, ... }
-    } else if (data.constructor.name === 'Object' || what.startsWith('obj')) {
+    } else if (data.constructor.name === 'Object' || what.match(/^obj/i)) {
       this._cols = Object.values(data).map(c => Series.from(c));
       this.colNames = Object.keys(data);
       // map { colName => col, ... }
-    } else if (data.constructor.name === 'Map' || what.startsWith('map')) {
+    } else if (data.constructor.name === 'Map' || what.match(/^map/i)) {
       this._cols = Array.from(data.values()).map(c => Series.from(c));
       this.colNames = Array.from(data.keys());
     } else {
       // array of rows
-      if (what.startsWith('row')) {
+      if (what.match(/^row/i)) {
         this._cols = transpose(data).map(c => Series.from(c));
       // array of cols
       } else {
@@ -190,7 +198,7 @@ class DataFrame {
       'IQR',
       'memory',
       'skewness',
-      'kurosis',
+      'kurtosis',
     ];
 
     /*
@@ -215,9 +223,7 @@ class DataFrame {
      * each forward function is forwarded to the underlying series
      * ForwardFunct :: Series (len = n) => Series (len = n)
      */
-    for (const f of [
-      'head', 'tail', 'map', 'reverse', 'zipWith', 'zipWith3',
-    ]) {
+    for (const f of ['map', 'reverse', 'zipWith', 'zipWith3']) {
       if (this[f] !== undefined) continue;
       this[f] = function (colId = null, ...args) {
         return this.call(colId, f, 'all', ...args);
@@ -267,6 +273,28 @@ class DataFrame {
         };
       }
     }
+  }
+
+  /**
+   * @param {?Number} [n]
+   * @returns {!DataFrame} data frame
+   */
+  head(n = null) {
+    if (n === null) {
+      return this.tail(HEAD_LEN);
+    }
+    return this.slice(0, n);
+  }
+
+  /**
+   * @param {?Number} [n]
+   * @returns {!DataFrame} data frame
+   */
+  tail(n = null) {
+    if (n === null) {
+      return this.tail(HEAD_LEN);
+    }
+    return this.slice(this.length - n, this.length);
   }
 
   /**
@@ -360,29 +388,6 @@ class DataFrame {
       return idx;
     }
   }
-
-  /**
-   * @param {!String|!Number} axisId
-   * @returns {!Number} axis index
-   * @private
-   */
-  // axisIdx(axisId) {
-    // if (axisId === 0 || axisId === 1) {
-      // return axisId;
-    // } else if (axisId &lt; 0) {
-      // return this.axisIdx(axisId + 2);
-    // } else if (axisId.constructor.name === 'String') {
-      // const fst = axisId.slice(0, 1);
-      // if (fst.toLocaleLowerCase() !== fst) {
-        // return this.axisId(fst.toLocaleLowerCase());
-      // } else if (axisId.startsWith('col')) {
-        // return 0;
-      // } else if (axisId.startsWith('row')) {
-        // return 1;
-      // }
-    // }
-    // throw new Error(`unrecognised axis ${axisId}`);
-  // }
 
   /**
    * @param {"f32"|"f64"|"i8"|"16"|"i32"|"u8"|"u16"|"u32"|"s"|null} [dtype]
@@ -526,19 +531,28 @@ class DataFrame {
 
   /**
    * @param {!DataFrame} other
+   * @param {'col'|'row'|'cols'|'rows'|0|1} [axis]
    * @returns {!DataFrame} data frame
    */
   concat(other, axis = 0) {
-    if (axis &lt; 0) {
-      return this.concat(other, axis + 2);
-    } else if (axis === 0) {
-      const cols = Array.from(this._cols);
-      for (let c = 0; c &lt; this.nCols; c++) {
-        const myCol = cols[c];
-        const otherCol = other._cols[c];
-        cols[c] = myCol.concat(otherCol);
+    if (axis.constructor.name === 'Number') {
+      if (axis &lt; 0) {
+        return this.concat(other, axis + 2);
+      } else if (axis === 0) {
+        const cols = Array.from(this._cols);
+        for (let c = 0; c &lt; this.nCols; c++) {
+          const myCol = cols[c];
+          const otherCol = other._cols[c];
+          cols[c] = myCol.concat(otherCol);
+        }
+        return new DataFrame(cols, 'cols', Array.from(this.colNames));
       }
-      return new DataFrame(cols, 'cols', Array.from(this.colNames));
+    } else if (axis.constructor.name === 'String') {
+      if (axis.match(/^col/i)) {
+        return this.concat(other, 0);
+      } else {
+        return this.concat(other, 1);
+      }
     }
 
     // else if concat HORIZONTALLY {
@@ -666,20 +680,13 @@ class DataFrame {
    * @returns {!DataFrame} data frame
    */
   dtype(...colIds) {
+    if (colIds.length === 0) {
+      return this.dtype(...this.colNames);
+    }
     const colIdxs = colIds.map(id => this.colIdx(id));
-    const df = this.agg(col => col.dtype, cIdx => colIdxs.indexOf(cIdx) &lt; 0).rename(1, 'dtype');
+    const df = this.agg(col => col.dtype, cIdx => colIdxs.indexOf(cIdx) >= 0).rename(1, 'dtype');
+    return df;
   }
-
-  /**
-   * @param {!Array&lt;!String>} newDtypes
-   */
-  // set dtypes(newDtypes) {
-    // let cIdx = 0; 
-    // for (const dt of newDtypes) {
-      // this._cols[cIdx] = this._cols[cIdx].cast(dt);
-      // cIdx++;
-    // }
-  // }
 
   /**
    * @returns {!Array&lt;!String>} data types for all columns
@@ -815,6 +822,9 @@ class DataFrame {
        * e.g. slice(0)         -> slice(0, end)
        * e.g. slice(0, 10, 20) -> slice(0, 10, 20, end)
        */
+    } else if (idxs.some(idx => idx &lt; 0)) {
+      // resolve negative indexes
+      return this.slice(...(idxs.map(idx => idx &lt; 0 ? idx + this.length : idx)));
     }
 
     const cols = Array(this.nCols).fill(0);
@@ -1180,14 +1190,19 @@ class DataFrame {
     if (k.toLocaleLowerCase() !== k) {
       return DF.set(k.toLocaleLowerCase(), v);
     }
-    if (k.match('print')) {
+    if (k.match(/pr(int|ec)/)) {
       Series.set(k, v);
       PRINT_PRECISION = v;
-    } else if (k.match('len')) {
+    } else if (k.match(/len|^head/)) {
       Series.set(k, v);
       HEAD_LEN = v;
+      PRINT_PRECISION = v;
+    } else if (k.match('width')) {
+      PRINT_WIDTH = v;
+    } else if (k.match('float')) {
+      Series.set(k, v);
     } else {
-      throw new Error(`unrecognised option "${k}"`);
+      throw new Error(`unrecognised option "${k}", try: printWidth, printPrecision, headLen, floatPrecision`);
     }
   }
 
@@ -1454,7 +1469,7 @@ module.exports = DataFrame;
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Tue Apr 02 2019 14:09:50 GMT+0100 (British Summer Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Tue Apr 02 2019 22:32:42 GMT+0100 (British Summer Time)
 </footer>
 
 <script> prettyPrint(); </script>
