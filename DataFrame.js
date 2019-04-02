@@ -2,6 +2,8 @@
 /**
  * TODO mode is broken
  * TODO slice cols is broken (doesn't include the last col)
+ * TODO loading (g)zipped csv
+ * TODO saving
  */
 const util = require('util');
 const { dirname, join } = require('path');
@@ -70,10 +72,11 @@ function transpose(xs) {
 class DataFrame {
   /**
    * @param {!DataFrame|!Object<!Array<!String>|!Array<!Number>>|!Array<!Array<!Number|!String>>|!Array<!TypedArray|!Array<!Number>|!Array<!String>>|!Map<!Array<!Number>|!Array<!String>>} data
-   * @param {'cols'|'rows'|'map'|'obj'} [what]
+   * @param {'cols'|'rows'|'col'|'row'|'map'|'obj'} [what]
    * @param {?Array<!String>} [colNames]
    */
   constructor(data = [], what = 'rows', colNames = null) {
+    what = what.toLocaleLowerCase()
     // empty
     if (data.length === 0) {
       this._cols = [];
@@ -354,29 +357,6 @@ class DataFrame {
   }
 
   /**
-   * @param {!String|!Number} axisId
-   * @returns {!Number} axis index
-   * @private
-   */
-  // axisIdx(axisId) {
-    // if (axisId === 0 || axisId === 1) {
-      // return axisId;
-    // } else if (axisId < 0) {
-      // return this.axisIdx(axisId + 2);
-    // } else if (axisId.constructor.name === 'String') {
-      // const fst = axisId.slice(0, 1);
-      // if (fst.toLocaleLowerCase() !== fst) {
-        // return this.axisId(fst.toLocaleLowerCase());
-      // } else if (axisId.startsWith('col')) {
-        // return 0;
-      // } else if (axisId.startsWith('row')) {
-        // return 1;
-      // }
-    // }
-    // throw new Error(`unrecognised axis ${axisId}`);
-  // }
-
-  /**
    * @param {"f32"|"f64"|"i8"|"16"|"i32"|"u8"|"u16"|"u32"|"s"|null} [dtype]
    * @param {?Array<!Number|!String>} [colNames]
    */
@@ -518,19 +498,28 @@ class DataFrame {
 
   /**
    * @param {!DataFrame} other
+   * @param {'col'|'row'|'cols'|'rows'|0|1} [axis]
    * @returns {!DataFrame} data frame
    */
   concat(other, axis = 0) {
-    if (axis < 0) {
-      return this.concat(other, axis + 2);
-    } else if (axis === 0) {
-      const cols = Array.from(this._cols);
-      for (let c = 0; c < this.nCols; c++) {
-        const myCol = cols[c];
-        const otherCol = other._cols[c];
-        cols[c] = myCol.concat(otherCol);
+    if (axis.constructor.name === 'Number') {
+      if (axis < 0) {
+        return this.concat(other, axis + 2);
+      } else if (axis === 0) {
+        const cols = Array.from(this._cols);
+        for (let c = 0; c < this.nCols; c++) {
+          const myCol = cols[c];
+          const otherCol = other._cols[c];
+          cols[c] = myCol.concat(otherCol);
+        }
+        return new DataFrame(cols, 'cols', Array.from(this.colNames));
       }
-      return new DataFrame(cols, 'cols', Array.from(this.colNames));
+    } else if (axis.constructor.name === 'String') {
+      if (axis.match(/^col/i)) {
+        return this.concat(other, 0);
+      } else {
+        return this.concat(other, 1);
+      }
     }
 
     // else if concat HORIZONTALLY {

@@ -1,14 +1,14 @@
 # DataFrame 
 
-- pandas-like data-frame library
+- [pandas](https://pandas.pydata.org/pandas-docs/stable/reference/frame.html)-like data-frame library
 - series built on typed arrays
 - tries to be memory efficient
 - extensions to arrays
 - great for tabular data
-- reads CSV
+- reads CSV (only for now)
 - work in progress
 
-See JSDoc-generated API docs see [gh-pages](https://nl253.github.io/DataFrame/DataFrame.html).
+See [JSDoc](http://usejsdoc.org/)-generated API docs see [gh-pages](https://nl253.github.io/DataFrame/DataFrame.html).
 
 For more human-friendly docs keep reading.
 
@@ -48,7 +48,6 @@ DF.dataSets
   'got',       // game of thrones deaths
   'happiness', // world happiness 2017
   'iris',     
-  'lifting',   // powerlifting
   'mushrooms',
   'pokemon',   // stats for all from all generations
   'superheros' ] 
@@ -68,8 +67,8 @@ iris = DF.loadDataSet('iris')
 
 ```javascript
 iris.head().print() 
-// can be head(20) for the first 20 rows
-// or tail() for last rows
+//  .head(20) for the first 20 rows
+//  .tail()   for last rows
 ```
 
 ```
@@ -332,6 +331,12 @@ iris.concat(iris, 1).colNames
   'Species2' ]
 ```
 
+#### Appending a Column
+
+```javascript
+iris.appendCol(iris.Id, 'Id2') // .appendCol(col, colName)
+```
+
 #### Shuffle
 
 ```javascript
@@ -544,7 +549,7 @@ As you can see you might get different results:
 
 It's a bit awkward for us to constantly have to drop the 'Species' column because it's a string column...
 
-You can easily convert it to a numeric colunm:
+You can easily convert it to a numeric column:
 
 From:
 
@@ -644,6 +649,15 @@ iris.select(1).clip(null, 4, 5).print(3) // null == all cols
              12B
 ```
 
+### Outliers
+
+To remove outliers (outside of Q1 to Q3) run:
+
+```javascript
+iris.dropOutliers()      // consider all cols
+iris.dropOutliers(0, -2) // consider just 1st and second to last cols
+```
+
 ## Advanced Human-Friendly API
 
 ### Data Types
@@ -711,14 +725,14 @@ iris.dtype() // note difference between `iris.dtype()` (method) and `iris.dtypes
 ```
 # s      column s dtype
 - ------------- -------
-  0            Id      u8
-  1 SepalLengt...     f32
-  2 SepalWidth...     f32
-  3 PetalLengt...     f32
-  4 PetalWidth...     f32
-  5       Species       s
-  - ------------- -------
-              NaN     NaN
+0            Id      u8
+1 SepalLengt...     f32
+2 SepalWidth...     f32
+3 PetalLengt...     f32
+4 PetalWidth...     f32
+5       Species       s
+- ------------- -------
+            NaN     NaN
 ```
 
 You can force-cast columns:
@@ -946,6 +960,12 @@ TODO
 
 ### Settings
 
+TODO
+
 #### Printing
 
+TODO
+
 #### Float Precision (32 / 64)
+
+TODO
