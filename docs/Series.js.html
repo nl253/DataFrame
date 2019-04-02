@@ -1,4 +1,32 @@
-// vim:hlsearch:nu:
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: Series.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: Series.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>// vim:hlsearch:nu:
 const util = require('util');
 const { randInRange, randInt } = require('./rand');
 
@@ -11,8 +39,8 @@ let HEAD_LEN = 5;
 let PRINT_PRECISION = 2;
 
 /**
- * @param {!Array<*>|!TypedArray} a
- * @returns {!Array<*>|!TypedArray} a
+ * @param {!Array&lt;*>|!TypedArray} a
+ * @returns {!Array&lt;*>|!TypedArray} a
  * @private
  */
 function enhance(a) {
@@ -29,12 +57,12 @@ function enhance(a) {
     }
     const parts = [`Series ${this.dtype === undefined ? '' : this.dtype}[`];
     const n = Math.min(len, this.length);
-    for (let i = 0; i < n; i++) {
+    for (let i = 0; i &lt; n; i++) {
       const val = this[i];
       const s = val.toString();
       const isStr = val.constructor.name === 'String';
-      const isNum = !isStr && val.constructor.name === 'Number';
-      const isFloat = isNum && s.match(/\./);
+      const isNum = !isStr &amp;&amp; val.constructor.name === 'Number';
+      const isFloat = isNum &amp;&amp; s.match(/\./);
       if (isFloat) {
         const [p1, p2] = s.split('.');
         parts.push(`${p1}.${p2.slice(0, PRINT_PRECISION)}`);
@@ -42,7 +70,7 @@ function enhance(a) {
         parts.push(s);
       }
     }
-    if (n < this.length) {
+    if (n &lt; this.length) {
       parts.push(`... ${this.length - n} more`);
     }
     return `${parts[0] + parts.slice(1).join(', ')}]`;
@@ -103,7 +131,7 @@ function enhance(a) {
   a.argMax = function (f) {
     let best = this[0];
     let bestScore = f(best);
-    for (let i = 1; i < this.length; i++) {
+    for (let i = 1; i &lt; this.length; i++) {
       const x = this[i];
       const score = f(x);
       if (score > bestScore) {
@@ -117,10 +145,10 @@ function enhance(a) {
   a.argMin = function (f) {
     let best = this[0];
     let bestScore = f(best);
-    for (let i = 1; i < this.length; i++) {
+    for (let i = 1; i &lt; this.length; i++) {
       const x = this[i];
       const score = f(x);
-      if (score < bestScore) {
+      if (score &lt; bestScore) {
         bestScore = score;
         best = x;
       }
@@ -166,18 +194,18 @@ function enhance(a) {
 
     let boundIdx = 0;
 
-    for (let i = binSize; i < this.length; i += binSize) {
+    for (let i = binSize; i &lt; this.length; i += binSize) {
       bounds[boundIdx] = sorted[i];
       boundIdx++;
     }
 
     const s = Series.empty(binSize, dtype);
 
-    for (let i = 0; i < this.length; i++) {
+    for (let i = 0; i &lt; this.length; i++) {
       const val = this[i];
-      for (let boundIdx = 0; boundIdx < k; boundIdx++) {
+      for (let boundIdx = 0; boundIdx &lt; k; boundIdx++) {
         const boundVal = bounds[boundIdx];
-        if (val < boundVal) {
+        if (val &lt; boundVal) {
           s[i] = boundIdx;
           break;
         }
@@ -224,9 +252,9 @@ function enhance(a) {
   a._sort = a.sort;
   a.sort = function (order = 'asc') {
     if (order === 'asc') {
-      return this.clone()._sort((a, b) => (a > b ? 1 : a < b ? -1 : 0));
+      return this.clone()._sort((a, b) => (a > b ? 1 : a &lt; b ? -1 : 0));
     } else if (order === 'des') {
-      return this.clone()._sort((a, b) => (a > b ? -1 : a < b ? 1 : 0));
+      return this.clone()._sort((a, b) => (a > b ? -1 : a &lt; b ? 1 : 0));
     } else {
       return this.clone()._sort(order);
     }
@@ -263,8 +291,8 @@ function enhance(a) {
 }
 
 /**
- * @param {!Array<*>} a
- * @returns {!Array<*>} the array
+ * @param {!Array&lt;*>} a
+ * @returns {!Array&lt;*>} the array
  * @private
  */
 function enhanceArray(a) {
@@ -277,7 +305,7 @@ function enhanceArray(a) {
 
   const defineGetter = (name, f) => Object.defineProperty(a, name, { get: f });
 
-  // memory & data type
+  // memory &amp; data type
 
   defineGetter('dtype', function () {
     if (this.isEmpty) {
@@ -302,7 +330,7 @@ function enhanceArray(a) {
     const newArr = empty(this.length, dtype);
     const map = new Map();
     let label = 0;
-    for (let i = 0; i < this.length; i++) {
+    for (let i = 0; i &lt; this.length; i++) {
       const val = this[i];
       const maybe = map.get(val);
       if (maybe === undefined) {
@@ -327,7 +355,7 @@ function enhanceArray(a) {
     if (n === null) {
       return this.sample(this.length, wr);
     }
-    if (n < 1) {
+    if (n &lt; 1) {
       return this.sample(Math.floor(this.length * n), wr);
     }
     if (wr) {
@@ -335,7 +363,7 @@ function enhanceArray(a) {
     }
     const sample = Array(n).fill(0);
     const used = new Set();
-    for (let ptr = 0; ptr < n; ptr++) {
+    for (let ptr = 0; ptr &lt; n; ptr++) {
       let idx;
       do {
         idx = Math.floor(Math.random() * this.length);
@@ -418,7 +446,7 @@ function enhanceTypedArray(a) {
 
   const defineGetter = (name, f) => Object.defineProperty(a, name, { get: f });
 
-  // memory & data type
+  // memory &amp; data type
   defineGetter('dtype', function () {
     const match = dtypeRegex.exec(this.constructor.name);
     return match[1].slice(0, 1).toLocaleLowerCase() + match[2];
@@ -485,7 +513,7 @@ function enhanceTypedArray(a) {
 
   a.takeWhile = function (f) {
     let i = 0;
-    while (f(this[i]) && i < this.length) i++;
+    while (f(this[i]) &amp;&amp; i &lt; this.length) i++;
     return this.subarray(0, i);
   };
 
@@ -493,7 +521,7 @@ function enhanceTypedArray(a) {
     let dtype = `f${FLOAT_PRECISION}`;
     if (this.dtype[0] === other.dtype[0]) {
       dtype = this.BYTES_PER_ELEMENT >= other.BYTES_PER_ELEMENT ? this.dtype : other.dtype;
-    } else if ((other.dtype.startsWith('u') && this.dtype.startsWith('i')) || (this.dtype.startsWith('u') && other.dtype.startsWith('i'))) {
+    } else if ((other.dtype.startsWith('u') &amp;&amp; this.dtype.startsWith('i')) || (this.dtype.startsWith('u') &amp;&amp; other.dtype.startsWith('i'))) {
       dtype = 'i32';
     } else if (other.dtype.startsWith('f')) {
       dtype = other.dtype;
@@ -539,10 +567,10 @@ function enhanceTypedArray(a) {
           .map(x => x + other);
       }
       const isInt = Number.isInteger(other);
-      const isNeg = other < 0;
-      if (amFloat || (isInt && (!isNeg || amInt))) {
+      const isNeg = other &lt; 0;
+      if (amFloat || (isInt &amp;&amp; (!isNeg || amInt))) {
         return this.map(x => x + other);
-      } else if (amUint && isInt && isNeg) {
+      } else if (amUint &amp;&amp; isInt &amp;&amp; isNeg) {
         return empty(this.length, 'i32').map((_, idx) => this[idx] * other);
       } else {
         return empty(this.length, `f${FLOAT_PRECISION}`).map((_, idx) => this[idx] * other);
@@ -566,7 +594,7 @@ function enhanceTypedArray(a) {
     const otherBits = other.BYTES_PER_ELEMENT * 8;
     const len = Math.min(this.length, other.length);
 
-    if (isFloat && amFloat) {
+    if (isFloat &amp;&amp; amFloat) {
       if (other.BYTES_PER_ELEMENT >= this.BYTES_PER_ELEMENT) {
         return other.map((x, idx) => x + this[idx]);
       } else {
@@ -576,20 +604,20 @@ function enhanceTypedArray(a) {
       return this.map((x, idx) => x + other[idx]);
     } else if (isFloat) {
       return other.map((x, idx) => x + this[idx]);
-    } else if (amUint && isUint) {
+    } else if (amUint &amp;&amp; isUint) {
       if (other.BYTES_PER_ELEMENT >= this.BYTES_PER_ELEMENT) {
         return other.map((x, idx) => x + this[idx]);
       } else {
         return this.map((x, idx) => x + other[idx]);
       }
-    } else if (amInt && isUint) {
+    } else if (amInt &amp;&amp; isUint) {
       if (myBits >= (otherBits * 2)) {
         return this.map((x, idx) => x + other[idx]);
       } else {
         return empty(len, 'i32')
           .map((_, idx) => this[idx] + other[idx]);
       }
-    } else if (isInt && amUint) {
+    } else if (isInt &amp;&amp; amUint) {
       if (otherBits >= (myBits * 2)) {
         return other.map((x, idx) => x + this[idx]);
       } else {
@@ -632,10 +660,10 @@ function enhanceTypedArray(a) {
           .map(x => x * other);
       }
       const isInt = Number.isInteger(other);
-      const isNeg = other < 0;
-      if (amFloat || (isInt && (!isNeg || amInt))) {
+      const isNeg = other &lt; 0;
+      if (amFloat || (isInt &amp;&amp; (!isNeg || amInt))) {
         return this.map(x => x * other);
-      } else if (amUint && isInt && isNeg) {
+      } else if (amUint &amp;&amp; isInt &amp;&amp; isNeg) {
         return empty(this.length, `i32`)
           .map((_, idx) => this[idx] * other);
       } else {
@@ -661,7 +689,7 @@ function enhanceTypedArray(a) {
     const otherBits = other.BYTES_PER_ELEMENT * 8;
     const len = Math.min(this.length, other.length);
 
-    if (isFloat && amFloat) {
+    if (isFloat &amp;&amp; amFloat) {
       if (other.BYTES_PER_ELEMENT >= this.BYTES_PER_ELEMENT) {
         return other.map((x, idx) => x * this[idx]);
       } else {
@@ -671,20 +699,20 @@ function enhanceTypedArray(a) {
       return this.map((x, idx) => x * other[idx]);
     } else if (isFloat) {
       return other.map((x, idx) => x * this[idx]);
-    } else if (amUint && isUint) {
+    } else if (amUint &amp;&amp; isUint) {
       if (other.BYTES_PER_ELEMENT >= this.BYTES_PER_ELEMENT) {
         return other.map((x, idx) => x * this[idx]);
       } else {
         return this.map((x, idx) => x * other[idx]);
       }
-    } else if (amInt && isUint) {
+    } else if (amInt &amp;&amp; isUint) {
       if (myBits >= (otherBits * 2)) {
         return this.map((x, idx) => x * other[idx]);
       } else {
         return empty(len, 'i32')
           .map((_, idx) => this[idx] * other[idx]);
       }
-    } else if (isInt && amUint) {
+    } else if (isInt &amp;&amp; amUint) {
       if (otherBits >= (myBits * 2)) {
         return other.map((x, idx) => x * this[idx]);
       } else {
@@ -724,7 +752,7 @@ function enhanceTypedArray(a) {
     const isFloat = other.dtype.match('f');
     const len = Math.min(this.length, other.length);
 
-    if (isFloat && amFloat) {
+    if (isFloat &amp;&amp; amFloat) {
       if (other.BYTES_PER_ELEMENT >= this.BYTES_PER_ELEMENT) {
         return other.map((x, idx) => x / this[idx]);
       } else {
@@ -833,7 +861,7 @@ function enhanceTypedArray(a) {
     if (n === null) {
       return this.sample(this.length, wr);
     }
-    if (n < 1) {
+    if (n &lt; 1) {
       return this.sample(Math.floor(this.length * n), wr);
     }
     if (wr) {
@@ -841,7 +869,7 @@ function enhanceTypedArray(a) {
     }
     const sample = empty(n, `f${FLOAT_PRECISION}`);
     const used = new Set();
-    for (let ptr = 0; ptr < n; ptr++) {
+    for (let ptr = 0; ptr &lt; n; ptr++) {
       let idx;
       do {
         idx = Math.floor(Math.random() * this.length);
@@ -926,14 +954,14 @@ function enhanceTypedArray(a) {
   a.dropOutliers = function () {
     const Q1 = this.Q1();
     const Q3 = this.Q3();
-    return this.filter(x => x >= Q1 && x <= Q3);
+    return this.filter(x => x >= Q1 &amp;&amp; x &lt;= Q3);
   };
 
   a.clip = function (lBound = null, uBound = null) {
-    if (lBound !== null && uBound !== null) {
-      return this.map(v => (v < lBound ? lBound : v > uBound ? uBound : v));
+    if (lBound !== null &amp;&amp; uBound !== null) {
+      return this.map(v => (v &lt; lBound ? lBound : v > uBound ? uBound : v));
     } else if (lBound !== null) {
-      return this.map(v => (v < lBound ? lBound : v));
+      return this.map(v => (v &lt; lBound ? lBound : v));
     } else {
       return this.map(v => (v > uBound ? uBound : v));
     }
@@ -975,7 +1003,7 @@ function enhanceTypedArray(a) {
 }
 
 /**
- * @param {!Array<!Number>|!TypedArray} xs
+ * @param {!Array&lt;!Number>|!TypedArray} xs
  * @param {!Number} [floatSize]
  * @returns {'i8'|'i16'|'i32'|'u8'|'u16'|'u32'|'f32'|'f64'} dtype
  * @private
@@ -986,18 +1014,18 @@ function guessDtype(xs, floatSize = null) {
   }
   let largest = xs.reduce((a, b) => Math.max(a, b));
   const smallest = xs.reduce((a, b) => Math.min(a, b));
-  if (smallest < 0 && Math.abs(smallest) > largest) {
+  if (smallest &lt; 0 &amp;&amp; Math.abs(smallest) > largest) {
     largest = Math.abs(smallest);
   }
   let bitsNeeded = Math.ceil(Math.log2(largest + 1));
-  const isNeg = smallest < 0;
+  const isNeg = smallest &lt; 0;
   const isFloat = xs.some(x => !Number.isInteger(x));
   if (isNeg) bitsNeeded++;
 
   // reals
   if (isFloat) {
     debugger;
-    if (smallest <= 1.23e-38 || largest >= 3.4e38) {
+    if (smallest &lt;= 1.23e-38 || largest >= 3.4e38) {
       return 'f64';
     } else {
       return 'f32';
@@ -1006,11 +1034,11 @@ function guessDtype(xs, floatSize = null) {
 
   // integers
   if (isNeg) {
-    if (bitsNeeded <= 8) {
+    if (bitsNeeded &lt;= 8) {
       return 'i8';
-    } else if (bitsNeeded <= 16) {
+    } else if (bitsNeeded &lt;= 16) {
       return 'i16';
-    } else if (bitsNeeded <= 32) {
+    } else if (bitsNeeded &lt;= 32) {
       return 'i32';
     } else {
       throw new Error('numbers to large to represent');
@@ -1018,11 +1046,11 @@ function guessDtype(xs, floatSize = null) {
   }
 
   // natural numbers
-  if (bitsNeeded <= 8) {
+  if (bitsNeeded &lt;= 8) {
     return 'u8';
-  } else if (bitsNeeded <= 16) {
+  } else if (bitsNeeded &lt;= 16) {
     return 'u16';
-  } else if (bitsNeeded <= 32) {
+  } else if (bitsNeeded &lt;= 32) {
     return 'u32';
   } else {
     throw new Error('numbers to large to represent');
@@ -1059,7 +1087,7 @@ function* rangeIter(a = 0, b = null, step = 1) {
   if (b === null) {
     yield *rangeIter(0, a, step);
   }
-  for (let i = a; i < b; i += step) yield i;
+  for (let i = a; i &lt; b; i += step) yield i;
 }
 
 /**
@@ -1067,7 +1095,7 @@ function* rangeIter(a = 0, b = null, step = 1) {
  * @param {!Number} [a]
  * @param {!Number} [b]
  * @param {!Number} [step]
- * @returns {!TypedArray<Number>} range
+ * @returns {!TypedArray&lt;Number>} range
  */
 function range(a = 0, b = null, step = 1) {
   if (b === null) return range(0, a);
@@ -1081,9 +1109,9 @@ function range(a = 0, b = null, step = 1) {
 }
 
 /**
- * @param {!Iterable<*>} xs
- * @param {?Iterable<*>} [vocab]
- * @returns {Map<Number>} multiset
+ * @param {!Iterable&lt;*>} xs
+ * @param {?Iterable&lt;*>} [vocab]
+ * @returns {Map&lt;Number>} multiset
  */
 function bag(xs, vocab = null) {
   if (vocab !== null) {
@@ -1098,8 +1126,8 @@ function bag(xs, vocab = null) {
 
 
 /**
- * @param {!Array<*>|!TypedArray} xs
- * @returns {!TypedArray|!Array<*>} series
+ * @param {!Array&lt;*>|!TypedArray} xs
+ * @returns {!TypedArray|!Array&lt;*>} series
  */
 function from(xs) {
   // return empty arrays
@@ -1107,7 +1135,7 @@ function from(xs) {
     return xs;
   }
 
-  const isTyped = xs.constructor.name.indexOf('Array') >= 0 && xs.constructor.name !== 'Array';
+  const isTyped = xs.constructor.name.indexOf('Array') >= 0 &amp;&amp; xs.constructor.name !== 'Array';
 
   if (isTyped) {
     return xs;
@@ -1134,7 +1162,7 @@ function from(xs) {
 /**
  * @param {!Number} [len]
  * @param {"u64"|"u32"|"u16"|"u8"|"i64"|"i32"|"i16"|"i8"|"f64"|"f32"|null|"s"} dtype
- * @returns {!TypedArray|!Array<*>} empty array
+ * @returns {!TypedArray|!Array&lt;*>} empty array
  */
 function empty(len = 0, dtype = null) {
   if (dtype === 's') {
@@ -1197,7 +1225,7 @@ function zeros(len, dtype = null) {
 
 /**
  * @param xs
- * @returns {!Array<*>|!TypedArray} array
+ * @returns {!Array&lt;*>|!TypedArray} array
  */
 function of(...xs) {
   return from(xs);
@@ -1237,3 +1265,26 @@ const Series = {
 };
 
 module.exports = Series;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="DataFrame.html">DataFrame</a></li></ul><h3>Global</h3><ul><li><a href="global.html#bag">bag</a></li><li><a href="global.html#empty">empty</a></li><li><a href="global.html#fill">fill</a></li><li><a href="global.html#from">from</a></li><li><a href="global.html#of">of</a></li><li><a href="global.html#ones">ones</a></li><li><a href="global.html#rand">rand</a></li><li><a href="global.html#randInRange">randInRange</a></li><li><a href="global.html#randInt">randInt</a></li><li><a href="global.html#range">range</a></li><li><a href="global.html#rangeIter">rangeIter</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#util">util</a></li><li><a href="global.html#zeros">zeros</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Tue Apr 02 2019 14:09:50 GMT+0100 (British Summer Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

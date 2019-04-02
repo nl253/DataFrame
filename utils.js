@@ -1,6 +1,7 @@
 /**
  * @param {!Number} n
  * @param {!Number} [prec]
+ * @private
  */
 function fmtFloat(n, prec = 2) {
   const s = n.toString();
