@@ -1285,8 +1285,6 @@ module.exports = class DataFrame {
       return 'Empty DataFrame';
     }
 
-    debugger;
-
     const rows = [];
 
     // print index column
@@ -1386,8 +1384,6 @@ module.exports = class DataFrame {
 
     // inject underlining `-------`
     rows.splice(1, 0, lens.map(l => '-'.repeat(l)));
-
-    debugger;
 
     // inject dtypes for all headings
     rows[0] = rows[0].slice(0, 1).concat(rows[0].slice(1, rows[0].length).map((h, cIdx) => {
