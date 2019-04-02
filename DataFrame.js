@@ -1162,14 +1162,19 @@ class DataFrame {
     if (k.toLocaleLowerCase() !== k) {
       return DF.set(k.toLocaleLowerCase(), v);
     }
-    if (k.match('print')) {
+    if (k.match(/pr(int|ec)/)) {
       Series.set(k, v);
       PRINT_PRECISION = v;
-    } else if (k.match('len')) {
+    } else if (k.match(/len|^head/)) {
       Series.set(k, v);
       HEAD_LEN = v;
+      PRINT_PRECISION = v;
+    } else if (k.match('width')) {
+      PRINT_WIDTH = v;
+    } else if (k.match('float')) {
+      Series.set(k, v);
     } else {
-      throw new Error(`unrecognised option "${k}"`);
+      throw new Error(`unrecognised option "${k}", try: printWidth, printPrecision, headLen, floatPrecision`);
     }
   }
 

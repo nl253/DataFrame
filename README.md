@@ -1038,18 +1038,47 @@ Id,SepalLengthCm,SepalWidthCm,PetalLengthCm,PetalWidthCm,Species
 2,4.900000095367432,3,1.399999976158142,0.20000000298023224,Iris-setosa
 ```
 
-### Series Human-Friendly API
-
-TODO
-
 ### Settings
 
-TODO
+<table>
+  <tr>
+    <th>Option</th>
+    <th>Default</th>
+    <th>Sensible Alternatives</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td>`printPrecision`</td>
+    <td>2</td>
+    <td>3, 4, 5, 6, 7, 8</td>
+    <td>how many float digits after the radix point to print</td>
+  </tr>
+  <tr>
+    <td>`floatPrecision`</td>
+    <td>32</td>
+    <td>64</td>
+    <td>-</td>
+  </tr>
+  <tr>
+    <td>`printWidth`</td>
+    <td>10</td>
+    <td>12, 15, 20</td>
+    <td>constrain width of columns when printing</td>
+  </tr>
+  <tr>
+    <td>`headlen`</td>
+    <td>5<td>
+    <td>7, 10, 20</td>
+    <td>by default print this number of rows when running `.head()`, `.tail()` etc.</td>
+  </tr>
+</table>
 
-#### Printing
+To set:
 
-TODO
+```javascript
+DF.set(option, value)
+```
 
-#### Float Precision (32 / 64)
+### Series Human-Friendly API
 
 TODO

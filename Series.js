@@ -1210,12 +1210,14 @@ function of(...xs) {
 function set(k, v) {
   if (k.toLocaleLowerCase() !== k) {
     return set(k.toLocaleLowerCase(), v);
-  } else if (k.match('print')) {
+  } else if (k.match(/^pr(int|ec)/)) {
     PRINT_PRECISION = v;
-  } else if (k.match('len')) {
+  } else if (k.match(/len|^head/)) {
     HEAD_LEN = v;
-  } else if (k.match('float')) {
+  } else if (k.match(/float/)) {
     FLOAT_PRECISION = v;
+  } else {
+    throw new Error(`unrecognised option "${k}", try: printPrecision, headLen, floatPrecision`);
   }
 }
 
