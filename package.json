@@ -1,14 +1,14 @@
 {
   "author": "Norbert Logiewa <norbertlogiewa96@gmail.com>",
   "bugs": {
-    "url": "https://github.com/nl253/JS-Typed-Array-Exensions/issues"
+    "url": "https://github.com/nl253/DataFrame/issues"
   },
   "dependencies": {
     "csv": "^5.1.1",
     "csv-parse": "latest",
     "winston": "^3.2.1"
   },
-  "description": "Extensions to typed arrays",
+  "description": "Dataframe & Series library for statistics and tabular data manipulation (like pandas)",
   "devDependencies": {
     "eslint": "^5.15.1",
     "eslint-config-airbnb": "^17.1.0",
@@ -60,15 +60,15 @@
   ],
   "license": "MIT",
   "main": "series.js",
-  "name": "typed_array_extensions",
+  "name": "dataf",
   "private": false,
-  "readme": "https://github.com/nl253/JS-Typed-Array-Exensions/blob/master/README.md",
+  "readme": "https://github.com/nl253/DataFrame/blob/master/README.md",
   "repository": {
     "type": "git",
-    "url": "https://github.com/nl253/JS-Typed-Array-Exensions"
+    "url": "https://github.com/nl253/DataFrame"
   },
   "scripts": {
     "test": "jest"
   },
-  "version": "0.0.1-alpha"
+  "version": "0.0.2-alpha"
 }

@@ -272,3 +272,4 @@ flycheck_*.el
 .dir-locals.el
 bower_components/
 
+./bin
