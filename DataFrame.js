@@ -2,7 +2,6 @@
 /**
  * TODO loading (g)zipped csv
  * TODO string col hashing
- * TODO cumulative ops
  * TODO binarizer
  */
 const { createUnzip, createGzip, createGunzip, createDeflate } = require('zlib');
@@ -11,14 +10,14 @@ const { dirname, join } = require('path');
 const { gunzipSync, gzipSync } = require('zlib');
 const { mkdirSync, readdirSync, existsSync, writeFileSync, readFileSync, createReadStream, createWriteStream } = require('fs');
 
+const stringifyCSV = require('csv-stringify');
+
 const Series = require('./Series');
 const { randInt } = require('./rand');
 const { readCSV } = require('./load');
 const { fmtFloat } = require('./utils');
 const log = require('./log');
 const env = require('./env');
-
-const stringifyCSV = require('csv-stringify');
 
 const bitRegex = /8|16|32|64/;
 
@@ -98,8 +97,11 @@ class DataFrame {
       this.colNames = Object.keys(data);
       // map { colName => col, ... }
     } else if (data.constructor.name === 'Map' || what.match(/^map/i)) {
-      this._cols = Array.from(data.values()).map(c => Series.from(c));
-      this.colNames = Array.from(data.keys());
+      this._cols = [
+        Series.from(Array.from(data.keys())),
+        Series.from(Array.from(data.values())),
+      ];
+      this.colNames = colNames === null ? ['Key', 'Value'] : colNames;
     } else {
       // array of rows
       if (what.match(/^row/i)) {
@@ -284,6 +286,7 @@ class DataFrame {
   /**
    * @param {!String|!Number} colId
    * @returns {!Number} column index
+   * @private
    */
   colIdx(colId) {
     // resolve named column
@@ -1021,11 +1024,9 @@ class DataFrame {
       }
     }
     const cIdx = this.colIdx(colId);
-    return new DataFrame(
-      Array.from(this._cols[cIdx].counts().entries()),
-      'rows',
-      [this.colNames[cIdx], 'count'],
-    );
+    const col = this._cols[cIdx];
+    const colNames = [this.colNames[cIdx], 'count'];
+    return new DataFrame(col.counts(), 'map', colNames);
   }
 
   /**

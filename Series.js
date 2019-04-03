@@ -209,9 +209,6 @@ function enhance(a) {
 
   // manipulation
 
-  a.replace = function (v, y) {
-    return this.map((x, idx) => (x === v ? y : x));
-  };
 
   a.drop = function (v) {
     return this.filter(a => !Object.is(a, v));
@@ -297,6 +294,10 @@ function enhanceArray(a) {
   };
 
   // pre-processing
+  
+  a.replace = function (pat, y) {
+    return this.map((x, idx) => x.replace(pat, y));
+  };
 
   a.labelEncode = function (dtype = null) {
     if (dtype === null) {
@@ -958,6 +959,10 @@ function enhanceTypedArray(a) {
     } else {
       return this.map(v => (v > uBound ? uBound : v));
     }
+  };
+
+  a.replace = function (v, y) {
+    return this.map((x, idx) => x === v ? y : x );
   };
 
   // functional programming
