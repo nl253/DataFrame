@@ -1,10 +1,8 @@
 // vim:hlsearch:nu:
 /**
- * TODO mode is broken
  * TODO loading (g)zipped csv
- * TODO saving
- * TODO replace NaN with mean / mode
  * TODO string col hashing
+ * TODO cumulative ops
  * TODO binarizer
  */
 const { createUnzip, createGzip, createGunzip, createDeflate } = require('zlib');
@@ -189,10 +187,12 @@ class DataFrame {
       }
     }
 
-    if (this.mode === undefined) {
-      this.mode = function (...args) {
-        return this.agg('mode', 'all', ...args);
-      };
+    for (const agg of ['mode', 'argMax', 'argMin']) {
+      if (this[agg] === undefined) {
+        this[agg] = function (...args) {
+          return this.agg(agg, 'all', ...args);
+        };
+      }
     }
 
     /*
@@ -200,7 +200,7 @@ class DataFrame {
      * ForwardFunct :: Series (len = n) => Series (len = n)
      */
     for (const f of [
-      'map', 'reverse', 'zipWith', 'zipWith3',
+      'replace', 'map', 'reverse', 'zipWith', 'zipWith3', 'cum',
     ]) {
       if (this[f] !== undefined) continue;
       this[f] = function (colId = null, ...args) {
@@ -208,7 +208,7 @@ class DataFrame {
       };
     }
 
-    for (const f of ['labelEncode', 'replace']) {
+    for (const f of ['labelEncode']) {
       if (this[f] !== undefined) continue;
       this[f] = function (colId = null, ...args) {
         return this.call(colId, f, 'str', ...args);
@@ -219,17 +219,21 @@ class DataFrame {
       'abs',
       'add',
       'cast',
+      'cbrt',
       'ceil',
       'clip',
       'cube',
       'cum',
       'div',
       'downcast',
+      'dropNaN',
       'floor',
       'kBins',
       'mul',
       'normalize',
+      'pow',
       'round',
+      'sqrt',
       'square',
       'sub',
       'trunc',
@@ -742,6 +746,8 @@ class DataFrame {
       return this.filter(x => x <= val, colId);
     } else if (op === '>=') {
       return this.filter(x => x >= val, colId);
+    } else {
+      throw new Error(`unrecognised op ${op}`);
     }
   }
 
@@ -1108,11 +1114,11 @@ class DataFrame {
     return new DataFrame(newCols, 'cols', Array.from(this.colNames));
   }
 
-
   /**
    * @returns {!Object<Array<!Number>|!Array<!String>>} dictionary
+   * @private
    */
-  toDict() {
+  _toObj() {
     const dict = {};
     for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
       const cName = this.colNames[cIdx];
@@ -1123,31 +1129,69 @@ class DataFrame {
   }
 
   /**
-   * @returns {!Array<Array<*>>} rows or cols as array
+   * @returns {!String} json-stringified data frame
    */
-  toArray(mode = 'rows') {
-    return mode === 'rows'
-      ? Array.from(this.rowsIter)
-      : this._cols.map(c => Array.from(c));
+  toJSON() {
+    return JSON.stringify(this._toObj());
   }
 
   /**
-   * @returns {!String} json-stringified data frame
+   * @param {!String} filePath
+   * @param {!Boolean|!Array<!String|!Number>} [header]
+   * @returns {!DataFrame} data frame
    */
-  saveJSON(filePath) {
-    if (filePath.match(/\.x?html\d?$/i)) {
-      const out = createWriteStream(filePath);
-      out.end(JSON.stringify(this.toDict()));
-      log.info(`saved JSON to ${filePath}`);
-    } else {
-      throw new Error('bad file name, expected *.json file name');
+  toCSV(filePath) {
+    // tODO DataFrame.toCSV()
+    throw new Error('not implemented yet');
+  }
+
+  /**
+   * @returns {!String} HTML
+   */
+  toHTML() {
+    const chunks = [];
+
+    chunks.push('<table>');
+    chunks.push('<tr>');
+
+    for (const name of this.colNames) {
+      chunks.push('<th>');
+      chunks.push(name.toString());
+      chunks.push('</th>');
     }
+
+    chunks.push('</tr>');
+
+    for (let rIdx = 0; rIdx < this.length; rIdx++) {
+      chunks.push('<tr>');
+
+      for (const val of this.irow(rIdx)) {
+        chunks.push(`<td>${val.toString()}</td>`);
+      }
+
+      chunks.push('</tr>');
+    }
+
+    chunks.push('</table>');
+    return chunks.join('');
   }
 
   /**
    * @param {!String} filePath
    */
-  saveHTML(filepath) {
+  saveJSON(filePath) {
+    if (!filePath.match(/\.json$/i)) {
+      log.warn(`bad file name ${filePath}, expected *.json file name`);
+    }
+    const out = createWriteStream(filePath);
+    out.end(JSON.stringify(this._toObj()));
+    log.info(`saved JSON to ${filePath}`);
+  }
+
+  /**
+   * @param {!String} filePath
+   */
+  saveHTML(filePath) {
     if (filePath.match(/\.x?html\d?$/i)) {
       const out = createWriteStream(filePath);
 
@@ -1155,9 +1199,7 @@ class DataFrame {
       out.write('<tr>');
 
       for (const name of this.colNames) {
-        out.write('<th>');
-        out.write(name.toString());
-        out.write('</th>');
+        out.write(`<th>${name.toString()}</th>`);
       }
 
       out.write('</tr>');
@@ -1175,6 +1217,7 @@ class DataFrame {
       }
 
       out.end('</table>');
+      log.info(`saved HTML to ${filePath}`);
     } else {
       throw new Error('bad file name, expected *.html file name');
     }
@@ -1198,6 +1241,7 @@ class DataFrame {
       for (const r of this.rowsIter) {
         stringifier.write(r);
       }
+      log.info(`saved CSV to ${filePath}`);
     } else {
       throw new Error(`bad file name, expected *.csv file name`);
     }
@@ -1224,7 +1268,7 @@ class DataFrame {
   }
 
   /**
-   * Loads JSON-encoded data. 
+   * Loads JSON-encoded data.
    *
    * NOTE the format must be the same as returned by saveJSON. Ie. { colName: [...], ...}.
    *
@@ -1237,7 +1281,7 @@ class DataFrame {
   }
 
   /**
-   * Loads one of the toy datasets the library ships whith. 
+   * Loads one of the toy datasets the library ships whith.
    *
    * NOTE to see all availible datasets run `DataFrame.dataSets`.
    *
@@ -1283,19 +1327,8 @@ class DataFrame {
    * @param {!String} k
    * @param {*} v
    */
-  static set(k, v) {
-    if (env[k] !== undefined) {
-      env[k] = v;
-    } else {
-      throw new Error(`unrecognised option ${k}`);
-    }
-  }
-
-  /**
-   * @returns {!DataFrame} table of options
-   */
-  static opts() {
-    return new DataFrame(Object.entries(env), 'rows', ['option', 'value']);
+  static get opts() {
+    return env;
   }
 
   /**
@@ -1449,7 +1482,7 @@ class DataFrame {
       const len = lens[cIdx + 1];
       const dtype = this.dtypes[cIdx];
       const heading = h.trim();
-      return dtype + ' '.repeat(len - heading.length - dtype.length) + heading;
+      return `${dtype}${' '.repeat(len - heading.length - dtype.length)}${heading}`;
     }));
 
     // inject underlining `-------`

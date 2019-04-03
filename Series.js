@@ -78,12 +78,12 @@ function enhance(a) {
       return newArr;
     }
     if (f.constructor.name === 'String') {
-      for (let i = this.length - 1; i >= 0; i--) {
-        newArr[i] = f(this.subarray(0, i + 1));
+      for (let i = this.length - 1; i > 0; i--) {
+        newArr[i] = this.subarray(0, i + 1)[f]();
       }
     } else {
-      for (let i = this.length - 1; i >= 0; i--) {
-        newArr[i] = this.subarray(0, i + 1)[f]();
+      for (let i = this.length - 1; i > 0; i--) {
+        newArr[i] = f(this.subarray(0, i + 1));
       }
     }
     return newArr;
@@ -1224,18 +1224,6 @@ function of(...xs) {
   return from(xs);
 }
 
-/**
- * @param {!String} k
- * @param {*} v
- */
-function set(k, v) {
-  if (env[k] !== undefined) {
-    env[k] = v;
-  } else {
-    throw new Error(`unrecognised option ${k}`);
-  }
-}
-
 let Series;
 
 if (process.env.TESTING === '1')  {
@@ -1249,7 +1237,7 @@ if (process.env.TESTING === '1')  {
     guessDtype,
     of,
     ones,
-    set,
+    env,
     rand,
     range,
     rangeIter,
@@ -1262,7 +1250,7 @@ if (process.env.TESTING === '1')  {
     from,
     of,
     ones,
-    set,
+    env,
     rand,
     range,
     zeros,
