@@ -29,26 +29,28 @@
             <pre class="prettyprint source linenums"><code>// vim:hlsearch:nu:
 /**
  * TODO mode is broken
- * TODO slice cols is broken (doesn't include the last col)
  * TODO loading (g)zipped csv
  * TODO saving
+ * TODO replace NaN with mean / mode
+ * TODO string col hashing
+ * TODO binarizer
  */
+const { createUnzip, createGzip, createGunzip, createDeflate } = require('zlib');
 const util = require('util');
 const { dirname, join } = require('path');
 const { gunzipSync, gzipSync } = require('zlib');
-const { mkdirSync, readdirSync, existsSync, writeFileSync, readFileSync } = require('fs');
+const { mkdirSync, readdirSync, existsSync, writeFileSync, readFileSync, createReadStream, createWriteStream } = require('fs');
 
 const Series = require('./Series');
 const { randInt } = require('./rand');
 const { readCSV } = require('./load');
 const { fmtFloat } = require('./utils');
 const log = require('./log');
+const env = require('./env');
+
+const stringifyCSV = require('csv-stringify');
 
 const bitRegex = /8|16|32|64/;
-
-let PRINT_PRECISION = 2;
-let HEAD_LEN = 5;
-let PRINT_WIDTH = 10;
 
 /**
  * @param {"f32"|"f64"|"i8"|"16"|"i32"|"u8"|"u16"|"u32"|"s"} dt1
@@ -83,12 +85,14 @@ function unify(dt1, dt2) {
  * @private
  */
 function transpose(xs) {
-  // from [1, 2 , 3] to:
-  //
-  // [[1],
-  //  [2],
-  //  [3]]
-  //
+  /*
+   * from [1, 2 , 3] to:
+   *
+   * [[1],
+   *  [2],
+   *  [3]]
+   *
+   */
   if (xs[0].constructor.name !== 'Array') {
     return xs.map(x => [x]);
   }
@@ -110,7 +114,7 @@ class DataFrame {
    * @param {?Array&lt;!String>} [colNames] labels for every column (#cols === #labels)
    */
   constructor(data = [], what = 'rows', colNames = null) {
-      // empty
+    // empty
     if (data.length === 0) {
       this._cols = [];
       this.colNames = [];
@@ -223,7 +227,9 @@ class DataFrame {
      * each forward function is forwarded to the underlying series
      * ForwardFunct :: Series (len = n) => Series (len = n)
      */
-    for (const f of ['map', 'reverse', 'zipWith', 'zipWith3']) {
+    for (const f of [
+      'map', 'reverse', 'zipWith', 'zipWith3',
+    ]) {
       if (this[f] !== undefined) continue;
       this[f] = function (colId = null, ...args) {
         return this.call(colId, f, 'all', ...args);
@@ -276,12 +282,101 @@ class DataFrame {
   }
 
   /**
+   * @returns {!Set&lt;!Number>} set of column indexes
+   * @private
+   */
+  get _numColIdxs() {
+    const { dtypes } = this;
+    const colIdxs = new Set();
+    for (let cIdx = 0; cIdx &lt; this.nCols; cIdx++) {
+      if (dtypes[cIdx] !== 's' &amp;&amp; dtypes[cIdx] !== 'null') {
+        colIdxs.add(cIdx);
+      }
+    }
+    return colIdxs;
+  }
+
+  /**
+   * @returns {!Set&lt;!Number>} set of column indexes
+   * @private
+   */
+  get _strColIdxs() {
+    const numCols = this._numColIdxs;
+    return new Set(this.colNames.filter((_, idx) => !numCols.has(idx)));
+  }
+
+  /**
+   * @param {!String|!Number} colId
+   * @returns {!Number} column index
+   */
+  colIdx(colId) {
+    // resolve named column
+    if (Number.isInteger(colId)) {
+      // resolve negative idx
+      if (colId &lt; 0) {
+        return this.colIdx(this.nCols + colId);
+      } else if (colId >= this.nCols) {
+        throw new Error(`there is no column #${colId}, out of bounds`);
+      } else {
+        return colId;
+      }
+    } else {
+      const idx = this.colNames.findIndex(colName => colName === colId);
+      if (idx &lt; 0) {
+        throw new Error(`failed to find matching column for "${colId}"`);
+      }
+      return idx;
+    }
+  }
+
+  /**
+   * @returns {!DataFrame} a data frame with numeric cols
+   */
+  get numeric() {
+    return this.select(...this._numColIdxs);
+  }
+
+  /**
+   * @returns {!DataFrame} a data frame with numeric cols
+   */
+  get nominal() {
+    return this.select(...this._strColIdxs);
+  }
+
+  /**
+   * @param {!String|!Number} colId
+   * @returns {Array&lt;String>|TypedArray} column
+   */
+  col(colId) {
+    return this._cols[this.colIdx(colId)];
+  }
+
+  /**
+   * @param {!Number} idx
+   * @returns {!Array&lt;*>} row
+   */
+  row(idx) {
+    return Array(this.nCols)
+      .fill(0)
+      .map((_, cIdx) => this.val(idx, cIdx));
+  }
+
+  /**
+   * @param {!Number} rowIdx
+   * @param {!String|!Number} colId
+   * @returns {!Number|!String} selects a val
+   */
+  val(rowIdx, colId) {
+    return this.col(colId)[rowIdx];
+  }
+
+  /**
    * @param {?Number} [n]
    * @returns {!DataFrame} data frame
    */
   head(n = null) {
     if (n === null) {
-      return this.tail(HEAD_LEN);
+      return this.tail(env.HEAD_LEN);
     }
     return this.slice(0, n);
   }
@@ -292,9 +387,64 @@ class DataFrame {
    */
   tail(n = null) {
     if (n === null) {
-      return this.tail(HEAD_LEN);
+      return this.tail(env.HEAD_LEN);
     }
     return this.slice(this.length - n, this.length);
+  }
+
+  /**
+   * @returns {!Number} number of rows
+   */
+  get length() {
+    if (this._cols[0] === undefined) {
+      return 0;
+    } else {
+      return this._cols[0].length;
+    }
+  }
+
+  /**
+   * @returns {!Number} number of columns
+   */
+  get nCols() {
+    return this._cols.length;
+  }
+
+  /**
+   * @param {...!String} colIds
+   * @returns {!DataFrame} data frame
+   */
+  dtype(...colIds) {
+    if (colIds.length === 0) {
+      return this.dtype(...this.colNames);
+    }
+    const colIdxs = colIds.map(id => this.colIdx(id));
+    const df = this.agg(col => col.dtype, cIdx => colIdxs.indexOf(cIdx) >= 0).rename(1, 'dtype');
+    return df;
+  }
+
+  /**
+   * @returns {!Array&lt;!String>} data types for all columns
+   */
+  get dtypes() {
+    return this._cols.map(c => c.dtype);
+  }
+
+
+  /**
+   * @param {...&lt;!Number|!String>} colIds
+   * @return {!DataFrame} data frame
+   */
+  select(...colIds) {
+    const cols = [];
+    const colNames = [];
+
+    for (const i of new Set(colIds.map(id => this.colIdx(id)))) {
+      cols.push(this._cols[i]);
+      colNames.push(this.colNames[i]);
+    }
+
+    return new DataFrame(cols, 'cols', colNames);
   }
 
   /**
@@ -320,6 +470,52 @@ class DataFrame {
       colNames[colIdx] = newName;
     }
     return new DataFrame(Array.from(this._cols), 'cols', colNames);
+  }
+
+  /**
+   * @param {!Number|!String} colId
+   * @param {!String|!Function} f
+   * @param {"all"|"num"|"str"|!Function} filter
+   * @param args
+   * @returns {!DataFrame} data frame with f applied to colId
+   */
+  call(colId = null, f, filter = 'all', ...args) {
+    if (colId === null) {
+      log.info('colId not specified');
+      if (this.nCols === 1) {
+        log.info('running for the only col');
+      } else {
+        log.info('running for all cols');
+      }
+    }
+    if (filter === 'num') {
+      return this.call(colId, f, cIdx => this._numColIdxs.has(cIdx), ...args);
+    } else if (filter === 'str') {
+      return this.call(colId, f, cIdx => !this._numColIdxs.has(cIdx), ...args);
+    } else if (filter === 'all') {
+      return this.call(colId, f, cIdx => true, ...args);
+    }
+    const { dtypes } = this;
+    const cols = Array.from(this._cols);
+    const colIdxs = (colId === null ? this.colNames : [colId]).map(id => this.colIdx(id));
+    if (f.constructor.name === 'String') {
+      for (const cIdx of colIdxs) {
+        if (!filter(cIdx)) {
+          log.warn(`tried running op col #${cIdx}`);
+        } else {
+          cols[cIdx] = cols[cIdx][f](...args);
+        }
+      }
+    } else {
+      for (const cIdx of colIdxs) {
+        if (!filter(cIdx)) {
+          log.warn(`tried running op col #${cIdx}`);
+        } else {
+          cols[cIdx] = f(cols[cIdx], ...args);
+        }
+      }
+    }
+    return new DataFrame(cols, 'cols', Array.from(this.colNames));
   }
 
   /**
@@ -366,167 +562,20 @@ class DataFrame {
   }
 
   /**
-   * @param {!String|!Number} colId
-   * @returns {!Number} column index
+   * @param {!Array&lt;!String>|!Array&lt;!Number>|TypedArray} col
+   * @param {?String} [name]
+   * @returns {!DataFrame} data frame
    */
-  colIdx(colId) {
-    // resolve named column
-    if (Number.isInteger(colId)) {
-      // resolve negative idx
-      if (colId &lt; 0) {
-        return this.colIdx(this.nCols + colId);
-      } else if (colId >= this.nCols) {
-        throw new Error(`there is no column #${colId}, out of bounds`);
-      } else {
-        return colId;
-      }
+  appendCol(col, name = null) {
+    const colNames = Array.from(this.colNames);
+    const cols = Array.from(this._cols);
+    cols.push(col);
+    if (name === null) {
+      colNames.push(colNames.length);
     } else {
-      const idx = this.colNames.findIndex(colName => colName === colId);
-      if (idx &lt; 0) {
-        throw new Error(`failed to find matching column for "${colId}"`);
-      }
-      return idx;
-    }
-  }
-
-  /**
-   * @param {"f32"|"f64"|"i8"|"16"|"i32"|"u8"|"u16"|"u32"|"s"|null} [dtype]
-   * @param {?Array&lt;!Number|!String>} [colNames]
-   */
-  transpose(dtype = null, colNames = null) {
-    if (dtype === null) {
-      const dt = this.dtypes.reduce((dt1, dt2) => unify(dt1, dt2));
-      log.info(`inferred dtype = ${dt}`);
-      return this.transpose(dt, colNames);
-    }
-    const cols = Array(this.length).fill(0).map(_ => Series.empty(this.nCols, dtype));
-    for (let cIdx = 0; cIdx &lt; this.nCols; cIdx++) {
-      for (let rIdx = 0; rIdx &lt; this.length; rIdx++) {
-        cols[rIdx][cIdx] = this._cols[cIdx][rIdx];
-      }
+      colNames.push(name);
     }
     return new DataFrame(cols, 'cols', colNames);
-  }
-
-  /**
-   * @returns {!DataFrame} a correlation matrix
-   */
-  corr(withNames = true) {
-    const numCols = this._numColIdxs;
-    const colIdxs = [];
-    const rows = [];
-    for (let yIdx = 0; yIdx &lt; this.nCols; yIdx++) {
-      if (numCols.has(yIdx)) {
-        colIdxs.push(yIdx);
-        rows.push([]);
-        for (let xIdx = 0; xIdx &lt; this.nCols; xIdx++) {
-          // every col is perfectrly correlated with itself (save some computation time)
-          if (xIdx === yIdx) {
-            rows[rows.length - 1].push(1);
-          } else if (numCols.has(xIdx)) {
-            const col = this._cols[yIdx];
-            const other = this._cols[xIdx];
-            const corr = col.corr(other);
-            rows[rows.length - 1].push(corr);
-          }
-        }
-      }
-    }
-
-    // numeric col names in the order of appearing in the matrix
-    const colNames = this.colNames.filter((_, cIdx) => colIdxs.indexOf(cIdx) >= 0);
-
-    /*
-     * prepend a col with colum names to the left
-     *    A1 A2 A3
-     * A1
-     * A2
-     * A3
-     */
-    if (withNames) {
-      for (let rIdx = 0; rIdx &lt; rows.length; rIdx++) {
-        const colName = this.colNames[colIdxs[rIdx]];
-        const row = rows[rIdx];
-        rows[rIdx] = [colName].concat(row);
-      }
-      return new DataFrame(rows, 'rows', ['column'].concat(colNames));
-    }
-    // else
-    return new DataFrame(rows, 'rows', colNames);
-  }
-
-  /**
-   * @param {!Number} [n] number of cols to select
-   * @param {"var"|"stdev"|"mean"|"mad"|"IQR"|"median"|"Q1"|"Q3"|"skewness"|"min"|"range"|"max"|!Function} [agg]
-   */
-  nBest(n = 5, agg = 'var') {
-    if (n > this.nCols) {
-      log.warn(`n = ${n}, but there is ${this.nCols} cols`);
-      return this.nBest(this.nCols, agg);
-    }
-
-    let bestCols;
-
-    if (agg.constructor.name === 'Function') {
-      bestCols = this._cols.map((col, idx) => ({ idx, name: this.colNames[idx], score: agg(col) }));
-    } else {
-      bestCols = this._cols.map((col, idx) => ({ idx, name: this.colNames[idx], score: col[agg]() }));
-    }
-
-    bestCols = bestCols.sort((o1, o2) => (o1.score > o2.score ? -1 : o1.score &lt; o2.score ? 1 : 0)).slice(0, n);
-
-    if (bestCols.some(({ name }) => !name.toString().match(/\d+/))) {
-      const colNames = [];
-      const cols = [];
-      for (const o of bestCols) {
-        colNames.push(o.name);
-        cols.push(this._cols[o.idx]);
-      }
-      return new DataFrame(cols, 'cols', colNames);
-    } else {
-      return new DataFrame(bestCols.map(({ idx }) => this._cols[idx]), 'cols');
-    }
-  }
-
-  /**
-   * @returns {!DataFrame} a data frame with numeric cols
-   */
-  get numeric() {
-    return this.select(...this._numColIdxs);
-  }
-
-  /**
-   * @returns {!DataFrame} a data frame with numeric cols
-   */
-  get nominal() {
-    return this.select(...this._strColIdxs);
-  }
-
-  /**
-   * @param {!String|!Number} colId
-   * @returns {Array&lt;String>|TypedArray} column
-   */
-  col(colId) {
-    return this._cols[this.colIdx(colId)];
-  }
-
-  /**
-   * @param {!Number} idx
-   * @returns {!Array&lt;*>} row
-   */
-  row(idx) {
-    return Array(this.nCols)
-      .fill(0)
-      .map((_, cIdx) => this.val(idx, cIdx));
-  }
-
-  /**
-   * @param {!Number} rowIdx
-   * @param {!String|!Number} colId
-   * @returns {!Number|!String} selects a val
-   */
-  val(rowIdx, colId) {
-    return this.col(colId)[rowIdx];
   }
 
   /**
@@ -593,223 +642,6 @@ class DataFrame {
   }
 
   /**
-   * @param {!Number} n ratio or number of elements
-   * @param {?Boolean} wr with replacement
-   * @returns {!DataFrame} data frame
-   */
-  sample(n = 0.1, wr = true) {
-    if (n &lt;= 1) {
-      return this.sample(Math.floor(n * this.length));
-    } else if (n >= this.length) {
-      log.warn('sample size >= nRows');
-      return this.sample(this.length - 1, wr);
-    }
-    const rows = [];
-    if (wr) {
-      while (rows.length &lt; n) {
-        const rIdx = randInt(0, this.length);
-        rows.push(this.row(rIdx));
-      }
-    } else {
-      const idxs = Array(this.length).fill(0).map((_, idx) => idx);
-      while (rows.length &lt; n) {
-        // this is a bit confusing because you are indexing an index
-        const i = randInt(0, idxs.length);
-        const rowIdx = idxs[i];
-        const row = this.row(rowIdx);
-        rows.push(row);
-        idxs.pop(i); // remove i from possible idxs
-      }
-    }
-    return new DataFrame(rows, 'rows', Array.from(this.colNames));
-  }
-
-  /**
-   * @param {!Array&lt;!String>|!Array&lt;!Number>|TypedArray} col
-   * @param {?String} [name]
-   * @returns {!DataFrame} data frame
-   */
-  appendCol(col, name = null) {
-    const colNames = Array.from(this.colNames);
-    const cols = Array.from(this._cols);
-    cols.push(col);
-    if (name === null) {
-      colNames.push(colNames.length);
-    } else {
-      colNames.push(name);
-    }
-    return new DataFrame(cols, 'cols', colNames);
-  }
-
-  /**
-   * @param {...&lt;!Number|!String>} colIds
-   * @return {!DataFrame} data frame
-   */
-  select(...colIds) {
-    const cols = [];
-    const colNames = [];
-
-    for (const i of new Set(colIds.map(id => this.colIdx(id)))) {
-      cols.push(this._cols[i]);
-      colNames.push(this.colNames[i]);
-    }
-
-    return new DataFrame(cols, 'cols', colNames);
-  }
-
-  /**
-   * @returns {!Number} number of rows
-   */
-  get length() {
-    if (this._cols[0] === undefined) {
-      return 0;
-    } else {
-      return this._cols[0].length;
-    }
-  }
-
-  /**
-   * @returns {!Number} number of columns
-   */
-  get nCols() {
-    return this._cols.length;
-  }
-
-  /**
-   * @param {...!String} colIds
-   * @returns {!DataFrame} data frame
-   */
-  dtype(...colIds) {
-    if (colIds.length === 0) {
-      return this.dtype(...this.colNames);
-    }
-    const colIdxs = colIds.map(id => this.colIdx(id));
-    const df = this.agg(col => col.dtype, cIdx => colIdxs.indexOf(cIdx) >= 0).rename(1, 'dtype');
-    return df;
-  }
-
-  /**
-   * @returns {!Array&lt;!String>} data types for all columns
-   */
-  get dtypes() {
-    const dtArr = this._cols.map(c => c.dtype);
-    // for (let i = 0; i &lt; this.nCols; i++) {
-      // Object.defineProperty(dtArr, i, { 
-        // set: (newDt) => {
-          // this._cols[i] = this._cols[i].cast(newDt);
-        // }});
-    // }
-    // for (const cName of this.colNames) {
-      // Object.defineProperty(dtArr, cName, { 
-        // set: (newDt) => {
-          // const cIdx = this.colIdx(cName);
-          // this._cols[cIdx] = this._cols[cIdx].cast(newDt);
-        // }});
-    // }
-    return dtArr;
-  }
-
-  /**
-   * @returns {!Set&lt;!Number>} set of column indexes
-   * @private
-   */
-  get _numColIdxs() {
-    const dtypes = this.dtypes;
-    const colIdxs = new Set();
-    for (let cIdx = 0; cIdx &lt; this.nCols; cIdx++) {
-      if (dtypes[cIdx] !== 's' &amp;&amp; dtypes[cIdx] !== 'null') {
-        colIdxs.add(cIdx);
-      }
-    }
-    return colIdxs;
-  }
-
-  /**
-   * @returns {!Set&lt;!Number>} set of column indexes
-   * @private
-   */
-  get _strColIdxs() {
-    const numCols = this._numColIdxs;
-    return new Set(this.colNames.filter((_, idx) => !numCols.has(idx)));
-  }
-
-  /**
-   * @param {!Number|!String} colId
-   * @param {!String|!Function} f
-   * @param {"all"|"num"|"str"|!Function} filter
-   * @param args
-   * @returns {!DataFrame} data frame with f applied to colId
-   */
-  call(colId = null, f, filter = 'all', ...args) {
-    if (colId === null) {
-      log.info('colId not specified');
-      if (this.nCols === 1) {
-        log.info('running for the only col');
-      } else {
-        log.info('running for all cols');
-      }
-    }
-    if (filter === 'num') {
-      return this.call(colId, f, cIdx => this._numColIdxs.has(cIdx), ...args);
-    } else if (filter === 'str') {
-      return this.call(colId, f, cIdx => !this._numColIdxs.has(cIdx), ...args);
-    } else if (filter === 'all') {
-      return this.call(colId, f, cIdx => true, ...args);
-    }
-    const { dtypes } = this;
-    const cols = Array.from(this._cols);
-    const colIdxs = (colId === null ? this.colNames : [colId]).map(id => this.colIdx(id));
-    if (f.constructor.name === 'String') {
-      for (const cIdx of colIdxs) {
-        if (!filter(cIdx)) {
-          log.warn(`tried running op col #${cIdx}`);
-        } else {
-          cols[cIdx] = cols[cIdx][f](...args);
-        }
-      }
-    } else {
-      for (const cIdx of colIdxs) {
-        if (!filter(cIdx)) {
-          log.warn(`tried running op col #${cIdx}`);
-        } else {
-          cols[cIdx] = f(cols[cIdx], ...args);
-        }
-      }
-    }
-    return new DataFrame(cols, 'cols', Array.from(this.colNames));
-  }
-
-  /**
-   * e.g. sliceCols(0)         -> sliceCols(0, end)
-   * e.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end)
-   *
-   * @param {...&lt;!String|!Number>} cols col pairs
-   * @returns {!DataFrame} data frame
-   */
-  sliceCols(...slices) {
-    if (slices.length === 0) {
-      throw new Error('no slice idxs specified (e.g. df.sliceCols(0, -1))');
-    } else if (slices.length % 2 !== 0) {
-      // odd number of idxs
-      return this.sliceCols(...slices, this.nCols - 1);
-    } 
-
-    // collect column idxs
-    const colIds = new Set();
-
-    for (let i = 1; i &lt; slices.length; i += 2) {
-      const lBound = this.colIdx(slices[i - 1]);
-      const rBound = this.colIdx(slices[i]);
-      for (let cIdx = lBound; cIdx &lt;= rBound; cIdx++) {
-        colIds.add(cIdx);
-      }
-    }
-
-    // then select them
-    return this.select(...colIds);
-  }
-
-  /**
    * @param {...!Number} idxs PAIRS of indexes
    * @returns {!DataFrame} a data frame
    */
@@ -824,7 +656,7 @@ class DataFrame {
        */
     } else if (idxs.some(idx => idx &lt; 0)) {
       // resolve negative indexes
-      return this.slice(...(idxs.map(idx => idx &lt; 0 ? idx + this.length : idx)));
+      return this.slice(...(idxs.map(idx => (idx &lt; 0 ? idx + this.length : idx))));
     }
 
     const cols = Array(this.nCols).fill(0);
@@ -843,77 +675,33 @@ class DataFrame {
   }
 
   /**
-   * @param {!Number|!String} colId
-   * @param {'asc'|'des'|!Function} [ord]
-   * @returns {DataFrame}
-   */
-  sort(colId = null, ord = 'asc') {
-    if (colId === null) {
-      if (this.nCols === 1) {
-        return this.sort(0, ord);
-      } else {
-        throw new Error('you need to select a column (e.g. df.sort(0))');
-      }
-    }
-    const cIdx = this.colIdx(colId);
-    if (ord.constructor.name === 'Function') {
-      return new DataFrame(Array.from(this.rowsIter).sort(ord), 'rows', Array.from(this.colNames));
-    } else if (ord === 'asc') {
-      return this.sort(cIdx, (r1, r2) => (r1[cIdx] > r2[cIdx] ? 1 : r1[cIdx] &lt; r2[cIdx] ? -1 : 0));
-    } else {
-      return this.sort(cIdx, (r1, r2) => (r1[cIdx] > r2[cIdx] ? -1 : r1[cIdx] &lt; r2[cIdx] ? 1 : 0));
-    }
-  }
-
-  /**
-   * @param {...&lt;!String|!Number>} colIds
+   * e.g. sliceCols(0)         -> sliceCols(0, end)
+   * e.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end)
+   *
+   * @param {...&lt;!String|!Number>} cols col pairs
    * @returns {!DataFrame} data frame
    */
-  dropOutliers(...colIds) {
-    // by default compute for all (numeric) columns
-    if (colIds.length === 0) {
-      log.info('running dropOutliers for all cols');
-      return this.dropOutliers(...this.colNames);
+  sliceCols(...slices) {
+    if (slices.length === 0) {
+      throw new Error('no slice idxs specified (e.g. df.sliceCols(0, -1))');
+    } else if (slices.length % 2 !== 0) {
+      // odd number of idxs
+      return this.sliceCols(...slices, this.nCols - 1);
     }
 
-    const cols = Array.from(this._cols);
-    const numCols = this._numColIdxs;
+    // collect column idxs
+    const colIds = new Set();
 
-    // indexes of *NUMERIC* columns
-    const numColIdxs = new Set(colIds.map(id => this.colIdx(id)).filter(cIdx => numCols.has(cIdx)));
-
-    // store {Q1, Q3, idx} for every *NUMERIC* column
-    const IQRs = this.colNames
-    // get column indexes
-      .map((_, idx) => idx)
-    // and now get all NUMERIC columns while leaving gaps to preserve indexing
-      .map(idx => (numColIdxs.has(idx) ? this._cols[idx] : null))
-    // and now computer IQ1 and IQ3 for all NUMERIC columns while leaving gaps to preserve indexing
-      .map(maybeCol => (maybeCol === null ? null : ({ Q1: maybeCol.Q1(), Q3: maybeCol.Q3() })));
-
-    // store results of testing for all rows
-    const tests = Array(this.length).fill(true);
-
-    // see if this row is an outlier by looking at each numeric column
-    for (let rIdx = 0; rIdx &lt; this.length; rIdx++) {
-      for (let cIdx = 0; cIdx &lt; this.nCols; cIdx++) {
-        if (!numColIdxs.has(cIdx)) continue;
-        const col = cols[cIdx];
-        const val = col[rIdx];
-        // if value is in Q1 .. Q3 then accept
-        if (val &lt; IQRs[cIdx].Q1 || val > IQRs[cIdx].Q3) {
-          tests[rIdx] = false;
-          break;
-        }
+    for (let i = 1; i &lt; slices.length; i += 2) {
+      const lBound = this.colIdx(slices[i - 1]);
+      const rBound = this.colIdx(slices[i]);
+      for (let cIdx = lBound; cIdx &lt;= rBound; cIdx++) {
+        colIds.add(cIdx);
       }
     }
 
-    for (let cIdx = 0; cIdx &lt; this.nCols; cIdx++) {
-      // filter every col according to pre-computed boolean vals above
-      cols[cIdx] = cols[cIdx].filter((_, rIdx) => tests[rIdx]);
-    }
-
-    return new DataFrame(cols, 'cols', Array.from(this.colNames));
+    // then select them
+    return this.select(...colIds);
   }
 
   /**
@@ -1023,12 +811,218 @@ class DataFrame {
   }
 
   /**
+   * @param {...&lt;!String|!Number>} colIds
+   * @returns {!DataFrame} data frame
+   */
+  dropOutliers(...colIds) {
+    // by default compute for all (numeric) columns
+    if (colIds.length === 0) {
+      log.info('running dropOutliers for all cols');
+      return this.dropOutliers(...this.colNames);
+    }
+
+    const cols = Array.from(this._cols);
+    const numCols = this._numColIdxs;
+
+    // indexes of *NUMERIC* columns
+    const numColIdxs = new Set(colIds.map(id => this.colIdx(id)).filter(cIdx => numCols.has(cIdx)));
+
+    // store {Q1, Q3, idx} for every *NUMERIC* column
+    const IQRs = this.colNames
+    // get column indexes
+      .map((_, idx) => idx)
+    // and now get all NUMERIC columns while leaving gaps to preserve indexing
+      .map(idx => (numColIdxs.has(idx) ? this._cols[idx] : null))
+    // and now computer IQ1 and IQ3 for all NUMERIC columns while leaving gaps to preserve indexing
+      .map(maybeCol => (maybeCol === null ? null : ({ Q1: maybeCol.Q1(), Q3: maybeCol.Q3() })));
+
+    // store results of testing for all rows
+    const tests = Array(this.length).fill(true);
+
+    // see if this row is an outlier by looking at each numeric column
+    for (let rIdx = 0; rIdx &lt; this.length; rIdx++) {
+      for (let cIdx = 0; cIdx &lt; this.nCols; cIdx++) {
+        if (!numColIdxs.has(cIdx)) continue;
+        const col = cols[cIdx];
+        const val = col[rIdx];
+        // if value is in Q1 .. Q3 then accept
+        if (val &lt; IQRs[cIdx].Q1 || val > IQRs[cIdx].Q3) {
+          tests[rIdx] = false;
+          break;
+        }
+      }
+    }
+
+    for (let cIdx = 0; cIdx &lt; this.nCols; cIdx++) {
+      // filter every col according to pre-computed boolean vals above
+      cols[cIdx] = cols[cIdx].filter((_, rIdx) => tests[rIdx]);
+    }
+
+    return new DataFrame(cols, 'cols', Array.from(this.colNames));
+  }
+
+  /**
+   * @param {!Number|!String} colId
+   * @param {'asc'|'des'|!Function} [ord]
+   * @returns {DataFrame}
+   */
+  sort(colId = null, ord = 'asc') {
+    if (colId === null) {
+      if (this.nCols === 1) {
+        return this.sort(0, ord);
+      } else {
+        throw new Error('you need to select a column (e.g. df.sort(0))');
+      }
+    }
+    const cIdx = this.colIdx(colId);
+    if (ord.constructor.name === 'Function') {
+      return new DataFrame(Array.from(this.rowsIter).sort(ord), 'rows', Array.from(this.colNames));
+    } else if (ord === 'asc') {
+      return this.sort(cIdx, (r1, r2) => (r1[cIdx] > r2[cIdx] ? 1 : r1[cIdx] &lt; r2[cIdx] ? -1 : 0));
+    } else {
+      return this.sort(cIdx, (r1, r2) => (r1[cIdx] > r2[cIdx] ? -1 : r1[cIdx] &lt; r2[cIdx] ? 1 : 0));
+    }
+  }
+
+  /**
    * Shuffle the data frame.
    *
    * @returns {!DataFrame} data frame with shuffle rows
    */
   shuffle() {
     const rows = Series.from(Array.from(this.rowsIter)).shuffle();
+    return new DataFrame(rows, 'rows', Array.from(this.colNames));
+  }
+
+  /**
+   * @param {"f32"|"f64"|"i8"|"16"|"i32"|"u8"|"u16"|"u32"|"s"|null} [dtype]
+   * @param {?Array&lt;!Number|!String>} [colNames]
+   */
+  transpose(dtype = null, colNames = null) {
+    if (dtype === null) {
+      const dt = this.dtypes.reduce((dt1, dt2) => unify(dt1, dt2));
+      log.info(`inferred dtype = ${dt}`);
+      return this.transpose(dt, colNames);
+    }
+    const cols = Array(this.length).fill(0).map(_ => Series.empty(this.nCols, dtype));
+    for (let cIdx = 0; cIdx &lt; this.nCols; cIdx++) {
+      for (let rIdx = 0; rIdx &lt; this.length; rIdx++) {
+        cols[rIdx][cIdx] = this._cols[cIdx][rIdx];
+      }
+    }
+    return new DataFrame(cols, 'cols', colNames);
+  }
+
+  /**
+   * @returns {!DataFrame} a correlation matrix
+   */
+  corr(withNames = true) {
+    const numCols = this._numColIdxs;
+    const colIdxs = [];
+    const rows = [];
+    for (let yIdx = 0; yIdx &lt; this.nCols; yIdx++) {
+      if (numCols.has(yIdx)) {
+        colIdxs.push(yIdx);
+        rows.push([]);
+        for (let xIdx = 0; xIdx &lt; this.nCols; xIdx++) {
+          // every col is perfectrly correlated with itself (save some computation time)
+          if (xIdx === yIdx) {
+            rows[rows.length - 1].push(1);
+          } else if (numCols.has(xIdx)) {
+            const col = this._cols[yIdx];
+            const other = this._cols[xIdx];
+            const corr = col.corr(other);
+            rows[rows.length - 1].push(corr);
+          }
+        }
+      }
+    }
+
+    // numeric col names in the order of appearing in the matrix
+    const colNames = this.colNames.filter((_, cIdx) => colIdxs.indexOf(cIdx) >= 0);
+
+    /*
+     * prepend a col with colum names to the left
+     *    A1 A2 A3
+     * A1
+     * A2
+     * A3
+     */
+    if (withNames) {
+      for (let rIdx = 0; rIdx &lt; rows.length; rIdx++) {
+        const colName = this.colNames[colIdxs[rIdx]];
+        const row = rows[rIdx];
+        rows[rIdx] = [colName].concat(row);
+      }
+      return new DataFrame(rows, 'rows', ['column'].concat(colNames));
+    }
+    // else
+    return new DataFrame(rows, 'rows', colNames);
+  }
+
+  /**
+   * @param {!Number} [n] number of cols to select
+   * @param {"var"|"stdev"|"mean"|"mad"|"IQR"|"median"|"Q1"|"Q3"|"skewness"|"min"|"range"|"max"|!Function} [agg]
+   */
+  nBest(n = 5, agg = 'var') {
+    if (n > this.nCols) {
+      log.warn(`n = ${n}, but there is ${this.nCols} cols`);
+      return this.nBest(this.nCols, agg);
+    }
+
+    let bestCols;
+
+    if (agg.constructor.name === 'Function') {
+      bestCols = this._cols.map((col, idx) => ({ idx, name: this.colNames[idx], score: agg(col) }));
+    } else {
+      bestCols = this._cols.map((col, idx) => ({ idx, name: this.colNames[idx], score: col[agg]() }));
+    }
+
+    bestCols = bestCols.sort((o1, o2) => (o1.score > o2.score ? -1 : o1.score &lt; o2.score ? 1 : 0)).slice(0, n);
+
+    if (bestCols.some(({ name }) => !name.toString().match(/\d+/))) {
+      const colNames = [];
+      const cols = [];
+      for (const o of bestCols) {
+        colNames.push(o.name);
+        cols.push(this._cols[o.idx]);
+      }
+      return new DataFrame(cols, 'cols', colNames);
+    } else {
+      return new DataFrame(bestCols.map(({ idx }) => this._cols[idx]), 'cols');
+    }
+  }
+
+  /**
+   * @param {!Number} n ratio or number of elements
+   * @param {?Boolean} wr with replacement
+   * @returns {!DataFrame} data frame
+   */
+  sample(n = 0.1, wr = true) {
+    // tODO optimize DF.sample(n, wr)
+    if (n &lt; 1) {
+      return this.sample(Math.floor(n * this.length));
+    } else if (n >= this.length) {
+      log.warn('sample size >= nRows');
+      return this.sample(this.length - 1, wr);
+    }
+    const rows = [];
+    if (wr) {
+      while (rows.length &lt; n) {
+        const rIdx = randInt(0, this.length);
+        rows.push(this.row(rIdx));
+      }
+    } else {
+      const idxs = Array(this.length).fill(0).map((_, idx) => idx);
+      while (rows.length &lt; n) {
+        // this is a bit confusing because you are indexing an index
+        const i = randInt(0, idxs.length);
+        const rowIdx = idxs[i];
+        const row = this.row(rowIdx);
+        rows.push(row);
+        idxs.pop(i); // remove i from possible idxs
+      }
+    }
     return new DataFrame(rows, 'rows', Array.from(this.colNames));
   }
 
@@ -1055,7 +1049,6 @@ class DataFrame {
       [this.colNames[cIdx], 'count'],
     );
   }
-
 
   /**
    * One hot encode a column.
@@ -1125,6 +1118,26 @@ class DataFrame {
   }
 
   /**
+   * @returns {!DataFrame} shallow copy of the data frame
+   */
+  copy() {
+    return new DataFrame(Array.from(this._cols), 'cols', Array.from(this.colNames));
+  }
+
+  /**
+   * @returns {!DataFrame} clone (deep copy) of the data frame
+   */
+  clone() {
+    const newCols = [];
+    for (let cIdx = 0; cIdx &lt; this.nCols; cIdx++) {
+      const col = this._cols[cIdx];
+      newCols.push(col.clone());
+    }
+    return new DataFrame(newCols, 'cols', Array.from(this.colNames));
+  }
+
+
+  /**
    * @returns {!Object&lt;Array&lt;!Number>|!Array&lt;!String>>} dictionary
    */
   toDict() {
@@ -1149,22 +1162,168 @@ class DataFrame {
   /**
    * @returns {!String} json-stringified data frame
    */
-  toJSON() {
-    return JSON.stringify(this.toDict());
+  saveJSON(filePath) {
+    if (filePath.match(/\.x?html\d?$/i)) {
+      const out = createWriteStream(filePath);
+      out.end(JSON.stringify(this.toDict()));
+      log.info(`saved JSON to ${filePath}`);
+    } else {
+      throw new Error('bad file name, expected *.json file name');
+    }
   }
 
   /**
-   * @param {!String} fileName
+   * @param {!String} filePath
    */
-  toFile(fileName) {
-    if (!fileName.endsWith('.df')) {
-      log.warn('not a "*.df" file name');
+  saveHTML(filepath) {
+    if (filePath.match(/\.x?html\d?$/i)) {
+      const out = createWriteStream(filePath);
+
+      out.write('&lt;table>');
+      out.write('&lt;tr>');
+
+      for (const name of this.colNames) {
+        out.write('&lt;th>');
+        out.write(name.toString());
+        out.write('&lt;/th>');
+      }
+
+      out.write('&lt;/tr>');
+
+      for (let rIdx = 0; rIdx &lt; this.length; rIdx++) {
+        out.write('&lt;tr>');
+
+        for (const val of this.irow(rIdx)) {
+          out.write('&lt;td>');
+          out.write(val.toString());
+          out.write('&lt;/td>');
+        }
+
+        out.write('&lt;/tr>');
+      }
+
+      out.end('&lt;/table>');
+    } else {
+      throw new Error('bad file name, expected *.html file name');
     }
-    const parent = dirname(fileName);
-    if (!existsSync(parent)) {
-      mkdirSync(parent);
+  }
+
+  /**
+   * @param {!String} filePath
+   */
+  saveCSV(filePath) {
+    if (filePath.match(/\.csv$/i)) {
+      const stringifier = stringifyCSV();
+      const out = createWriteStream(filePath);
+      const header = this.colNames.map(cName => cName.toString());
+
+      stringifier.on('error', err => log.error(err.message));
+
+      stringifier.on('data', row => out.write(row));
+
+      stringifier.write(header);
+
+      for (const r of this.rowsIter) {
+        stringifier.write(r);
+      }
+    } else {
+      throw new Error(`bad file name, expected *.csv file name`);
     }
-    writeFileSync(fileName, gzipSync(this.toJSON()), { flag: 'w' });
+  }
+
+  /**
+   * @param {!String} filePath
+   * @param {!Boolean|!Array&lt;!String|!Number>} [header]
+   * @returns {!DataFrame} data frame
+   */
+  static loadCSV(filePath, header = true) {
+    if (!filePath.endsWith('.csv')) {
+      log.warn('not a *.csv file');
+    }
+    const rows = readCSV(filePath);
+    if (header === true) {
+      const header = rows[0];
+      return new DataFrame(rows.splice(1), 'rows', header);
+    } else if (header === false) {
+      return new DataFrame(rows, 'rows');
+    } else {
+      return new DataFrame(rows, 'rows', header);
+    }
+  }
+
+  /**
+   * Loads JSON-encoded data. 
+   *
+   * NOTE the format must be the same as returned by saveJSON. Ie. { colName: [...], ...}.
+   *
+   * @param {!String} filePath
+   * @returns {!DataFrame} data frame
+   */
+  static loadJSON(filePath) {
+    const dict = readFileSync(filePath);
+    return new DataFrame(JSON.parse(dict));
+  }
+
+  /**
+   * Loads one of the toy datasets the library ships whith. 
+   *
+   * NOTE to see all availible datasets run `DataFrame.dataSets`.
+   *
+   * @param {!String} name
+   * @param {?Boolean} hasHeader
+   * @param {?Array&lt;!String>} colNames
+   * @returns {!DataFrame} data frame
+   */
+  static loadDataSet(name, hasHeader = true, colNames = null) {
+    return DataFrame.loadCSV(`${dirname(__filename)}/datasets/${name}/${name}.csv`, hasHeader, colNames);
+  }
+
+  /**
+   * Toy datasets path.
+   *
+   * @returns {!String} datasets path
+   * @private
+   */
+  static get _dataSetsPath() {
+    return join(dirname(__filename), 'datasets');
+  }
+
+  /**
+   * @returns {!Array&lt;!String>} datasets
+   */
+  static get dataSets() {
+    return readdirSync(DataFrame._dataSetsPath).filter(node => !node.match(/\.w+$/));
+  }
+
+  /**
+   * Construct a DataFrame from columns.
+   *
+   * @param cols columns
+   * @returns {!DataFrame}
+   */
+  static of(...cols) {
+    return new DataFrame(cols, 'cols');
+  }
+
+  /**
+   * Sets an option.
+   *
+   * @param {!String} k
+   * @param {*} v
+   */
+  static set(k, v) {
+    if (env[k] !== undefined) {
+      env[k] = v;
+    } else {
+      throw new Error(`unrecognised option ${k}`);
+    }
+  }
+
+  /**
+   * @returns {!DataFrame} table of options
+   */
+  static opts() {
+    return new DataFrame(Object.entries(env), 'rows', ['option', 'value']);
   }
 
   /**
@@ -1175,137 +1334,8 @@ class DataFrame {
     console.log(this.toString(n, m));
   }
 
-  /**
-   * @returns {!DataFrame} shallow copy of the data frame
-   */
-  copy() {
-    return new DataFrame(Array.from(this._cols), 'cols', Array.from(this.colNames));
-  }
-
-  /**
-   * @param {"len"|"print"|"float"} k
-   * @param {!Number} v
-   */
-  static set(k, v) {
-    if (k.toLocaleLowerCase() !== k) {
-      return DF.set(k.toLocaleLowerCase(), v);
-    }
-    if (k.match(/pr(int|ec)/)) {
-      Series.set(k, v);
-      PRINT_PRECISION = v;
-    } else if (k.match(/len|^head/)) {
-      Series.set(k, v);
-      HEAD_LEN = v;
-      PRINT_PRECISION = v;
-    } else if (k.match('width')) {
-      PRINT_WIDTH = v;
-    } else if (k.match('float')) {
-      Series.set(k, v);
-    } else {
-      throw new Error(`unrecognised option "${k}", try: printWidth, printPrecision, headLen, floatPrecision`);
-    }
-  }
-
-  /**
-   * @returns {!DataFrame} clone (deep copy) of the data frame
-   */
-  clone() {
-    const newCols = [];
-    for (let cIdx = 0; cIdx &lt; this.nCols; cIdx++) {
-      const col = this._cols[cIdx];
-      newCols.push(col.clone());
-    }
-    return new DataFrame(newCols, 'cols', Array.from(this.colNames));
-  }
-
-  /**
-   * @param {!String} filePath
-   * @param {?Boolean} [hasHeader]
-   * @param {?Array&lt;!String>} colNames
-   * @returns {!DataFrame} data frame
-   */
-  static fromCSV(filePath, hasHeader = true, colNames = null) {
-    if (!filePath.endsWith('.csv')) {
-      log.warn('not a *.csv file');
-    }
-    const rows = readCSV(filePath, false); // assume for now it doesn't
-    if (hasHeader) {
-      const header = rows[0];
-      return new DataFrame(rows.splice(1), 'rows', header);
-    } else {
-      return new DataFrame(rows.splice(1), 'rows');
-    }
-  }
-
-  /**
-   * @param {!String} filePath
-   * @returns {!DataFrame} data frame
-   */
-  static fromFile(filePath) {
-    if (!existsSync(filePath) &amp;&amp; existsSync(`${filePath}.df`)) {
-      return DataFrame.fromFile(`${filePath}.df`);
-    }
-    const json = JSON.parse(gunzipSync(readFileSync(filePath)).toString('utf-8'));
-    const colNames = Object.keys(json);
-    const isIndexed = colNames.map(nm => !!nm.match(/^\d+$/)).reduce((l, r) => l &amp;&amp; r, true);
-    return new DataFrame(
-      Object.values(json),
-      'cols',
-      isIndexed ? colNames.map(parseFloat) : colNames,
-    );
-  }
-
-  /**
-   * @param {!String} name
-   * @param {?Boolean} hasHeader
-   * @param {?Array&lt;!String>} colNames
-   * @returns {!DataFrame} data frame
-   */
-  static loadDataSet(name, hasHeader = true, colNames = null) {
-    return DataFrame.fromCSV(`${dirname(__filename)}/datasets/${name}/${name}.csv`, hasHeader, colNames);
-  }
-
-  /**
-   * @returns {!String} datasets path
-   */
-  static get dataSetsPath() {
-    return join(dirname(__filename), 'datasets');
-  }
-
-  /**
-   * @returns {!Array&lt;!String>} datasets
-   */
-  static get dataSets() {
-    return readdirSync(DataFrame.dataSetsPath).filter(node => !node.match(/\.w+$/));
-  }
-
-  static of(...cols) {
-    return new DataFrame(cols, 'cols');
-  }
-
   [util.inspect.custom](depth, options) {
     return this.toString();
-  }
-
-  toHTML(indent = 2) {
-    return `
-      &lt;table>
-      ${' '.repeat(indent)}&lt;tr>
-      ${' '.repeat(indent * 2)}${this.colNames.map(name => `&lt;th>${name.toString()}&lt;/th>`).join(`\n${' '.repeat(indent * 2)}`)}
-    ${' '.repeat(indent)}&lt;/tr>
-      ${' '.repeat(indent * 2)}${Array.from(this.rowsIter).map(r => `&lt;tr>\n${' '.repeat(indent * 2)}${r.map(x => `&lt;td>${x.toString()}&lt;/td>`).join(`\n${' '.repeat(indent * 2)}`)}\n${' '.repeat(indent)}&lt;/tr>`).join(`\n${' '.repeat(indent)}`)}
-      &lt;/table>`;
-  }
-
-  toCSV(header = false) {
-    const rows = [];
-    if (header) {
-      rows.push(this.colNames.join(','));
-    }
-    for (const r of this.rowsIter) {
-      rows.push(r.map(x => x.toString()).join(','));
-    }
-    return rows.join('\n');
   }
 
   /**
@@ -1331,13 +1361,25 @@ class DataFrame {
       return 'Empty DataFrame';
     }
 
+    let width = Math.max(Math.floor((process.stdout.columns / this.nCols) - 1), env.MIN_COL_WIDTH);
+
+    if (this.nCols &lt;= 1) {
+      width += 15;
+    } else if (this.nCols &lt;= 2) {
+      width += 10;
+    } else if (this.nCols &lt;= 3) {
+      width += 7;
+    } else if (this.nCols &lt;= 3) {
+      width += 3;
+    }
+
     const rows = [];
 
     // print index column
     rows.push(['#'].concat(this.colNames
-      // trunc column headings
-      .map(h => h.length > PRINT_WIDTH - 3 ? h.slice(0, PRINT_WIDTH - 3) + '...' : h)
-      // pad to reserve space for dtypes (injected later)
+    // trunc column headings
+      .map(h => (h.length > width - 3 ? `${h.slice(0, width - 3)}...` : h))
+    // pad to reserve space for dtypes (injected later)
       .map((h, cIdx) => ' '.repeat(this.dtypes[cIdx].length + 1) + h.toString())));
 
     const numCols = this._numColIdxs;
@@ -1349,12 +1391,12 @@ class DataFrame {
         const s = val.toString();
         const isNum = numCols.has(cIdx);
         const isStr = !isNum &amp;&amp; val.constructor.name === 'String';
-        const isTooLong = isStr &amp;&amp; s.length > PRINT_WIDTH;
+        const isTooLong = isStr &amp;&amp; s.length > width;
 
         if (isTooLong) {
-          row[cIdx] = `${s.slice(0, PRINT_WIDTH)}...`;
+          row[cIdx] = `${s.slice(0, width)}...`;
           continue;
-        } 
+        }
 
         const isFloat = isNum &amp;&amp; this.dtypes[cIdx].startsWith('f');
 
@@ -1366,13 +1408,13 @@ class DataFrame {
         const hasRadixPoint = maybePointIdx >= 0;
 
         if (hasRadixPoint) {
-          row[cIdx] = s.slice(0, maybePointIdx + PRINT_PRECISION + 1);
-          if ((s.length - PRINT_PRECISION) === maybePointIdx) {
+          row[cIdx] = s.slice(0, maybePointIdx + env.PRINT_PREC + 1);
+          if ((s.length - env.PRINT_PREC) === maybePointIdx) {
             row[cIdx] += '0';
           }
           continue;
-        } 
-        
+        }
+
         if (!Object.is(val, NaN)) {
           row[cIdx] = `${s}.00`;
         }
@@ -1397,7 +1439,7 @@ class DataFrame {
 
       if (size >= 1e9) {
         size /= 1e9;
-        unit = 'GB'; 
+        unit = 'GB';
       } else if (size >= 1e6) {
         size /= 1e6;
         unit = 'MB';
@@ -1405,7 +1447,7 @@ class DataFrame {
         size /= 1e3;
         unit = 'KB';
       }
-      return fmtFloat(size, PRINT_PRECISION) + unit;
+      return fmtFloat(size, env.PRINT_PREC) + unit;
     })));
 
     // const midCol = Math.floor(this.nCols / 2);
@@ -1424,9 +1466,8 @@ class DataFrame {
     }
 
     // lengths of each column
-    const lens = Array(this.nCols + 1).fill(0).map((_, idx) => 
-        rows.map(r => r[idx].toString().length)
-            .reduce((x, y) => Math.max(x, y), 1));
+    const lens = Array(this.nCols + 1).fill(0).map((_, idx) => rows.map(r => r[idx].toString().length)
+      .reduce((x, y) => Math.max(x, y), 1));
 
     // inject underlining `-------`
     rows.splice(1, 0, lens.map(l => '-'.repeat(l)));
@@ -1435,7 +1476,7 @@ class DataFrame {
     rows[0] = rows[0].slice(0, 1).concat(rows[0].slice(1, rows[0].length).map((h, cIdx) => {
       const len = lens[cIdx + 1];
       const dtype = this.dtypes[cIdx];
-      const heading = h.trim()
+      const heading = h.trim();
       return dtype + ' '.repeat(len - heading.length - dtype.length) + heading;
     }));
 
@@ -1463,13 +1504,13 @@ module.exports = DataFrame;
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="DataFrame.html">DataFrame</a></li></ul><h3>Global</h3><ul><li><a href="global.html#bag">bag</a></li><li><a href="global.html#empty">empty</a></li><li><a href="global.html#fill">fill</a></li><li><a href="global.html#from">from</a></li><li><a href="global.html#of">of</a></li><li><a href="global.html#ones">ones</a></li><li><a href="global.html#rand">rand</a></li><li><a href="global.html#randInRange">randInRange</a></li><li><a href="global.html#randInt">randInt</a></li><li><a href="global.html#range">range</a></li><li><a href="global.html#rangeIter">rangeIter</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#util">util</a></li><li><a href="global.html#zeros">zeros</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="DataFrame.html">DataFrame</a></li></ul><h3>Global</h3><ul><li><a href="global.html#bag">bag</a></li><li><a href="global.html#empty">empty</a></li><li><a href="global.html#fill">fill</a></li><li><a href="global.html#from">from</a></li><li><a href="global.html#of">of</a></li><li><a href="global.html#ones">ones</a></li><li><a href="global.html#rand">rand</a></li><li><a href="global.html#randInRange">randInRange</a></li><li><a href="global.html#randInt">randInt</a></li><li><a href="global.html#range">range</a></li><li><a href="global.html#rangeIter">rangeIter</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#zeros">zeros</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Tue Apr 02 2019 22:32:42 GMT+0100 (British Summer Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Apr 03 2019 17:10:13 GMT+0100 (British Summer Time)
 </footer>
 
 <script> prettyPrint(); </script>

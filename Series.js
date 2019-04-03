@@ -5,10 +5,7 @@ const { randInRange, randInt } = require('./rand');
 const dtypeRegex = /([a-z]+)(8|16|32|64)/i;
 const isNumRegex = /^(\d+\.?\d*|\d*\.\d+)(e-?\d+)?$/i;
 const log = require('./log');
-
-let FLOAT_PRECISION = 32;
-let HEAD_LEN = 5;
-let PRINT_PRECISION = 2;
+const env = require('./env');
 
 /**
  * @param {!Array<*>|!TypedArray} a
@@ -25,7 +22,7 @@ function enhance(a) {
 
   a.toString = function (len = null) {
     if (len === null) {
-      return this.toString(HEAD_LEN);
+      return this.toString(env.HEAD_LEN);
     } else if (len > this.length) {
       log.warn(`len = ${len}, but there is ${this.length} items`);
     }
@@ -40,7 +37,7 @@ function enhance(a) {
       const isFloat = isNum && s.match(/\./);
       if (isFloat) {
         const [p1, p2] = s.split('.');
-        parts.push(`${p1}.${p2.slice(0, PRINT_PRECISION)}`);
+        parts.push(`${p1}.${p2.slice(0, env.PRINT_PREC)}`);
       } else /* int */ {
         parts.push(s);
       }
@@ -53,13 +50,13 @@ function enhance(a) {
 
   a.print = function (n = null) {
     if (n === null) {
-      return this.print(HEAD_LEN);
+      return this.print(env.HEAD_LEN);
     }
     return console.log(this.toString(n));
   };
 
   a[util.inspect.custom] = function (depth, options) {
-    return this.toString(HEAD_LEN);
+    return this.toString(env.HEAD_LEN);
   };
 
   // cumulative operations
@@ -354,11 +351,17 @@ function enhanceArray(a) {
 
   // manipulation, views and slices
 
-  a.head = function (n = HEAD_LEN) {
+  a.head = function (n = null) {
+    if (n === null) {
+      return this.head(env.HEAD_LEN);
+    }
     return this.slice(0, n);
   };
 
-  a.tail = function (n = HEAD_LEN) {
+  a.tail = function (n = null) {
+    if (n === null) {
+      return this.tail(env.HEAD_LEN);
+    }
     return this.slice(this.length - n);
   };
 
@@ -470,11 +473,17 @@ function enhanceTypedArray(a) {
 
   // manipulation, views and slices
 
-  a.head = function (n = HEAD_LEN) {
+  a.head = function (n = null) {
+    if (n === null) {
+      return this.head(env.HEAD_LEN);
+    }
     return this.subarray(0, n);
   };
 
-  a.tail = function (n = HEAD_LEN) {
+  a.tail = function (n = null) {
+    if (n === null) {
+      return this.tail(env.HEAD_LEN);
+    }
     return this.subarray(this.length - n);
   };
 
@@ -496,7 +505,7 @@ function enhanceTypedArray(a) {
   };
 
   a.concat = function (other) {
-    let dtype = `f${FLOAT_PRECISION}`;
+    let dtype = `f${env.FLOAT_PREC}`;
     if (this.dtype[0] === other.dtype[0]) {
       dtype = this.BYTES_PER_ELEMENT >= other.BYTES_PER_ELEMENT ? this.dtype : other.dtype;
     } else if ((other.dtype.startsWith('u') && this.dtype.startsWith('i')) || (this.dtype.startsWith('u') && other.dtype.startsWith('i'))) {
@@ -512,11 +521,17 @@ function enhanceTypedArray(a) {
     return newArr;
   };
 
-  a.nLargest = function (n = HEAD_LEN) {
+  a.nLargest = function (n = null) {
+    if (n === null) {
+      return this.nLargest(env.HEAD_LEN);
+    }
     return this.sort('des').subarray(0, n);
   };
 
-  a.nSmallest = function (n = HEAD_LEN) {
+  a.nSmallest = function (n = null) {
+    if (n === null) {
+      return this.nSmallest(env.HEAD_LEN);
+    }
     return this.sort('asc').subarray(0, n);
   };
 
@@ -551,7 +566,7 @@ function enhanceTypedArray(a) {
       } else if (amUint && isInt && isNeg) {
         return empty(this.length, 'i32').map((_, idx) => this[idx] * other);
       } else {
-        return empty(this.length, `f${FLOAT_PRECISION}`).map((_, idx) => this[idx] * other);
+        return empty(this.length, `f${env.FLOAT_PREC}`).map((_, idx) => this[idx] * other);
       }
     }
 
@@ -603,7 +618,7 @@ function enhanceTypedArray(a) {
           .map((_, idx) => this[idx] + other[idx]);
       }
     }
-    return empty(len, `f${FLOAT_PRECISION}`).map((_, idx) => this[idx] * other[idx]);
+    return empty(len, `f${env.FLOAT_PREC}`).map((_, idx) => this[idx] * other[idx]);
   };
 
   a.sub = function (other = null, dtype = null) {
@@ -615,7 +630,7 @@ function enhanceTypedArray(a) {
       } else if (Number.isInteger(other)) {
         return empty(this.length, 'i32').map((_, idx) => this[idx] - other);
       } else {
-        return empty(this.length, `f${FLOAT_PRECISION}`).map((_, idx) => this[idx] - other);
+        return empty(this.length, `f${env.FLOAT_PREC}`).map((_, idx) => this[idx] - other);
       }
     } else {
       return this.add(other.mul(-1, dtype), dtype);
@@ -645,7 +660,7 @@ function enhanceTypedArray(a) {
         return empty(this.length, `i32`)
           .map((_, idx) => this[idx] * other);
       } else {
-        return empty(this.length, `f${FLOAT_PRECISION}`)
+        return empty(this.length, `f${env.FLOAT_PREC}`)
           .map((_, idx) => this[idx] * other);
       }
     }
@@ -698,7 +713,7 @@ function enhanceTypedArray(a) {
           .map((_, idx) => this[idx] * other[idx]);
       }
     }
-    return empty(len, `f${FLOAT_PRECISION}`).map((_, idx) => this[idx] * other[idx]);
+    return empty(len, `f${env.FLOAT_PREC}`).map((_, idx) => this[idx] * other[idx]);
   };
 
   a.div = function (other = null, dtype = null) {
@@ -713,7 +728,7 @@ function enhanceTypedArray(a) {
         return empty(this.length, dtype)
           .map(x => x / other);
       }
-      return empty(this.length, `f${FLOAT_PRECISION}`).map((_, idx) => this[idx] / other);
+      return empty(this.length, `f${env.FLOAT_PREC}`).map((_, idx) => this[idx] / other);
     }
 
     // else if other is enhanced array
@@ -741,7 +756,7 @@ function enhanceTypedArray(a) {
     } else if (isFloat) {
       return other.map((x, idx) => x / this[idx]);
     }
-    return empty(len, `f${FLOAT_PRECISION}`)
+    return empty(len, `f${env.FLOAT_PREC}`)
       .map((_, idx) => this[idx] / other[idx]);
   };
 
@@ -816,19 +831,19 @@ function enhanceTypedArray(a) {
   };
 
   a.skewness = function () {
-    const xs = this.cast(`f${FLOAT_PRECISION}`);
+    const xs = this.cast(`f${env.FLOAT_PREC}`);
     return xs.sub(this.mean()).cube().mean() / (xs.var() ** (3 / 2));
   };
 
   a.corr = function (other) {
-    const muDiffX = this.cast(`f${FLOAT_PRECISION}`).sub(this.mean());
-    const muDiffY = other.cast(`f${FLOAT_PRECISION}`).sub(other.mean());
+    const muDiffX = this.cast(`f${env.FLOAT_PREC}`).sub(this.mean());
+    const muDiffY = other.cast(`f${env.FLOAT_PREC}`).sub(other.mean());
     return muDiffX.mul(muDiffY).add() / (Math.sqrt(muDiffX.square().add()) * Math.sqrt(muDiffY.square().add()));
   };
 
   a.kurtosis = function () {
     const mu = this.mean();
-    const xs = this.cast(`f${FLOAT_PRECISION}`);
+    const xs = this.cast(`f${env.FLOAT_PREC}`);
     const subMu = xs.sub(mu);
     const numerator = subMu.pow(4).add() / this.length;
     const denominator = (subMu.square().add() / this.length) ** 2;
@@ -845,7 +860,7 @@ function enhanceTypedArray(a) {
     if (wr) {
       return this.subarray(0, n).map(_ => this[randInt(0, this.length)]);
     }
-    const sample = empty(n, `f${FLOAT_PRECISION}`);
+    const sample = empty(n, `f${env.FLOAT_PREC}`);
     const used = new Set();
     for (let ptr = 0; ptr < n; ptr++) {
       let idx;
@@ -948,11 +963,11 @@ function enhanceTypedArray(a) {
   // functional programming
 
   a.zipWith = function (other, f, dtype = null) {
-    return empty(this.length, dtype === null ? `f${FLOAT_PRECISION}` : dtype).map((_, idx) => f(this[idx], other[idx]));
+    return empty(this.length, dtype === null ? `f${env.FLOAT_PREC}` : dtype).map((_, idx) => f(this[idx], other[idx]));
   };
 
   a.zipWith3 = function (xs, ys, f, dtype = null) {
-    return empty(this.length, dtype === null ? `f${FLOAT_PRECISION}` : dtype).map((_, idx) => f(this[idx], xs[idx], ys[idx]));
+    return empty(this.length, dtype === null ? `f${env.FLOAT_PREC}` : dtype).map((_, idx) => f(this[idx], xs[idx], ys[idx]));
   };
 
   // hacks
@@ -988,7 +1003,7 @@ function enhanceTypedArray(a) {
  */
 function guessDtype(xs, floatSize = null) {
   if (floatSize === null) {
-    return guessDtype(xs, FLOAT_PRECISION);
+    return guessDtype(xs, env.FLOAT_PREC);
   }
   let largest = xs.reduce((a, b) => Math.max(a, b));
   const smallest = xs.reduce((a, b) => Math.min(a, b));
@@ -1146,7 +1161,7 @@ function empty(len = 0, dtype = null) {
   if (dtype === 's') {
     return Array(len).fill(0);
   } else if (dtype === null) {
-    return empty(len, `f${FLOAT_PRECISION}`);
+    return empty(len, `f${env.FLOAT_PREC}`);
   }
   const match = dtypeRegex.exec(dtype);
   const bytesNeeded = parseInt(match[2]) / 8;
@@ -1169,7 +1184,7 @@ function rand(n, a = null, b = null, dtype = null) {
   } else if (dtype !== null) {
     return empty(n, dtype).map(_ => randInRange(a, b));
   } else {
-    return empty(n, `f${FLOAT_PRECISION}`).map(_ => randInRange(a, b));
+    return empty(n, `f${env.FLOAT_PREC}`).map(_ => randInRange(a, b));
   }
 }
 
@@ -1210,38 +1225,48 @@ function of(...xs) {
 }
 
 /**
- * @param {"len"|"precison"|"float"} k
- * @param {!Number} v
+ * @param {!String} k
+ * @param {*} v
  */
 function set(k, v) {
-  if (k.toLocaleLowerCase() !== k) {
-    return set(k.toLocaleLowerCase(), v);
-  } else if (k.match(/^pr(int|ec)/)) {
-    PRINT_PRECISION = v;
-  } else if (k.match(/len|^head/)) {
-    HEAD_LEN = v;
-  } else if (k.match(/float/)) {
-    FLOAT_PRECISION = v;
+  if (env[k] !== undefined) {
+    env[k] = v;
   } else {
-    throw new Error(`unrecognised option "${k}", try: printPrecision, headLen, floatPrecision`);
+    throw new Error(`unrecognised option ${k}`);
   }
 }
 
-// everything is exposed for unit testing
-const Series = {
-  bag,
-  constFromDtype,
-  empty,
-  fill,
-  from,
-  guessDtype,
-  of,
-  ones,
-  set,
-  rand,
-  range,
-  rangeIter,
-  zeros,
-};
+let Series;
+
+if (process.env.TESTING === '1')  {
+  // everything is exposed for unit testing
+  Series = {
+    bag,
+    constFromDtype,
+    empty,
+    fill,
+    from,
+    guessDtype,
+    of,
+    ones,
+    set,
+    rand,
+    range,
+    rangeIter,
+    zeros,
+  };
+} else {
+  Series = {
+    empty,
+    fill,
+    from,
+    of,
+    ones,
+    set,
+    rand,
+    range,
+    zeros,
+  };
+}
 
 module.exports = Series;

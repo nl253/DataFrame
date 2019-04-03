@@ -82,7 +82,7 @@
 0    11           5.40           3.70           1.50           0.20 Iris-setos...
 1    12           4.80           3.40           1.60           0.20 Iris-setos...
 - ----- -------------- -------------- -------------- -------------- -------------
-     2B             8B             8B             8B             8B           NaN</code></pre><h4>Getting a Column (Series)</h4><p>We know that there are 6 columns (try running <code>iris.nCols</code>).  To get all column names run: </p>
+     2B             8B             8B             8B             8B           NaN</code></pre><h4>Getting a Column (Series)</h4><p>We know that there are 6 columns (try running <code>iris.nCols</code>).  To get all column names run:</p>
 <pre class="prettyprint source lang-javascript"><code>iris.colNames</code></pre><pre class="prettyprint source lang-javascript"><code>[ 'Id',
   'SepalLengthCm',
   'SepalWidthCm',
@@ -90,7 +90,7 @@
   'PetalWidthCm',
   'Species' ]</code></pre><p>If you want to extract a column (series, see the Series API below) <em>from</em> a data frame try:</p>
 <pre class="prettyprint source lang-javascript"><code>iris.Species.print(5) // last column</code></pre><pre class="prettyprint source"><code>Series s[Iris-setosa, Iris-setosa, Iris-setosa, Iris-setosa, Iris-setosa, ... 145 more]</code></pre><p>Here <code>s</code> stands for STRING. You may also see:  <code>f64</code>, <code>f32</code>, <code>i32</code>, <code>i16</code>, <code>i8</code>, <code>u32</code>, <code>u16</code> and <code>u8</code>.</p>
-<p><strong>NOTE</strong> some column names will have spaces or/and will clash with the API and you will have to use <code>iris.col(2)</code> OR <code>iris.col('SepalWidthCm')</code>. 
+<p><strong>NOTE</strong> some column names will have spaces or/and will clash with the API and you will have to use <code>iris.col(2)</code> OR <code>iris.col('SepalWidthCm')</code>.
 <strong>Columns can always be referred to by their index OR name</strong>.</p>
 <h4>Selecting columns (Data Frame)</h4><p>Suppose you only want the first couple of columns:</p>
 <pre class="prettyprint source lang-javascript"><code>iris.select(0, 1, -2).print(5) // the 1st, 2nd and the 2nd to last</code></pre><p>This show the first 5 rows of the <em>new</em> data frame with only: <code>Id</code>, <code>SepalLength</code> and <code>PetalWidth</code>.</p>
@@ -207,8 +207,8 @@ iris.SepalLengthCm = iris.SepalLengthCm.map(s => s >= 5 ? 0 : 1)</code></pre><p>
 <li><code>.mul(colId | null, n)</code></li>
 <li><code>.div(colId | null, n)</code></li>
 </ul>
-<p>It's smart enough to know not to <code>.abs()</code>, for example. String cols will be
-ignored if this is not a compatible operation.</p>
+<p>It's smart enough to know not to apply them to string columns if they don't
+make sense (e.g. <code>.abs()</code>). String columns are ignored.</p>
 <h4>Rename Columns</h4><pre class="prettyprint source lang-javascript"><code>iris.rename(0, 'First').rename(-2, 'Second to Last')
 // or just
 iris.rename(0, 'First', -2, 'Second to Last')</code></pre><h4>Merging Data Frames</h4><pre class="prettyprint source lang-javascript"><code>iris.concat(iris) // append all rows (axis 0)
@@ -271,10 +271,30 @@ iris.numeric.transpose().sum() </code></pre><pre class="prettyprint source"><cod
 3 PetalLengt...    3.50
 4 PetalWidth...    1.50
 - ------------- -------
-            NaN     20B</code></pre><h5>Sample (get a random subset of rows)</h5><p>Signature: <code>iris.sample(0.15)</code> for random 15% of the dataset. <br>
-Signature: <code>iris.sample(30)</code> for random 30 sample of the dataset. <br>
-Signature: <code>iris.sample(0.5, true)</code> (with replacement -- default) <br>
-Signature: <code>iris.sample(100, false)</code> (<strong>without</strong> replacement)</p>
+            NaN     20B</code></pre><h5>Sample (get a random subset of rows)</h5><p>Signatures:</p>
+<table>
+  <tr>
+    <th>Signature</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td><code>.sample(0.15)</code></td>
+    <td>for random 15% of the dataset</td>
+  </tr>
+  <tr>
+    <td><code>iris.sample(30)</code></td>
+    <td>for random 30 sample of the dataset</td>
+  </tr>
+  <tr>
+    <td><code>iris.sample(0.5, true)</code></td>
+    <td>with replacement (default)</td>
+  </tr>
+  <tr>
+    <td><code>iris.sample(100, false)</code></td>
+    <td><strong>without</strong> replacement</td>
+  </tr>
+</table>
+
 <h5>Summary</h5><pre class="prettyprint source lang-javascript"><code>iris.summary() // this will produce a summary data frame with info for every column</code></pre><pre class="prettyprint source"><code># s      column s dtype f32 min f32 max f32 range f32 mean f32 stdev
 - ------------- ------- ------- ------- --------- -------- ---------
 0            Id      u8    1.00  150.00    149.00    75.50     43.30
@@ -290,7 +310,8 @@ Signature: <code>iris.sample(100, false)</code> (<strong>without</strong> replac
 1 Iris-versi...       50
 2 Iris-virgi...       50
 - ------------- --------
-            NaN       3B</code></pre><h4>Correlations (Matrix)</h4><pre class="prettyprint source lang-javascript"><code>iris.corr()</code></pre><pre class="prettyprint source"><code># s      column f64 Id f64 SepalLe... f64 SepalWi... f64 PetalLe... f64 PetalWi...
+            NaN       3B</code></pre><h4>Correlations</h4><p>For a correlation of each column with each other column (matrix):</p>
+<pre class="prettyprint source lang-javascript"><code>iris.corr() // .corr(false) to *not* print the first column</code></pre><pre class="prettyprint source"><code># s      column f64 Id f64 SepalLe... f64 SepalWi... f64 PetalLe... f64 PetalWi...
 - ------------- ------ -------------- -------------- -------------- --------------
 0            Id   1.00           0.71          -0.39           0.88           0.89
 1 SepalLengt...   0.71           1.00          -0.10           0.87           0.81
@@ -299,23 +320,42 @@ Signature: <code>iris.sample(100, false)</code> (<strong>without</strong> replac
 4 PetalWidth...   0.89           0.81          -0.35           0.96           1.00
 - ------------- ------ -------------- -------------- -------------- --------------
             NaN    40B            40B            40B            40B            40B</code></pre><h3>Pre-Processing</h3><h4>Remove NaN / Infinity / other</h4><p>To remove all rows that have some value:</p>
-<pre class="prettyprint source lang-javascript"><code>iris.removeAll(NaN) // from all cols
-// from 1th and 3rd cols and from col 'PetalLengthCm'
-iris.removeAll(NaN, 0, 2, 'PetalLengthCm') </code></pre><h4>Discretized (Bin)</h4><pre class="prettyprint source lang-javascript"><code>iris.kBins('SepalLengthCm', 5); // 5 bins for this column
+<pre class="prettyprint source lang-javascript"><code>// from all cols i.e. remove all rows where any of the value is NaN
+iris.removeAll(NaN) 
 
-iris.kBins(null, 3); // 3 bins for all columns
+// from 1th and 3rd cols and from col 'PetalLengthCm'
+iris.removeAll(NaN, 0, 2, 'PetalLengthCm') </code></pre><h4>Discretize (Bin)</h4><pre class="prettyprint source lang-javascript"><code>iris.kBins('SepalLengthCm', 5); // 5 bins for this column
+
+iris.kBins(null, 3);            // 3 bins for all columns
 
 iris.kBins(2, 3).col(2).print(10) // 3rd (2 idx) col, 3 bins</code></pre><pre class="prettyprint source"><code>Series u8[2, 1, 2, 1, 2, 2, 2, 2, 1, 1, ... 40 more]</code></pre><p><strong>NOTE</strong> this is smart enough only to target numeric attributes so string columns will be ignored (no need to run <code>.numeric</code>).</p>
-<h4>Feature (Column) Selection</h4><p>Signature: <code>iris.nBest(n, metric)</code> where metric is one of <code>{&quot;var&quot;, &quot;stdev&quot;, &quot;mean&quot;, &quot;mad&quot;, &quot;IQR&quot;, &quot;median&quot;, &quot;Q1&quot;, &quot;Q3&quot;, &quot;skewness&quot;, &quot;minimum&quot;, &quot;range&quot;, &quot;maximum&quot;}</code> OR a function from Series (one column) to a number (<code>Series -&gt; Num</code>). <br></p>
-<p>Feature selection (i.e. select best columns, by default uses &quot;var&quot; -- variance):</p>
-<pre class="prettyprint source lang-javascript"><code>iris.drop('Id').numeric.nBest(2).print(3) // note the numeric</code></pre><pre class="prettyprint source"><code>  # f32 PetalLe... f32 SepalLe...
+<h4>Feature (Column) Selection</h4><p>Feature selection (i.e. select best columns, by default uses <code>&quot;var&quot;</code> -- variance):</p>
+<p>Signature: <code>iris.nBest(n, metric)</code> where metric is one of:</p>
+<ul>
+<li><code>&quot;var&quot;</code></li>
+<li><code>&quot;stdev&quot;</code></li>
+<li><code>&quot;mean&quot;</code></li>
+<li><code>&quot;mad&quot;</code></li>
+<li><code>&quot;IQR&quot;</code></li>
+<li><code>&quot;median&quot;</code></li>
+<li><code>&quot;Q1&quot;</code></li>
+<li><code>&quot;Q3&quot;</code></li>
+<li><code>&quot;skewness&quot;</code></li>
+<li><code>&quot;min&quot;</code></li>
+<li><code>&quot;range&quot;</code></li>
+<li><code>&quot;max&quot;</code></li>
+</ul>
+<p>OR a function from Series (one column) to a number (<code>Series -&gt; Num</code>). <br></p>
+<pre class="prettyprint source lang-javascript"><code>iris.drop('Id').numeric.nBest(2).print(3) // note the numeric
+
+// try: iris.drop('Id').numeric.nBest(2, 'mad').print(3)</code></pre><pre class="prettyprint source"><code>  # f32 PetalLe... f32 SepalLe...
 --- -------------- --------------
   0           1.39           5.09
   1           1.39           4.90
   2           1.29           4.69
 ...     (147 more)            ...
 --- -------------- --------------
-              600B           600B</code></pre><h4>Normalization</h4><p>However, this is very naive and you might want to normalize (scale to the same range) the values:</p>
+              600B           600B</code></pre><h4>Normalization</h4><p>However, using <code>.nBest()</code> in this way is very naive and you might want to normalize (scale to the same range) the values:</p>
 <pre class="prettyprint source lang-javascript"><code>iris.drop('Id').numeric.normalize().nBest(2).print(3)</code></pre><p>As you can see you might get different results:</p>
 <pre class="prettyprint source"><code>  # f32 PetalWi... f32 PetalLe...
 --- -------------- --------------
@@ -324,29 +364,29 @@ iris.kBins(2, 3).col(2).print(10) // 3rd (2 idx) col, 3 bins</code></pre><pre cl
   2           0.04           0.05
 ...     (147 more)            ...
 --- -------------- --------------
-              600B           600B</code></pre><h4>Label Encoding</h4><p>It's a bit awkward for us to constantly have to drop the 'Species' column because it's a string column...</p>
+              600B           600B</code></pre><h4>Label Encoding</h4><p>It's a bit awkward to constantly have to drop the <code>'Species'</code> column because it's a string column...</p>
 <p>You can easily convert it to a numeric column:</p>
 <p>From:</p>
-<pre class="prettyprint source lang-javascript"><code>iris.print(48, 52)</code></pre><pre class="prettyprint source"><code>  # u8 Id f32 SepalLe... f32 SepalWi... f32 PetalLe... f32 PetalWi... s     Species
---- ----- -------------- -------------- -------------- -------------- -------------
-...   ...            ...      (48 more)            ...            ...           ...
- 48    49           5.30           3.70           1.50           0.20 Iris-setos...
- 49    50           5.00           3.29           1.39           0.20 Iris-setos...
- 50    51           7.00           3.20           4.69           1.39 Iris-versi...
- 51    52           6.40           3.20           4.50           1.50 Iris-versi...
-...   ...            ...      (98 more)            ...            ...           ...
---- ----- -------------- -------------- -------------- -------------- -------------
-     150B           600B           600B           600B           600B           NaN</code></pre><p>To:</p>
-<pre class="prettyprint source lang-javascript"><code>iris.labelEncode().print(48, 52)</code></pre><pre class="prettyprint source"><code>  # u8 Id f32 SepalLe... f32 SepalWi... f32 PetalLe... f32 PetalWi... u8 Species
---- ----- -------------- -------------- -------------- -------------- ----------
-...   ...            ...      (48 more)            ...            ...        ...
- 48    49           5.30           3.70           1.50           0.20          0
- 49    50           5.00           3.29           1.39           0.20          0
- 50    51           7.00           3.20           4.69           1.39          1
- 51    52           6.40           3.20           4.50           1.50          1
-...   ...            ...      (98 more)            ...            ...        ...
---- ----- -------------- -------------- -------------- -------------- ----------
-     150B           600B           600B           600B           600B       150B</code></pre><p>By default all string columns will be label encoded (numeric columns will be ignored). You may specify the colIds e.g. <code>df.labelEncode(0, -3, 'Target')</code>.</p>
+<pre class="prettyprint source lang-javascript"><code>iris.select(-2, -1).print(48, 52)</code></pre><pre class="prettyprint source"><code>  # f32 PetalWi... s     Species
+--- -------------- -------------
+...      (48 more)           ...
+ 48           0.20 Iris-setos...
+ 49           0.20 Iris-setos...
+ 50           1.39 Iris-versi...
+ 51           1.50 Iris-versi...
+...      (98 more)           ...
+--- -------------- -------------
+              600B           NaN</code></pre><p>To:</p>
+<pre class="prettyprint source lang-javascript"><code>iris.select(-2, -1).labelEncode().print(48, 52)</code></pre><pre class="prettyprint source"><code>  # f32 PetalWi... u8 Species
+--- -------------- ----------
+...      (48 more)        ...
+ 48           0.20          0
+ 49           0.20          0
+ 50           1.39          1
+ 51           1.50          1
+...      (98 more)        ...
+--- -------------- ----------
+              600B       150B</code></pre><p>By default all string columns will be label encoded (numeric columns will be ignored). You may specify the <code>colIds</code> e.g. <code>df.labelEncode(0, -3, 'Target')</code>.</p>
 <h4>One-Hot Encoding</h4><p>Signature: <code>iris.oneHot(colId)</code> <br></p>
 <pre class="prettyprint source lang-javascript"><code>// expects the column to be unsigned int
 iris.labelEncode('Species').oneHot('Species').print(48, 52)</code></pre><pre class="prettyprint source"><code>  # u8 0 u8      1 u8 2
@@ -359,22 +399,23 @@ iris.labelEncode('Species').oneHot('Species').print(48, 52)</code></pre><pre cla
 ...  ... (98 more)  ...
 --- ---- --------- ----
     150B      150B 150B</code></pre><h4>Clipping (ensuring value is in range)</h4><p>For demonstration let's make a 1-col data frame:</p>
-<pre class="prettyprint source lang-javascript"><code>iris.select(1)
-
-// print with iris.select(1).head(3)</code></pre><pre class="prettyprint source"><code># f32 SepalLe...
+<pre class="prettyprint source lang-javascript"><code>iris.select(1).print(3)</code></pre><pre class="prettyprint source"><code># f32 SepalLe...
 - --------------
 0           5.09
 1           4.90
 2           4.69
 - --------------
              12B</code></pre><p>To clip:</p>
-<pre class="prettyprint source lang-javascript"><code>iris.select(1).clip(null, 4, 5).print(3) // null == all cols</code></pre><pre class="prettyprint source"><code># f32 SepalLe...
-- --------------
-0           5.00
-1           4.90
-2           4.69
-- --------------
-             12B</code></pre><h3>Outliers</h3><p>To remove outliers (outside of Q1 to Q3) run:</p>
+<pre class="prettyprint source lang-javascript"><code>// null == all cols
+iris.select(1).clip(null, 4.88, 5).print(3)</code></pre><pre class="prettyprint source"><code>  # f32 SepalLe...
+--- --------------
+  0           5.00
+  1           4.90
+  2           4.88
+...     (147 more)
+--- --------------
+              600B</code></pre><p>Notice that <code>5.09</code> got clipped to <code>5.00</code>!</p>
+<h3>Outliers</h3><p>To remove outliers (outside of Q1 to Q3) run:</p>
 <pre class="prettyprint source lang-javascript"><code>iris.dropOutliers()      // consider all cols
 iris.dropOutliers(0, -2) // consider just 1st and second to last cols</code></pre><h2>Advanced Human-Friendly API</h2><h3>Data Types</h3><table>
   <tr>
@@ -383,39 +424,39 @@ iris.dropOutliers(0, -2) // consider just 1st and second to last cols</code></pr
   </tr>
   <tr>
     <td>string</td>
-    <td>&quot;s&quot;</td>
+    <td>s</td>
   </tr>
   <tr>
     <td>32-bit signed integer</td>
-    <td>&quot;i32&quot;</td>
+    <td>i32</td>
   </tr>
   <tr>
     <td>16-bit signed integer</td>
-    <td>&quot;i16&quot;</td>
+    <td>i16</td>
   </tr>
   <tr>
     <td>8-bit signed integer</td>
-    <td>&quot;i8&quot;</td>
+    <td>i8</td>
   </tr>
   <tr>
     <td>32-bit unsigned integer</td>
-    <td>&quot;u32&quot;</td>
+    <td>u32</td>
   </tr>
   <tr>
     <td>16-bit unsigned integer</td>
-    <td>&quot;u16&quot;</td>
+    <td>u16</td>
   </tr>
   <tr>
     <td>8-bit unsigned integer</td>
-    <td>&quot;u8&quot;</td>
+    <td>u8</td>
   </tr>
   <tr>
     <td>32-bit float (single precision)</td>
-    <td>&quot;f32&quot;</td>
+    <td>f32</td>
   </tr>
   <tr>
     <td>64-bit float (double precision)</td>
-    <td>&quot;f64&quot;</td>
+    <td>f64</td>
   </tr>
 </table>
 
@@ -424,7 +465,7 @@ iris.dropOutliers(0, -2) // consider just 1st and second to last cols</code></pr
 
 [ 'u8', 'f32', 'f32', 'f32', 'f32', 's' ]</code></pre><p>Or for a prettier output make a meta data frame with information about the
 previous data frame!</p>
-<pre class="prettyprint source lang-javascript"><code>iris.dtype() // note difference between `iris.dtype()` (method) and `iris.dtypes` (getter)</code></pre><p><strong>SIDENOTE</strong> .dtype() is an aggregate!  this means it produces a data frame from applying a <code>Series -&gt; *</code> operation to all columns.</p>
+<pre class="prettyprint source lang-javascript"><code>iris.dtype() // note difference between `iris.dtype()` (method) and `iris.dtypes` (getter)</code></pre><p><strong>SIDENOTE</strong> <code>.dtype()</code> is an aggregate! This means it produces a data frame from applying a <code>Series -&gt; *</code> operation to all columns.</p>
 <pre class="prettyprint source"><code># s      column s dtype
 - ------------- -------
 0            Id      u8
@@ -437,7 +478,7 @@ previous data frame!</p>
             NaN     NaN</code></pre><p>You can force-cast columns:</p>
 <pre class="prettyprint source lang-javascript"><code>iris.cast(2, 'u8')</code></pre><p><code>cast(colId, dtype)</code> <strong>expects the column number as the first parameter</strong>.</p>
 <h3>Down-Casting</h3><p>You can also run <code>iris.downcast()</code> and let the library figure out the most efficient data type for each column so that data is not lost.
-This is especially useful after truncating (floats are converted to ints).</p>
+This is especially useful after truncating (floats are converted to integers).</p>
 <p>Default:</p>
 <pre class="prettyprint source"><code># u8 Id f32 SepalLe... f32 SepalWi... f32 PetalLe... f32 PetalWi... s     Species
 - ----- -------------- -------------- -------------- -------------- -------------
@@ -465,7 +506,7 @@ This is especially useful after truncating (floats are converted to ints).</p>
 <p>To figure out how much your data frame is taking in total try:</p>
 <pre class="prettyprint source lang-javascript"><code>iris.memory().col(-1).add()
 
-2550 // bytes</code></pre><h3>Copies</h3><h4>Deep Copy</h4><p>If for some reason you need a deep-copy try:</p>
+2550 // bytes</code></pre><h3>Copies</h3><h4>Deep Copy</h4><p>If for some reason you need a deep-copy try (expensive):</p>
 <pre class="prettyprint source lang-javascript"><code>iris.clone()</code></pre><h4>Shallow Copy</h4><p>Shallow copies are cheap:</p>
 <pre class="prettyprint source lang-javascript"><code>iris.copy()</code></pre><h3>Generalized Row Slicing</h3><p>Sometimes you may want to get rows from 10th to 20th and e.g. 50th to 65th:</p>
 <pre class="prettyprint source lang-javascript"><code>//         [F, T],[F,  T] // FROM - TO
@@ -477,14 +518,14 @@ iris.slice(9, 19, 49, 64)</code></pre><h3>Generalized Column Slicing</h3><p>The 
 1           1.39           0.20     2           4.90           3.00
 2           1.29           0.20     3           4.69           3.20
 - -------------- -------------- ----- -------------- --------------
-             12B            12B    3B            12B            12B</code></pre><h3>Exporting</h3><h4>Array</h4><h4>Array of Columns</h4><pre class="prettyprint source lang-javascript"><code>iris.head(2).toArray('col')
+             12B            12B    3B            12B            12B</code></pre><h3>Exporting</h3><h4>Array</h4><h5>Array of Columns</h5><pre class="prettyprint source lang-javascript"><code>iris.head(2).toArray('col')
 
 [ [ 1, 2 ],
   [ 5.099999904632568, 4.900000095367432 ],
   [ 3.5, 3 ],
   [ 1.399999976158142, 1.399999976158142 ],
   [ 0.20000000298023224, 0.20000000298023224 ],
-  [ 'Iris-setosa', 'Iris-setosa' ] ]</code></pre><h4>Array of Rows</h4><pre class="prettyprint source lang-javascript"><code>iris.head(2).toArray()
+  [ 'Iris-setosa', 'Iris-setosa' ] ]</code></pre><h5>Array of Rows</h5><pre class="prettyprint source lang-javascript"><code>iris.head(2).toArray()
 
 [ [ 1,
     5.099999904632568,
@@ -529,7 +570,7 @@ iris.slice(9, 19, 49, 64)</code></pre><h3>Generalized Column Slicing</h3><p>The 
   &quot;PetalLengthCm&quot;: [1.399999976158142, 1.399999976158142],
   &quot;PetalWidthCm&quot;: [0.20000000298023224, 0.20000000298023224],
   &quot;Species&quot;: [&quot;Iris-setosa&quot;, &quot;Iris-setosa&quot;]
-}</code></pre><h4>CSV</h4><pre class="prettyprint source lang-javascript"><code>iris.head(2).toCSV(true) // hasHeader = true</code></pre><pre class="prettyprint source lang-csv"><code>Id,SepalLengthCm,SepalWidthCm,PetalLengthCm,PetalWidthCm,Species
+}</code></pre><h4>CSV</h4><pre class="prettyprint source lang-javascript"><code>iris.head(2).toCSV() </code></pre><pre class="prettyprint source lang-csv"><code>Id,SepalLengthCm,SepalWidthCm,PetalLengthCm,PetalWidthCm,Species
 1,5.099999904632568,3.5,1.399999976158142,0.20000000298023224,Iris-setosa
 2,4.900000095367432,3,1.399999976158142,0.20000000298023224,Iris-setosa</code></pre><h3>Settings</h3><table>
   <tr>
@@ -565,7 +606,23 @@ iris.slice(9, 19, 49, 64)</code></pre><h3>Generalized Column Slicing</h3><p>The 
 </table>
 
 <p>To set:</p>
-<pre class="prettyprint source lang-javascript"><code>DF.set(option, value)</code></pre><h3>Series Human-Friendly API</h3><p>TODO</p></article>
+<pre class="prettyprint source lang-javascript"><code>DF.set(option, value)</code></pre><h3>Series Human-Friendly API</h3><p>TODO</p>
+<h3>Disclaimer</h3><ol>
+<li>I am not a statistician</li>
+<li>Unit tests for DataFrame are not done yet</li>
+<li>Alpha-stage</li>
+<li>I would not use it in production (yet)</li>
+<li>This isn't supposed to be an exact copy of pandas</li>
+</ol>
+<h3>License</h3><p><strong>MIT</strong></p>
+<p>Copyright 2019 Norbert Logiewa</p>
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the &quot;Software&quot;), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:</p>
+<p>The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.</p>
+<p>THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+<!-- 
+TODO document `df.call()`
+TODO document `df.agg()`
+--></article>
     </section>
 
 
@@ -576,13 +633,13 @@ iris.slice(9, 19, 49, 64)</code></pre><h3>Generalized Column Slicing</h3><p>The 
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="DataFrame.html">DataFrame</a></li></ul><h3>Global</h3><ul><li><a href="global.html#bag">bag</a></li><li><a href="global.html#empty">empty</a></li><li><a href="global.html#fill">fill</a></li><li><a href="global.html#from">from</a></li><li><a href="global.html#of">of</a></li><li><a href="global.html#ones">ones</a></li><li><a href="global.html#rand">rand</a></li><li><a href="global.html#randInRange">randInRange</a></li><li><a href="global.html#randInt">randInt</a></li><li><a href="global.html#range">range</a></li><li><a href="global.html#rangeIter">rangeIter</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#util">util</a></li><li><a href="global.html#zeros">zeros</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="DataFrame.html">DataFrame</a></li></ul><h3>Global</h3><ul><li><a href="global.html#bag">bag</a></li><li><a href="global.html#empty">empty</a></li><li><a href="global.html#fill">fill</a></li><li><a href="global.html#from">from</a></li><li><a href="global.html#of">of</a></li><li><a href="global.html#ones">ones</a></li><li><a href="global.html#rand">rand</a></li><li><a href="global.html#randInRange">randInRange</a></li><li><a href="global.html#randInt">randInt</a></li><li><a href="global.html#range">range</a></li><li><a href="global.html#rangeIter">rangeIter</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#zeros">zeros</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Tue Apr 02 2019 22:32:42 GMT+0100 (British Summer Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Apr 03 2019 17:10:13 GMT+0100 (British Summer Time)
 </footer>
 
 <script> prettyPrint(); </script>

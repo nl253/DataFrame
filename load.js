@@ -11,12 +11,10 @@ function readJSON(filePath) {
 
 /**
  * @param {!String} filePath
- * @param {?Boolean} [hasHeader]
  * @returns {Array<Array<String>>} table
  */
-function readCSV(filePath, hasHeader = false) {
+function readCSV(filePath) {
   return parseCSV(readFileSync(filePath), {
-    header: hasHeader,
     skip_empty_lines: true,
   });
 }

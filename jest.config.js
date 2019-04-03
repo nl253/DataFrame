@@ -3,6 +3,8 @@
  * https://jestjs.io/docs/en/configuration.html
  */
 
+process.env.TESTING = '1';
+
 module.exports = {
 
   /*
