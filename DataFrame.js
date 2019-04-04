@@ -471,8 +471,10 @@ class DataFrame {
       }
     }
     if (filter === 'num') {
+      log.info('ignoring str cols');
       return this.call(colId, f, cIdx => this._numColIdxs.has(cIdx), ...args);
     } else if (filter === 'str') {
+      log.info('ignoring num cols');
       return this.call(colId, f, cIdx => !this._numColIdxs.has(cIdx), ...args);
     } else if (filter === 'all') {
       return this.call(colId, f, cIdx => true, ...args);
@@ -482,7 +484,7 @@ class DataFrame {
     if (f.constructor.name === 'String') {
       for (const cIdx of colIdxs) {
         if (!filter(cIdx)) {
-          log.warn(`tried running op col #${cIdx}`);
+          log.debug(`tried running op col #${cIdx}`);
         } else {
           if (cols[cIdx][f] === undefined) {
             throw new Error(`can't call ${f} on column ${this.colNames[cIdx]}`);
@@ -493,7 +495,7 @@ class DataFrame {
     } else {
       for (const cIdx of colIdxs) {
         if (!filter(cIdx)) {
-          log.warn(`tried running op col #${cIdx}`);
+          log.debug(`tried running op col #${cIdx}`);
         } else {
           cols[cIdx] = f(cols[cIdx], ...args);
         }
@@ -1453,7 +1455,7 @@ class DataFrame {
         }
 
         if (!Object.is(val, NaN)) {
-          row[cIdx] = `${s}.00`;
+          row[cIdx] = `${s}.${'0'.repeat(env.PRINT_PREC)}`;
         }
       }
       rows.push([i].concat(row));
@@ -1520,10 +1522,41 @@ class DataFrame {
     // inject underlining `-------`
     rows.splice(rows.length - 1, 0, lens.map(l => '-'.repeat(l)));
 
+    const truncated = new Set();
+    const nColsToShow = Math.floor(process.stdout.columns / env.MIN_COL_WIDTH);
+    const offset = Math.floor(nColsToShow / 2);
+
+    if (rows[0].length > nColsToShow) {
+      const left = offset; // index and a few cols
+      const right = rows[0].length - offset;
+      for (let cIdx = left; cIdx < right; cIdx++) {
+        truncated.add(cIdx)
+        for (let rIdx = 0; rIdx < rows.length; rIdx++) {
+          rows[rIdx][cIdx] = '.';
+        }
+        // show '.' ONLY for values
+        // colNames and dashes (-----) should be replaced with ' '
+        for (let i = 0; i < 2; i++) {
+          rows[i][cIdx] = ' ';
+          rows[rows.length - i - 1][cIdx] = ' ';
+        }
+      }
+      // padding between the first column of dots
+      // and a column on it's left
+      for (let rIdx = 0; rIdx < rows.length; rIdx++) {
+        rows[rIdx][left] = ' ' + rows[rIdx][left];
+      }
+    }
 
     // pad start with ' '
     for (let i = 0; i < rows.length; i++) {
-      rows[i] = rows[i].map((val, cIdx) => val.toString().padStart(lens[cIdx], ' ')).join(' ');
+      rows[i] = rows[i].map((val, cIdx) => {
+        if (truncated.has(cIdx)) { 
+          return val;
+        } else {
+          return val.toString().padStart(lens[cIdx], ' ')
+        }
+      }).join(' ');
     }
 
     return rows.join('\n');

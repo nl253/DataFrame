@@ -1038,42 +1038,58 @@ function guessNumDtype(xs, floatSize = null) {
     return guessNumDtype(xs, env.FLOAT_PREC);
   }
 
-  const isNeg = xs.some(x => x < 0);
-  const largest = xs.map(x => Math.abs(x)).reduce((a, b) => Math.max(a, b));
-  let bitsNeeded = Math.ceil(Math.log2(largest + 1));
-  const isFloat = xs.some(x => !Number.isInteger(x) && !Object.is(x, NaN));
-
-  if (isNeg) bitsNeeded++; // sign bit
+  const notNaN = xs.filter(x => !Object.is(NaN, x));
+  const largest = notNaN.reduce((a, b) => Math.max(a, b));
+  const smallest = notNaN.reduce((a, b) => Math.min(a, b));
+  const isFloat = notNaN.some(x => !Number.isInteger(x));
+  log.debug(`max num is ${largest}, and min num is ${smallest}`);
 
   // reals
   if (isFloat) {
-    if (-largest <= 1.23e-38 || largest >= 3.4e38) {
+    if (smallest < 1.23e-38 || largest > 3.4e38) {
+      log.debug('opted for f64');
       return 'f64';
     } 
-    // else 
+    log.debug('opted for f32');
     return 'f32';
+  }
+
+  const isNeg = smallest < 0;
+  let bitsNeeded = Math.ceil(Math.log2(Math.max(largest + 1, Math.abs(smallest - 1))));
+
+  if (isNeg) {
+    bitsNeeded++; // sign bit
   }
 
   // integers
   if (isNeg) {
     if (bitsNeeded <= 8) {
+      log.debug('opted for i8');
       return 'i8';
     } else if (bitsNeeded <= 16) {
+      log.debug('opted for i16');
       return 'i16';
     } else if (bitsNeeded <= 32) {
+      log.debug('opted for i32');
       return 'i32';
     }
   }
 
+  log.debug(`guessed un-signed integer`);
+
   // natural numbers
   if (bitsNeeded <= 8) {
+    log.debug('opted for u8');
     return 'u8';
   } else if (bitsNeeded <= 16) {
+    log.debug('opted for u16');
     return 'u16';
   } else if (bitsNeeded <= 32) {
+    log.debug('opted for u32');
     return 'u32';
   }
 
+  log.debug(`huge number ${largest}, defaulting to f64`);
   return 'f64'; // huge number
 }
 
