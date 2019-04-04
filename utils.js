@@ -1,3 +1,5 @@
+const dtypeRegex = /\s*([a-z]+)(8|16|32|64)\s*/i;
+
 /**
  * @param {!Number} n
  * @param {!Number} [prec]
@@ -104,5 +106,6 @@ module.exports = {
   getTypeMarker,
   unify,
   fmtFloatSI,
+  dtypeRegex,
   fmtFloat,
 };

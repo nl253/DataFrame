@@ -2,7 +2,7 @@
 const util = require('util');
 const { randInRange, randInt } = require('./rand');
 
-const dtypeRegex = /\s*([a-z]+)(8|16|32|64)\s*/i;
+const { dtypeRegex } = require('./utils');
 const isNumRegex = /^(\d+\.?\d*|\d*\.\d+)(e-?\d+)?$/i;
 const log = require('./log');
 const env = require('./env');
@@ -19,6 +19,9 @@ function enhance(a) {
   if (a.randEl !== undefined) {
     return a;
   }
+
+  const defineGetter = (name, f) => Object.defineProperty(a, name, { get: f });
+
 
   a.convert = function (dtype = null) {
     if (dtype === this.dtype) {
@@ -102,8 +105,6 @@ function enhance(a) {
   // other
 
   a.counts = function () { return bag(this); };
-
-  const defineGetter = (name, f) => Object.defineProperty(a, name, { get: f });
 
   defineGetter('randEl', function () {
     return this[Math.floor(randInRange(0, this.length))];
@@ -306,7 +307,6 @@ function enhStrArr(a) {
       return this[0].constructor.name.toLocaleLowerCase();
     }
   });
-
 
   a.clone = function () {
     return Array.from(this);
@@ -1187,7 +1187,7 @@ function from(xs, toDtype = null) {
   // return empty arrays
   if (xs.length === 0) {
     log.debug(`empty input, returning empty Series`);
-    return enhance(xs.constructor());
+    return enhStrArr(xs.constructor());
   }
 
   const isNum = !xs.some(x => x.constructor.name[0] !== 'N');

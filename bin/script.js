@@ -5,6 +5,6 @@ const Series = require('../Series');
 
 const xs = DF.loadDataSet('lifting');
 
-xs.sliceCols(0, 6).print(10, 13);
+xs.sliceCols(0, 6).slice(0, 0).print();
 
 module.exports = xs;

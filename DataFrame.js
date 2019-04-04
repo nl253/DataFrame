@@ -17,11 +17,9 @@ const stringifyCSV = require('csv-stringify');
 const Series = require('./Series');
 const { randInt } = require('./rand');
 const { readCSV } = require('./load');
-const { fmtFloat, unify, fmtFloatSI } = require('./utils');
+const { fmtFloat, unify, fmtFloatSI, dtypeRegex } = require('./utils');
 const log = require('./log');
 const env = require('./env');
-
-const bitRegex = /8|16|32|64/;
 
 /**
  * @param {!Array<Array<*>>} xs
@@ -100,7 +98,6 @@ class DataFrame {
         log.debug('data is columns');
         this._cols = data.map((c, cIdx) => {
           const isSeries = Series.isSeries(c);
-          debugger;
           const dtypeGiven = dtypes[cIdx] !== null && dtypes[cIdx] !== undefined;
           const noNeedToConvert = isSeries && (!dtypeGiven || c.dtype === dtypes[cIdx]);
           if (noNeedToConvert) {
@@ -270,8 +267,7 @@ class DataFrame {
     const { dtypes } = this;
     const colIdxs = new Set();
     for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
-      if (dtypes[cIdx].match(bitRegex)) {
-      // if (dtypes[cIdx] !== 's' && dtypes[cIdx] !== 'null') {
+      if (dtypes[cIdx].match(dtypeRegex)) {
         colIdxs.add(cIdx);
       }
     }
@@ -1400,136 +1396,160 @@ class DataFrame {
       return 'Empty DataFrame';
     }
 
-    let width = Math.max(Math.floor((process.stdout.columns / this.nCols) - 1), env.MIN_COL_WIDTH);
+    let colWidth = Math.max(
+      // 1 for ' ' between cols
+      Math.floor(process.stdout.columns / this.nCols),
+      env.MIN_COL_WIDTH);
 
+    // few cols so make them larger
     if (this.nCols <= 1) {
-      width += 15;
+      colWidth += 15;
     } else if (this.nCols <= 2) {
-      width += 10;
+      colWidth += 10;
     } else if (this.nCols <= 3) {
-      width += 7;
-    } else if (this.nCols <= 3) {
-      width += 3;
+      colWidth += 7;
+    } else if (this.nCols <= 4) {
+      colWidth += 3;
+    } else if (this.nCols <= 5) {
+      colWidth += 1;
     }
 
     const rows = [];
 
-    // print index column
-    rows.push(['#'].concat(this.colNames
-    // trunc column headings
-      .map(h => (h.length > width - 3 ? `${h.slice(0, width - 3)}...` : h))
-    // pad to reserve space for dtypes (injected later)
-      .map((h, cIdx) => ' '.repeat(this.dtypes[cIdx].length + 1) + h.toString())));
+    // index marker
+    const headerRow = ['#'];
+
+    for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
+      let h = this.colNames[cIdx].toString(); 
+      // trunc column headings
+      if (h.length > colWidth) {
+        h = `${h.slice(0, colWidth - 2)}..`;
+      } 
+      // pad to reserve space for ' ' and dtype (injected later after col len is computed)
+      h =  ' '.repeat(this.dtypes[cIdx].length + 1) + h.toString();
+      headerRow.push(h);
+    }
+
+    rows.push(headerRow);
+
+    const midCol = Math.floor(rows[0].length / 2);
+
+    if (n > 0) {
+      const arr = Array(this.nCols + 1).fill('...');
+      arr[midCol] = `(${n} more)`;
+      rows.push(arr);
+    }
 
     const numCols = this._numColIdxs;
 
-    for (let i = n; i < m; i++) {
-      const row = this.row(i);
+    for (let rIdx = n; rIdx < m; rIdx++) {
+      const row = Array(this.nCols + 1).fill(0);
+      row[0] = rIdx.toString();
       for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
-        const val = row[cIdx];
+        const val = this.val(rIdx, cIdx);
         const s = val.toString();
         const isNum = numCols.has(cIdx);
         const isStr = !isNum && val.constructor.name === 'String';
-        const isTooLong = isStr && s.length > width;
+        const isTooLong = isStr && s.length > colWidth;
 
         if (isTooLong) {
-          row[cIdx] = `${s.slice(0, width)}...`;
+          row[cIdx + 1] = `${s.slice(0, colWidth - 2)}..`;
           continue;
         }
 
         const isFloat = isNum && this.dtypes[cIdx].startsWith('f');
 
         if (isFloat) {
-          row[cIdx] = fmtFloat(val, env.PRINT_PREC);
+          row[cIdx + 1] = fmtFloat(val, env.PRINT_PREC);
+          continue;
         }
+
+        row[cIdx + 1] = s;
       }
-      rows.push([i].concat(row));
+      rows.push(row);
     }
 
     if (this.length === 0) {
-      rows.push([''].concat(Array(this.nCols).fill('empty')));
-    }
+      const emptyInfo = Array(this.nCols + 1).fill('empty');
+      emptyInfo[0] = '';
+      rows.push(emptyInfo);
 
-    rows.push([''].concat(Array(this.nCols).fill(0).map((_, cIdx) => {
-      const col = this._cols[cIdx];
-
-      // string column
-      if (col.memory === undefined) {
-        return '';
-      }
-      return fmtFloatSI(col.memory(), env.PRINT_PREC, 'B');
-    })));
-
-    // const midCol = Math.floor(this.nCols / 2);
-    const midCol = Math.floor(rows[0].length / 2);
-
-    if (n > 0) {
-      const arr = Array(this.nCols + 1).fill('...');
-      arr[midCol] = `(${n} more)`;
-      rows.splice(1, 0, arr);
-    }
-
-    if (m < this.length) {
+    } else if (m < this.length) {
       const arr = Array(this.nCols + 1).fill('...');
       arr[midCol] = `(${this.length - m} more)`;
-      rows.splice(rows.length - 1, 0, arr);
+      rows.push(arr);
     }
+
+    const memInfo = Array(this.nCols + 1).fill(0);
+    memInfo[0] = '';
+    
+    for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
+      const col = this._cols[cIdx];
+      // string column
+      if (col.memory === undefined) {
+        memInfo[cIdx + 1] = '';
+      } else {
+        memInfo[cIdx + 1] = fmtFloatSI(col.memory(), env.PRINT_PREC, 'B').replace('.00', '');
+      }
+    }
+
+    rows.push(memInfo);
 
     // lengths of each column
-    const lens = Array(this.nCols + 1).fill(0).map((_, idx) => rows.map(r => r[idx].toString().length)
-      .reduce((x, y) => Math.max(x, y), 1));
+    const colWidths = Array(this.nCols + 1)
+      .fill(0)
+      .map((_, idx) => rows
+        .map(r => r[idx].toString().length)
+        .reduce((x, y) => Math.max(x, y), 1)
+      );
 
-    // inject underlining `-------`
-    rows.splice(1, 0, lens.map(l => '-'.repeat(l)));
+    // underline
+    rows.splice(1, 0, colWidths.map(l => '-'.repeat(l)));
+    rows.splice(rows.length - 1, 0, colWidths.map(l => '-'.repeat(l)));
 
     // inject dtypes for all headings
-    rows[0] = rows[0].slice(0, 1).concat(rows[0].slice(1, rows[0].length).map((h, cIdx) => {
-      const len = lens[cIdx + 1];
+    const headerRowWithDT = Array(headerRow.length);
+    headerRowWithDT[0] = headerRow[0];
+
+    for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
+      const len = colWidths[cIdx + 1];
+      const h = headerRow[cIdx + 1];
       const dtype = this.dtypes[cIdx];
       const heading = h.trim();
-      return `${dtype}${' '.repeat(len - heading.length - dtype.length)}${heading}`;
-    }));
+      headerRowWithDT[cIdx + 1] = `${dtype}${' '.repeat(len - heading.length - dtype.length)}${heading}`;
+    }
 
-    // inject underlining `-------`
-    rows.splice(rows.length - 1, 0, lens.map(l => '-'.repeat(l)));
+    rows[0] = headerRowWithDT;
 
-    const truncated = new Set();
-    const nColsToShow = Math.floor(process.stdout.columns / env.MIN_COL_WIDTH);
-    const offset = Math.floor(nColsToShow / 2);
+    // +1 for space between cols
+    const tooLong = colWidths.reduce((l1, l2) => l1 + l2 + 1, 0) > process.stdout.columns;
 
-    if (rows[0].length > nColsToShow) {
-      const left = offset; // index and a few cols
-      const right = rows[0].length - offset;
-      for (let cIdx = left; cIdx < right; cIdx++) {
-        truncated.add(cIdx)
-        for (let rIdx = 0; rIdx < rows.length; rIdx++) {
-          rows[rIdx][cIdx] = '.';
-        }
-        // show '.' ONLY for values
-        // colNames and dashes (-----) should be replaced with ' '
-        for (let i = 0; i < 2; i++) {
-          rows[i][cIdx] = ' ';
-          rows[rows.length - i - 1][cIdx] = ' ';
-        }
-      }
-      // padding between the first column of dots
-      // and a column on it's left
+    if (tooLong) {
+      // remove cols in the middle
+      // +1 for ' ' padding
+      const nColsToShow = Math.floor(process.stdout.columns / (colWidth + 1)); 
+      // C C C LEFT C C C RIGHT C C C
+      // should remove Cs on the left of LEFT and on the right of RIGHT
+      // C C C ... C C C
+      const left = Math.floor(nColsToShow / 2);
+      const right = rows[0].length - left;
       for (let rIdx = 0; rIdx < rows.length; rIdx++) {
-        rows[rIdx][left] = ' ' + rows[rIdx][left];
+        let s = '';
+        for (let cIdx = 0; cIdx < left; cIdx++) {
+          s += rows[rIdx][cIdx].padStart(colWidths[cIdx] + 1, ' ');
+        }
+        s += ' ...';
+        for (let cIdx = right; cIdx < rows[rIdx].length; cIdx++) {
+          s += rows[rIdx][cIdx].padStart(colWidths[cIdx] + 1, ' ');
+        }
+        rows[rIdx] = s;
+      }
+    } else {
+      // pad start with ' '
+      for (let rIdx = 0; rIdx < rows.length; rIdx++) {
+        rows[rIdx] = rows[rIdx].map((val, cIdx) => val.padStart(colWidths[cIdx] + 1, ' ')).join(' ');
       }
     }
-
-    // pad start with ' '
-    for (let i = 0; i < rows.length; i++) {
-      rows[i] = rows[i].map((val, cIdx) => {
-        if (truncated.has(cIdx)) { 
-          return val;
-        } else {
-          return val.toString().padStart(lens[cIdx], ' ')
-        }
-      }).join(' ');
-    }
-
     return rows.join('\n');
   }
 }
