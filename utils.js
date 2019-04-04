@@ -1,16 +1,43 @@
 /**
  * @param {!Number} n
  * @param {!Number} [prec]
+ * @returns {!String}
  * @private
  */
 function fmtFloat(n, prec = 2) {
+  if (Object.is(n, NaN)) {
+    return 'NaN';
+  }
   const s = n.toString();
   const maybePointIdx = s.indexOf('.');
   if (maybePointIdx >= 0) {
-    return `${s.slice(0, maybePointIdx)}.${s.slice(maybePointIdx + 1, maybePointIdx + 1 + prec)}`;
+    const left = s.slice(0, maybePointIdx);
+    const right = s.slice(maybePointIdx + 1, maybePointIdx + 1 + prec).padEnd(prec, '0');
+    return `${left}.${right}`;
   } else {
-    return s;
+    return `${s}.${'0'.repeat(prec)}`;
   }
+}
+
+/**
+ * @param {!Number} n
+ * @param {!Number} [prec]
+ * @returns {!String}
+ * @private
+ */
+function fmtFloatSI(n, prec = 2, unit = 'B') {
+
+  if (n >= 1e12) {
+    return `${fmtFloat(n / 1e12, prec)}T${unit}`;
+  } else if (n >= 1e9) {
+    return `${fmtFloat(n / 1e9, prec)}G${unit}`;
+  } else if (n >= 1e6) {
+    return `${fmtFloat(n / 1e6, prec)}M${unit}`;
+  } else if (n >= 1e3) {
+    return `${fmtFloat(n / 1e3, prec)}K${unit}`;
+  }
+
+  return fmtFloat(n, prec) + unit;
 }
 
 /**
@@ -76,5 +103,6 @@ function unify(dt1, dt2) {
 module.exports = {
   getTypeMarker,
   unify,
+  fmtFloatSI,
   fmtFloat,
 };

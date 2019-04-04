@@ -17,7 +17,7 @@ const stringifyCSV = require('csv-stringify');
 const Series = require('./Series');
 const { randInt } = require('./rand');
 const { readCSV } = require('./load');
-const { fmtFloat, unify } = require('./utils');
+const { fmtFloat, unify, fmtFloatSI } = require('./utils');
 const log = require('./log');
 const env = require('./env');
 
@@ -1439,23 +1439,8 @@ class DataFrame {
 
         const isFloat = isNum && this.dtypes[cIdx].startsWith('f');
 
-        if (!isFloat) {
-          continue;
-        }
-
-        const maybePointIdx = s.indexOf('.');
-        const hasRadixPoint = maybePointIdx >= 0;
-
-        if (hasRadixPoint) {
-          row[cIdx] = s.slice(0, maybePointIdx + env.PRINT_PREC + 1);
-          if ((s.length - env.PRINT_PREC) === maybePointIdx) {
-            row[cIdx] += '0';
-          }
-          continue;
-        }
-
-        if (!Object.is(val, NaN)) {
-          row[cIdx] = `${s}.${'0'.repeat(env.PRINT_PREC)}`;
+        if (isFloat) {
+          row[cIdx] = fmtFloat(val, env.PRINT_PREC);
         }
       }
       rows.push([i].concat(row));
@@ -1472,21 +1457,7 @@ class DataFrame {
       if (col.memory === undefined) {
         return '';
       }
-
-      let size = col.memory();
-      let unit = 'B';
-
-      if (size >= 1e9) {
-        size /= 1e9;
-        unit = 'GB';
-      } else if (size >= 1e6) {
-        size /= 1e6;
-        unit = 'MB';
-      } else if (size >= 1e3) {
-        size /= 1e3;
-        unit = 'KB';
-      }
-      return fmtFloat(size, env.PRINT_PREC) + unit;
+      return fmtFloatSI(col.memory(), env.PRINT_PREC, 'B');
     })));
 
     // const midCol = Math.floor(this.nCols / 2);
