@@ -12,7 +12,7 @@ const log = createLogger({
       ({ level, message }) => `[${level.toLocaleUpperCase()}] ${message}`,
     ),
   ),
-  level: 'info',
+  level: 'debug',
   transports: [new transports.File({ filename: 'error.log', level: 'error' }), new transports.File({ filename: 'log.log' })],
 });
 

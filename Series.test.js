@@ -78,7 +78,7 @@ for (const pair of [
   ]) {
   const [arr, dtype] = pair;
   test('correct guesses dtype [-1,2] to be i8 ', () => {
-    expect(Series.guessDtype(arr)).toEqual(dtype);
+    expect(Series.guessNumDtype(arr)).toEqual(dtype);
   });
 }
 
