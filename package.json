@@ -33,7 +33,7 @@
     "log.js",
     "load.js",
     "utils.js",
-    "Series.js",
+    "Column.js",
     "datasets/alcohol/alcohol.csv",
     "datasets/blackFriday/blackFriday.csv",
     "datasets/countries/countries.csv",

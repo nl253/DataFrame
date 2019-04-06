@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 const DF = require('../DataFrame');
-const Series = require('../Series');
+const Column = require('../Column');
 
-const xs = DF.loadDataSet('lifting');
+const xs = new DF('iris');
 
-xs.sliceCols(0, 6).slice(0, 0).print();
+xs.print();
 
 module.exports = xs;

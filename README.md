@@ -458,10 +458,10 @@ iris.numeric.transpose().sum()
 
 **MATH**
 
-- `.sum()`
-- `.diff()`
-- `.prod()`
-- `.quot()`
+- `.add()`
+- `.sub()`
+- `.mul()`
+- `.div()`
 
 **STATS**
 

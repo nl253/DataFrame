@@ -1,4 +1,5 @@
-const dtypeRegex = /\s*([a-z]+)(8|16|32|64)\s*/i;
+const isNumRegex = /^(\d+\.?\d*|\d*\.\d+)([eE]-?\d+)?$/;
+const dtypeRegex = /\s*([a-zA-Z]+)(8|16|32|64)\s*/;
 
 /**
  * @param {!Number} n
@@ -46,6 +47,7 @@ function fmtFloatSI(n, prec = 2, unit = 'B') {
  *
  * @param {!Number|!String} xs
  * @returns {'s'|'f64'|'f34'|'i32'|'i16'|'i8'|'u32'|'u16'|'u8'} type marker
+ * @private
  */
 function getTypeMarker(val) {
   if (val.constructor.name[0] === 'S') {
@@ -103,9 +105,10 @@ function unify(dt1, dt2) {
 }
 
 module.exports = {
-  getTypeMarker,
-  unify,
-  fmtFloatSI,
   dtypeRegex,
   fmtFloat,
+  fmtFloatSI,
+  getTypeMarker,
+  isNumRegex,
+  unify,
 };
