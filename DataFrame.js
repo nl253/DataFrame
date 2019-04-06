@@ -20,6 +20,57 @@ const { fmtFloat, unify, fmtFloatSI, dtypeRegex } = require('./utils');
 const log = require('./log');
 const opts = require('./opts');
 
+const PROGRAMMER_PRINTING = {
+  DOTS: '..',
+  EMPTY_STR: '--',
+  IDX_MARKER: 'hex',
+  INDEX_BASE: 16,
+  MEM_INFO: true,
+  MEM_INFO_INDEX: '--',
+  MEM_INFO_STR: '--',
+  MIN_COL_WIDTH: 12,
+  PAD_STR: ' ',
+  PRINT_TYPES: false,
+  PRINT_TYPES: true,
+  SHOW_MORE: true,
+  SPACE_BETWEEN: 3,
+  UNDERLINE: ' ',
+  UNDERLINE_BOT: true,
+};
+
+const DEFAULT_PRINTING = {
+  DOTS: '..',
+  EMPTY_STR: 'empty',
+  IDX_MARKER: '#',
+  INDEX_BASE: 10,
+  MEM_INFO: true,
+  MEM_INFO_INDEX: '',
+  MEM_INFO_STR: '',
+  MIN_COL_WIDTH: 10,
+  PAD_STR: ' ',
+  PRINT_TYPES: true,
+  SHOW_MORE: true,
+  SPACE_BETWEEN: 1,
+  UNDERLINE: '-',
+  UNDERLINE_BOT: true,
+};
+
+const MINIMAL_PRINTING = {
+  DOTS: '.',
+  EMPTY_STR: '-',
+  IDX_MARKER: '',
+  MEM_INFO: false,
+  MEM_INFO_INDEX: '',
+  MEM_INFO_STR: '',
+  MIN_COL_WIDTH: 12,
+  PAD_STR: ' ',
+  PRINT_TYPES: false,
+  SHOW_MORE: false,
+  SPACE_BETWEEN: 2,
+  UNDERLINE: ' ',
+  UNDERLINE_BOT: true,
+};
+
 /**
  * @param {!Array<Array<*>>} xs
  * @returns {!Array<Array<*>>} xs^T
@@ -1441,30 +1492,13 @@ class DataFrame {
   static setPrinting(opt = 'minimal') {
     if (opt.match(/^mini/i)) {
       log.warn('minimal printing ON');
-      opts.UNDERLINE = ' ';
-      opts.SPACE_BETWEEN = 2;
-      opts.SHOW_MORE = false;
-      opts.EMPTY_STR = '-';
-      opts.MEM_INFO_STR = '';
-      opts.IDX_MARKER = '';
-      opts.MEM_INFO_INDEX = '';
-      opts.DOTS = '.';
-      opts.UNDERLINE_BOT = true;
-      opts.MIN_COL_WIDTH = 12;
-      opts.PAD_STR = ' ';
+      Object.assign(opts, MINIMAL_PRINTING);
     } else if (opt.match(/^def/)) {
       log.warn('default printing ON');
-      opts.UNDERLINE = '-';
-      opts.SPACE_BETWEEN = 1;
-      opts.SHOW_MORE = true;
-      opts.EMPTY_STR = 'empty';
-      opts.MEM_INFO_STR = '';
-      opts.IDX_MARKER = '#';
-      opts.MEM_INFO_INDEX = '';
-      opts.DOTS = '..';
-      opts.UNDERLINE_BOT = true;
-      opts.MIN_COL_WIDTH = 10;
-      opts.PAD_STR = ' ';
+      Object.assign(opts, DEFAULT_PRINTING);
+    } else if (opt.match(/^prog/)) {
+      log.warn('programmer printing ON');
+      Object.assign(opts, PROGRAMMER_PRINTING);
     } else if (opt.match(/^co[sz]y/)) {
       log.warn('SPACE_BETWEEN = 1');
       opts.SPACE_BETWEEN = 1;
@@ -1489,7 +1523,13 @@ class DataFrame {
     } else if (opt.match(/^unind/)) {
       log.warn('showing index OFF');
       opts.SHOW_INDEX = false;
-    } else throw new Error(`unrecognised printing opt ${opt}, try "minimal" or "default"`);
+    } else if (opt.match(/^untyp/)) {
+      log.warn('showing types OFF');
+      opts.PRINT_TYPES = false;
+    } else if (opt.match(/^typ/)) {
+      log.warn('showing types ON');
+      opts.PRINT_TYPES = true;
+    } else throw new Error(`unrecognised printing opt ${opt}, try "minimal", "programmer" or "default"`);
   }
 
   /**
