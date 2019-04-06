@@ -1251,6 +1251,8 @@ function from(xs, toDtype = null, doClone = true) {
     if (okRatio >= opts.PARSE_NUM_RATIO) {
       log.debug(`OK, parsed string array to ${tryParse.dtype} Column`);
       return tryParse;
+    } else {
+      log.debug(`correctness = ${okRatio}`);
     }
   } 
 

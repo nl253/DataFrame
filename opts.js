@@ -54,7 +54,6 @@ const opts = {
     'cum',
     'disDiff',
     'downcast',
-    'dropNaN',
     'floor',
     'kBins',
     'normalize',

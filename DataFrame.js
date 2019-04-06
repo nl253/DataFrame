@@ -5,6 +5,11 @@
  * TODO document cum ops
  * TODO binarizer
  * TODO document imports
+ * TODO document matrix ops
+ * TODO document add, mul, div, sub
+ * TODO document opts, printing presets
+ * TODO document dataset lookup
+ * TODO document examples
  */
 const util = require('util');
 const { join, resolve } = require('path');
@@ -322,19 +327,19 @@ class DataFrame {
       }
     }
 
-    this.corr = function(withNames = true) { 
+    this.corr = function (withNames = true) { 
       return this.matrix('corr', withNames, true, 1);
     };
 
-    this.cov = function(withNames = true) { 
-      return this.matrix('corr', withNames, true, null);
+    this.cov = function (withNames = true) { 
+      return this.matrix('cov', withNames, true, null);
     };
 
-    this.dot = function(withNames = true) { 
+    this.dot = function (withNames = true) { 
       return this.matrix('dot', withNames, true, null);
     };
 
-    this.dist = function(p = 2, withNames = true) { 
+    this.dist = function (p = 2, withNames = true) { 
       return this.matrix((xs, ys) => xs.dist(ys, p), withNames, true, 0);
     };
 
@@ -1041,8 +1046,9 @@ class DataFrame {
    * @param {?Boolean} [withNames]
    * @param {?Boolean} [isCommutative]
    * @param {*|null} [identity]
+   * @returns {!DataFrame} data frame
    */
-  matrix(f, withNames = true, isCommutative = true, identity = 1, ...args) {
+  matrix(f, withNames = true, isCommutative = false, identity = null, ...args) {
     if (f.constructor.name[0] === 'S') {
       // resolve function
       return this.matrix((xs, ys) => xs[f](ys), withNames, isCommutative);

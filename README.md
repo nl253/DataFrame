@@ -1,7 +1,7 @@
 # DataFrame 
 
 - [pandas](https://pandas.pydata.org/pandas-docs/stable/reference/frame.html)-like data-frame library
-- series built on typed arrays
+- Column built on typed arrays
 - tries to be memory efficient
 - extensions to arrays
 - great for tabular data
@@ -41,16 +41,17 @@ DF.dataSets
 ```
 
 ```javascript
-[ 'alcohol',   // alcohol consumption math students
-  'countries', // geographical and economical data for all countries
-  'diabetes',  
-  'food',      // food choices
-  'got',       // game of thrones deaths
-  'happiness', // world happiness 2017
-  'iris',     
-  'mushrooms',
-  'pokemon',   // stats for all from all generations
-  'superheros' ] 
+[ 'alcohol.csv',   // alcohol consumption math students
+  'countries.csv', // geographical and economical data for all countries
+  'diabetes.csv',  
+  'food.csv',      // food choices
+  'got.csv',       // game of thrones deaths
+  'happiness.csv', // world happiness 2017
+  'iris.csv',     
+  'mushrooms.csv',
+  'pokemon.csv',   // stats for all from all generations
+  'superheros.csv' 
+  ...  ] 
 ```
 
 All have been placed in the public domain.
@@ -58,7 +59,7 @@ All have been placed in the public domain.
 ### Load the Iris DataSet
 
 ```javascript
-iris = DF.loadDataSet('iris')
+let iris = new DF('iris') // use `let`, you will be re-assigning a lot
 ```
 
 ### Selecting / Slicing Rows
@@ -83,8 +84,7 @@ iris.head().print()
      5B            20B            20B            20B            20B           NaN
 ```
 
-Note the data types next to column names and memory indicators for every column.
-
+**NOTE** the data types next to column names and memory indicators for every column.
 
 #### Slicing
 
@@ -101,31 +101,28 @@ iris.slice(10, 20).print() // can be .slice(5) for .slice(5, end)
      2B             8B             8B             8B             8B           NaN
 ```
 
-#### Getting a Column (Series)
+**NOTE** the library will try to compute the width of each column
+
+#### Getting a Column (Column)
 
 We know that there are 6 columns (try running `iris.nCols`).  To get all column names run:
 
 ```javascript
-iris.colNames
+iris.colNames.print(100) // make sure it prints all 
 ```
 
 ```javascript
-[ 'Id',
-  'SepalLengthCm',
-  'SepalWidthCm',
-  'PetalLengthCm',
-  'PetalWidthCm',
-  'Species' ]
+Column s [Id, SepalLengthCm, SepalWidthCm, PetalLengthCm, PetalWidthCm, Species]
 ```
 
-If you want to extract a column (series, see the Series API below) *from* a data frame try:
+If you want to extract a column (Column, see the Column API below) *from* a data frame try:
 
 ```javascript
 iris.Species.print(5) // last column
 ```
 
 ```
-Series s[Iris-setosa, Iris-setosa, Iris-setosa, Iris-setosa, Iris-setosa, ... 145 more]
+Column s[Iris-setosa, Iris-setosa, Iris-setosa, Iris-setosa, Iris-setosa, ... 145 more]
 ```
 
 Here `s` stands for STRING. You may also see:  `f64`, `f32`, `i32`, `i16`, `i8`, `u32`, `u16` and `u8`.
@@ -224,6 +221,8 @@ iris.Species[0]
 'Iris-setosa'
 
 iris.where('Iris-setosa', -1) // -1 for last col
+
+// ... DataFrame with subset of rows with just Iris-setosa
 ```
 
 #### Matching Predicate (Test)
@@ -252,9 +251,7 @@ iris.val(10, 'Species') // val(rowIdx, colId)
 Accessing a single row:
 
 ```javascript
-const row = iris.row(20); // 21st row
-
-row
+const row = iris.row(20) // 21st row
 
 [ 21,
   5.400000095367432,
@@ -286,6 +283,11 @@ If you want to iterate over all the rows (this isn't very efficient) try:
 const rowIt = iris.slice(0, 3).rowsIter // (getter)
 
 for (const r of rowIt) {
+  console.log(r)
+}
+
+// you may also iterate over the dataframe (equivalent method)
+for (const r of iris) {
   console.log(r)
 }
 
@@ -331,7 +333,7 @@ Apply function to each element is selected column:
 
 ```javascript
 iris.map(-1, label => {
-  // there is an easier way to do this (see `labelEncode()`)
+  // there is an easier way to do this (see `DataFrame.labelEncode()`)
   if (label === 'Iris-versi') {
     return 0;
   } else if (label === 'Iris-virgi') {
@@ -405,17 +407,14 @@ iris.concat(iris, 1).colNames
 iris.appendCol(iris.Id, 'Id2') // .appendCol(col, colName)
 ```
 
-#### Shuffle
+#### Shuffle, Reverse
 
 ```javascript
 iris.shuffle()
-```
-
-#### Reverse
-
-```javascript
 iris.reverse()
 ```
+
+Both are *safe* in that the **won't modify** in place.
 
 #### Sort
 
@@ -451,6 +450,8 @@ iris.numeric.transpose().sum()
 --- ---------- -------
           150B    600B
 ```
+
+**NOTE** transposing will only work for homogeneous `DataFrame`s (all nums or all strings).
 
 ### Statistics & Math
 
@@ -547,8 +548,12 @@ iris.summary() // this will produce a summary data frame with info for every col
 
 #### Counts (of unique values)
 
+This is particularly useful for nominal / discrete attributes that take on a
+small amount of values. E.g. `Gender` is one of `{M, F}` or `Salary` is one of `{Low, Med, High}`.
+
 ```javascript
 iris.counts(-1) // for the last column
+// iris.ps(-1) // for normalized values
 ```
 
 ```
@@ -561,12 +566,17 @@ iris.counts(-1) // for the last column
             NaN       3B
 ```
 
-#### Correlations 
+#### Correlations (A Matrix Operation)
 
 For a correlation of each column with each other column (matrix):
 
 ```javascript
-iris.corr() // .corr(false) to *not* print the first column
+iris.corr()      // .corr(false) to *not* print the first column
+// iris.cov()    // covariance
+// iris.dot()    // dot product between each col
+// iris.dist(1)  // manhattan distance
+// iris.dist(2)  // euclidian distance
+// iris.dist(2+) // minkowsky distance
 ```
 
 ```
@@ -602,11 +612,13 @@ iris.kBins('SepalLengthCm', 5); // 5 bins for this column
 
 iris.kBins(null, 3);            // 3 bins for all columns
 
-iris.kBins(2, 3).col(2).print(10) // 3rd (2 idx) col, 3 bins
+iris.kBins(2, 3) // 3rd (2 idx) col, 3 bins
+    .col(2)      // select ONLY 3rd column (index is 2), which is of type Column
+    .print(10)  
 ```
 
 ```
-Series u8[2, 1, 2, 1, 2, 2, 2, 2, 1, 1, ... 40 more]
+Column u8[2, 1, 2, 1, 2, 2, 2, 2, 1, 1, ... 40 more]
 ```
 
 **NOTE** this is smart enough only to target numeric attributes so string columns will be ignored (no need to run `.numeric`).
@@ -630,10 +642,13 @@ Signature: `iris.nBest(n, metric)` where metric is one of:
 - `"range"`
 - `"max"`
 
-OR a function from Series (one column) to a number (`Series -> Num`). <br>
+OR a function from Column (one column) to a number (`Column -> Num`). <br>
 
 ```javascript
-iris.drop('Id').numeric.nBest(2).print(3) // note the numeric
+iris.drop('Id') // `Id` column is not very useful
+    .numeric    // select all numeric cols
+    .nBest(2)   // best 2 features using variance as score
+    .print(3)   // show first 3 rows
 
 // try: iris.drop('Id').numeric.nBest(2, 'mad').print(3)
 ```
@@ -654,7 +669,11 @@ iris.drop('Id').numeric.nBest(2).print(3) // note the numeric
 However, using `.nBest()` in this way is very naive and you might want to normalize (scale to the same range) the values:
 
 ```javascript
-iris.drop('Id').numeric.normalize().nBest(2).print(3)
+iris.drop('Id')  // `Id` column is not very useful
+    .numeric     // select all numeric cols
+    .normalize() // bring them to range [0, 1]
+    .nBest(2)    // best 2 features using variance as score
+    .print(3) 
 ```
 
 As you can see you might get different results:
@@ -722,7 +741,9 @@ Signature: `iris.oneHot(colId)` <br>
 
 ```javascript
 // expects the column to be unsigned int
-iris.labelEncode('Species').oneHot('Species').print(48, 52)
+iris.labelEncode('Species')
+    .oneHot('Species')
+    .print(48, 52)
 ```
 
 ```
@@ -759,8 +780,9 @@ iris.select(1).print(3)
 To clip:
 
 ```javascript
-// null == all cols
-iris.select(1).clip(null, 4.88, 5).print(3)
+iris.select(1)
+    .clip(null, 4.88, 5) // null == all cols
+    .print(3)
 ```
 
 ```
@@ -837,7 +859,7 @@ If you want to get the data type for all columns try:
 ```javascript
 iris.dtypes 
 
-[ 'u8', 'f32', 'f32', 'f32', 'f32', 's' ]
+[ 'u8', 'f32', 'f32', 'f32', 'f32', 's' ] // read-only
 ```
 
 Or for a prettier output make a meta data frame with information about the
@@ -847,7 +869,7 @@ previous data frame!
 iris.dtype() // note difference between `iris.dtype()` (method) and `iris.dtypes` (getter)
 ```
 
-**SIDENOTE** `.dtype()` is an aggregate! This means it produces a data frame from applying a `Series -> *` operation to all columns.
+**SIDENOTE** `.dtype()` is an aggregate! This means it produces a data frame from applying a `Column -> *` operation to all columns.
 
 ```
 # s      column s dtype
@@ -865,11 +887,8 @@ iris.dtype() // note difference between `iris.dtype()` (method) and `iris.dtypes
 You can force-cast columns:
 
 ```javascript
-iris.cast(2, 'u8')
+iris.cast(2, 'u8') // passing `null` instead of `2` would run cast on all cols
 ```
-
-`cast(colId, dtype)` **expects the column number as the first parameter**.
-
 
 ### Down-Casting
 
@@ -930,7 +949,9 @@ iris.memory()
 To figure out how much your data frame is taking in total try:
 
 ```javascript
-iris.memory().col(-1).add()
+iris.memory()
+    .col(-1)
+    .add()
 
 2550 // bytes
 ```
@@ -982,40 +1003,6 @@ iris.sliceCols(-3, -2, 0, 2)
 ```
 
 ### Exporting 
-
-#### Array
-
-##### Array of Columns
-
-```javascript
-iris.head(2).toArray('col')
-
-[ [ 1, 2 ],
-  [ 5.099999904632568, 4.900000095367432 ],
-  [ 3.5, 3 ],
-  [ 1.399999976158142, 1.399999976158142 ],
-  [ 0.20000000298023224, 0.20000000298023224 ],
-  [ 'Iris-setosa', 'Iris-setosa' ] ]
-```
-
-##### Array of Rows
-
-```javascript
-iris.head(2).toArray()
-
-[ [ 1,
-    5.099999904632568,
-    3.5,
-    1.399999976158142,
-    0.20000000298023224,
-    'Iris-setosa' ],
-  [ 2,
-    4.900000095367432,
-    3,
-    1.399999976158142,
-    0.20000000298023224,
-    'Iris-setosa' ] ]
-```
 
 #### HTML
 
@@ -1122,18 +1109,58 @@ To set:
 DF.set(option, value)
 ```
 
-### Series Human-Friendly API
+### More Advanced Examples
+
+#### Matrix of Normalized Differences Between Means of Columns
+
+This would normally take a lot of code:
+
+```javascript
+iris.normalize()
+    .matrix(
+        (col1, col2) => Math.abs(col1.mean() - col2.mean()), 
+        true, // show cols
+        true, // halves the computation time when f(c2, c1) == f(c1, c2)
+        0)    // saves computation on the diagonal, when f(c, c) == id
+```
+
+#### Save Memory
+
+```javascript
+df = df.labelEncode()  // string cols => unsigned int
+       .kBins(null, 5) // f64, f32, ... => unsigned int
+       .downcast()     // optimize
+
+// see memory
+df.memory()
+
+// see dtypes
+df.dtype()
+
+// megabytes
+B = df.memory()  // mem for each col
+      .add()     // add up
+      .val(0, 1) // get total
+
+MB = B / 1e6
+```
+
+### Column Human-Friendly API
 
 TODO
 
 ### Disclaimer 
 
 1. I am not a statistician
-2. Unit tests for DataFrame are not done yet
+2. Unit tests for `DataFrame` are not done yet
 3. Alpha-stage
 4. I would not use it in production (yet)
 5. This isn't supposed to be an exact copy of pandas
-
+6. In some places it's not very efficient
+7. Date columns / mixed data types not supported. Every column must be either
+   numeric OR string. A single `DataFrame` may have a combination of numeric
+   and string columns.
+8. I am a student.
 
 ### License
 
