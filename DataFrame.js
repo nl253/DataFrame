@@ -4,10 +4,10 @@
  * TODO string col hashing
  * TODO document cum ops
  * TODO binarizer
- * TODO dates
+ * TODO document imports
  */
 const util = require('util');
-const { dirname, relative, join, resolve } = require('path');
+const { join, resolve } = require('path');
 const { readdirSync, readFileSync, createWriteStream, existsSync, statSync } = require('fs');
 
 const parseCSV = require('csv-parse/lib/sync');
@@ -55,48 +55,47 @@ class DataFrame {
    * @param {!Array<?String>} [dtypes]
    */
   constructor(data = [], what = 'cols', colNames = null, dtypes = []) {
-    debugger;
-
     // another data frame, shallow copy it
     if (what === 'df' || data.constructor.name === this.constructor.name) {
-      log.info('data is another DataFrame, making a shallow copy');
+      log.info('input is another DataFrame, making a shallow copy');
       return new DataFrame(
-        Array.from(data._cols), 
-        'cols', 
-        Array.from(data.colNames), 
+        Array.from(data._cols),
+        'cols',
+        Array.from(data.colNames),
         Array.from(data.dtypes),
       );
 
-      // data is string
+      // input is string
     } else if (data.constructor.name[0] === 'S' || data.constructor.name[0] === 'B') {
 
       // json string
       if (what.match(/^json/i)) {
-        log.info('data is JSON string, parsing');
+        log.info('input is JSON String, parsing');
         return new DataFrame(JSON.parse(data), 'obj', null, dtypes);
 
         // csv string
       } else if (what.match(/^csv/i)) {
-        log.info('data is CSV string, parsing');
-        const rows = parseCSV(data, {skip_empty_lines: true});
+        log.info('input is CSV String, parsing');
+        const rows = parseCSV(data, { skip_empty_lines: true });
         if (colNames === null) {
           return new DataFrame(rows.slice(1), 'rows', rows[0], dtypes);
-        } else { 
+        } else {
           return new DataFrame(rows, 'rows', colNames, dtypes);
         }
 
-      // json file
+        // json file
       } else if (what.match(/^filejson/i) || (data.match(/\.json$/i) && existsSync(data))) {
-        log.info('data is JSON file, reading');
+        log.info(`input is JSON file "${data}", reading`);
         return new DataFrame(readFileSync(data), 'json', colNames, dtypes);
 
-      // csv file
+        // csv file
       } else if (what.match(/^filecsv/i) || (data.match(/\.csv$/i) && existsSync(data))) {
-        log.info('data is csv file, reading');
+        log.info(`input is CSV file name "${data}", reading`);
         return new DataFrame(readFileSync(data), 'csv', colNames, dtypes);
 
-      } else if (!!data.match(/\.(csv|json)$/)) {
-        log.info(`data is dataset file name ${data}`);
+        // dataset with *.csv ending (walk recursively)
+      } else if (data.match(/\.(csv|json)$/)) {
+        log.info(`input is dataset file name "${data}"`);
         const nodeStack = Array.from(opts.DATASETS);
         let i = 0;
         while (i < nodeStack.length) {
@@ -113,8 +112,10 @@ class DataFrame {
           }
           i++;
         }
+
+        // dataset name WITHOUT *.csv ending
       } else {
-        log.info(`data is dataset name ${data}`);
+        log.info(`input is dataset name ${data}`);
         const nodeStack = Array.from(opts.DATASETS);
         const regexes = [/\.csv$/i, /\.json$/i];
         let i = 0;
@@ -127,7 +128,7 @@ class DataFrame {
             }
           } else if (stats.isFile()) {
             for (const extRegex of regexes) {
-              if (!!path.match(extRegex) && path.indexOf(data + '.') >= 0) {
+              if (!!path.match(extRegex) && path.indexOf(`${data}.`) >= 0) {
                 return new DataFrame(path, 'file', colNames, dtypes);
               }
             }
@@ -140,21 +141,21 @@ class DataFrame {
 
       // object { colName => col, ... }
     } else if (what.match(/^obj/i) || data.constructor.name[0] === 'O') {
-      log.info('data is object, using keys as col names and vals as cols');
+      log.info('input is Object, using keys as col names and vals as cols');
       return new DataFrame(
         Object.values(data),
-        'cols', 
-        Object.keys(data), 
+        'cols',
+        Object.keys(data),
         dtypes,
       );
 
       // map { col1 => col2, ... }
     } else if (what.match(/^map/i) || data.constructor.name[0] === 'M') {
-      log.info('data is map, using keys as col1 and vals as col2');
+      log.info('input is Map, using keys as col1 and vals as col2');
       const keys = Array.from(data.keys());
       const values = Array.from(data.values());
       return new DataFrame(
-        [keys, values], 
+        [keys, values],
         'cols',
         colNames === null ? ['key', 'value'] : colNames,
         dtypes,
@@ -162,15 +163,15 @@ class DataFrame {
 
       // array of rows
     } else if (what.match(/^row/i)) {
-      log.info('data is rows, transposing to columns');
+      log.info('input is Array of rows, transposing to columns');
       return new DataFrame(transpose(data), 'cols', colNames, dtypes);
 
-    } else if (what.match(/^col/i)) {
       // array of cols
-      log.debug(`data is ${data.length} columns`);
-      this._cols = data.map((c, cIdx) => {
-        const printName = `col #${cIdx}` + (!!colNames[cIdx] ? ` (${colNames[cIdx]})` : '');
-        log.debug(`${printName} is already a Column`)
+    } else if (what.match(/^col/i)) {
+      log.debug(`input is Array of ${data.length} columns`);
+      this.cols = data.map((c, cIdx) => {
+        const printName = `col #${cIdx}${colNames[cIdx] ? ` (${colNames[cIdx]})` : ''}`;
+        log.debug(`${printName} is already a Column`);
         const isCol = Column.isCol(c);
         const dtypeGiven = dtypes[cIdx] !== null && dtypes[cIdx] !== undefined;
         const noNeedToConvert = isCol && (!dtypeGiven || c.dtype === dtypes[cIdx]);
@@ -183,84 +184,43 @@ class DataFrame {
         return Column.from(c, dtypes[cIdx] || null);
       });
 
-      this.colNames = colNames === null 
-        ?  Array(this.nCols).fill(0).map((_, idx) => idx) 
-        : colNames;
+      this.colNames = Column.from(colNames === null
+        ? Array(this.nCols).fill(0).map((_, idx) => idx)
+        : colNames);
     } else throw new Error('unrecognised input data');
 
     const attrNames = new Set(this.colNames);
-    // index using cols integers AND column names
-    Array(this.nCols).fill(0).map((_, idx) => attrNames.add(idx));
 
-    /*
-     * easy access e.g. df.age, df.salary
+    // index using cols integers AND column names
+    for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
+      attrNames.add(cIdx);
+    }
+
+    /* easy access e.g. df.age, df.salary
      * easy replacement (assignment) of cols e.g. df.age = df2.age;
-     */
+     * easy broadcasting e.g. df.label = 0; */
     for (const name of attrNames) {
       Object.defineProperty(this, name, {
-        get() {
-          return this.col(name);
-        },
+        get() { return this.col(name); },
         set(newCol) {
           // broadcast
-          if (newCol.constructor.name[0] === 'N') {
-            for (let i = 0; i < newCol.length; i++) {
-              this._cols[this.colIdx(name)] = newCol[i];
+          if (newCol.constructor.name[0] === 'N' || newCol.constructor.name[0] === 'S') {
+            const cIdx = this.colIdx(name);
+            for (let i = 0; i < this.length; i++) {
+              this.cols[cIdx][i] = newCol;
             }
           } else {
-            this._cols[this.colIdx(name)] = newCol;
+            this.cols[this.colIdx(name)] = newCol;
           }
         },
       });
     }
 
-    this.irow = function* (rIdx) {
-      for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
-        yield this.val(rIdx, cIdx);
-      }
-    };
+    // functs and aggs are forwarded to the underlying column
 
-    function* rowsIter() {
-      for (let r = 0; r < this.length; r++) {
-        yield this.row(r);
-      }
-    }
-
-    // make this.rowsIter a getter
-    Object.defineProperty(this, 'rowsIter', { get: rowsIter });
-    this[Symbol.iterator] = rowsIter;
-
-    // each produces a number from an array
-    const aggsNum = [
-      'mean',
-      'median',
-      'Q1',
-      'Q3',
-      'var',
-      'stdev',
-      'mad',
-      'min',
-      'max',
-      'range',
-      'IQR',
-      'memory',
-      'skewness',
-      'kurtosis',
-    ];
-
-    /*
-     * each aggregare op is a function (Column => Number)
-     * it changes the shape of the data frame from n x m => m x 2
-     */
-    for (const agg of aggsNum) {
-      if (this[agg] === undefined) {
-        this[agg] = function (...args) {
-          return this.agg(agg, 'num', ...args);
-        };
-      }
-    }
-
-    for (const agg of ['mode', 'argMax', 'argMin']) {
+    /* each aggregare op is a function (Column => Number)
+     * it changes the shape of the data frame from n x m => m x 2 */
+    for (const agg of opts.AGG_ALL) {
       if (this[agg] === undefined) {
         this[agg] = function (...args) {
           return this.agg(agg, 'all', ...args);
@@ -268,54 +228,38 @@ class DataFrame {
       }
     }
 
-    /*
-     * each forward function is forwarded to the underlying column
-     * ForwardFunct :: Column (len = n) => Column (len = n)
-     */
-    for (const f of [
-      'replace', 'map', 'reverse', 'zipWith', 'zipWith3', 'cum',
-    ]) {
+    for (const agg of opts.AGG_NUM) {
+      if (this[agg] === undefined) {
+        this[agg] = function (...args) {
+          return this.agg(agg, 'num', ...args);
+        };
+      }
+    }
+
+
+    // each function is a function (Column => Column)
+    for (const f of opts.FUNCTS_ALL) {
       if (this[f] !== undefined) continue;
       this[f] = function (colId = null, ...args) {
         return this.call(colId, f, 'all', ...args);
       };
     }
 
-    for (const f of ['labelEncode', 'parse']) {
-      if (this[f] !== undefined) continue;
-      this[f] = function (colId = null, ...args) {
-        return this.call(colId, f, 'str', ...args);
-      };
-    }
-
-    const functsNum = [
-      'abs',
-      'cast',
-      'cbrt',
-      'ceil',
-      'clip',
-      'cube',
-      'cum',
-      'disDiff',
-      'downcast',
-      'dropNaN',
-      'floor',
-      'kBins',
-      'normalize',
-      'pow',
-      'round',
-      'smooth',
-      'sqrt',
-      'square',
-      'trunc',
-    ];
-    for (const f of functsNum) {
+    for (const f of opts.FUNCTS_NUM) {
       if (this[f] !== undefined) continue;
       this[f] = function (colId = null, ...args) {
         return this.call(colId, f, 'num', ...args);
       };
     }
 
+    for (const f of opts.FUNCTS_STR) {
+      if (this[f] !== undefined) continue;
+      this[f] = function (colId = null, ...args) {
+        return this.call(colId, f, 'str', ...args);
+      };
+    }
+
+    // special cases, when called *without* any param, treat as agg
     for (const op of ['add', 'sub', 'mul', 'div']) {
       if (this[op] === undefined) {
         this[op] = function (...args) {
@@ -326,6 +270,32 @@ class DataFrame {
           }
         };
       }
+    }
+
+    // don't assign / drop / push to this.colNames (use df.rename(newName))
+    Object.freeze(this.colNames); 
+
+    // don't assign / drop / push to this.cols (use df.drop, df.select or df.sliceCols)
+    Object.freeze(this.cols);     
+  }
+
+  get rowsIter() {
+    return (function* () {
+      for (let r = 0; r < this.length; r++) {
+        yield this.row(r);
+      }
+    }).bind(this)();
+  }
+
+  *[Symbol.iterator]() {
+    for (let r = 0; r < this.length; r++) {
+      yield this.row(r);
+    }
+  }
+
+  *irow(rIdx) {
+    for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
+      yield this.val(rIdx, cIdx);
     }
   }
 
@@ -341,7 +311,7 @@ class DataFrame {
         colIdxs.add(cIdx);
       }
     }
-    return colIdxs;
+    return Object.freeze(colIdxs);
   }
 
   /**
@@ -350,7 +320,7 @@ class DataFrame {
    */
   get _strColIdxs() {
     const numCols = this._numColIdxs;
-    return new Set(this.colNames.filter((_, idx) => !numCols.has(idx)));
+    return Object.freeze(new Set(this.colNames.filter((_, idx) => !numCols.has(idx))));
   }
 
   /**
@@ -397,7 +367,7 @@ class DataFrame {
    * @returns {Array<String>|TypedArray} column
    */
   col(colId) {
-    return this._cols[this.colIdx(colId)];
+    return this.cols[this.colIdx(colId)];
   }
 
   /**
@@ -445,10 +415,10 @@ class DataFrame {
    * @returns {!Number} number of rows
    */
   get length() {
-    if (this._cols[0] === undefined) {
+    if (this.cols[0] === undefined) {
       return 0;
     } else {
-      return this._cols[0].length;
+      return this.cols[0].length;
     }
   }
 
@@ -456,7 +426,7 @@ class DataFrame {
    * @returns {!Number} number of columns
    */
   get nCols() {
-    return this._cols.length;
+    return this.cols.length;
   }
 
   /**
@@ -476,7 +446,7 @@ class DataFrame {
    * @returns {!Array<!String>} data types for all columns
    */
   get dtypes() {
-    return this._cols.map(c => c.dtype);
+    return this.cols.map(c => c.dtype);
   }
 
   /**
@@ -492,7 +462,7 @@ class DataFrame {
     const colNames = [];
 
     for (const i of new Set(colIds.map(id => this.colIdx(id)))) {
-      cols.push(this._cols[i]);
+      cols.push(this.cols[i]);
       colNames.push(this.colNames[i]);
     }
 
@@ -521,7 +491,7 @@ class DataFrame {
       const colIdx = this.colIdx(colId);
       colNames[colIdx] = newName;
     }
-    return new DataFrame(Array.from(this._cols), 'cols', colNames);
+    return new DataFrame(Array.from(this.cols), 'cols', colNames);
   }
 
   /**
@@ -550,7 +520,7 @@ class DataFrame {
     } else if (filter === 'all') {
       return this.call(colId, f, _cIdx => true, ...args);
     }
-    const cols = Array.from(this._cols);
+    const cols = Array.from(this.cols);
     const colIdxs = (colId === null ? this.colNames : [colId]).map(id => this.colIdx(id));
 
     // is string (funct name)
@@ -600,7 +570,7 @@ class DataFrame {
         if (!filter(cIdx)) {
           continue;
         }
-        const col = this._cols[cIdx];
+        const col = this.cols[cIdx];
         const colName = this.colNames[cIdx];
         colNames.push(colName);
         aggResults.push(col[f]());
@@ -610,7 +580,7 @@ class DataFrame {
         if (!filter(cIdx)) {
           continue;
         }
-        const col = this._cols[cIdx];
+        const col = this.cols[cIdx];
         const colName = this.colNames[cIdx];
         colNames.push(colName);
         aggResults.push(f(col));
@@ -631,7 +601,7 @@ class DataFrame {
    */
   appendCol(col, name = null) {
     const colNames = Array.from(this.colNames);
-    const cols = Array.from(this._cols);
+    const cols = Array.from(this.cols);
     cols.push(col);
     if (name === null) {
       colNames.push(colNames.length);
@@ -651,7 +621,7 @@ class DataFrame {
       if (axis < 0) {
         return this.concat(other, axis + 2);
       } else if (axis === 0) {
-        const cols = Array.from(this._cols);
+        const cols = Array.from(this.cols);
         for (let c = 0; c < this.nCols; c++) {
           const myCol = cols[c];
           const otherCol = other._cols[c];
@@ -701,7 +671,7 @@ class DataFrame {
       }
     } while (renamed);
 
-    const cols = this._cols.concat(other._cols);
+    const cols = this.cols.concat(other._cols);
     return new DataFrame(cols, 'cols', colNames);
   }
 
@@ -730,7 +700,7 @@ class DataFrame {
       const lBound = idxs[i - 1];
       const rBound = idxs[i];
       for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
-        const col = this._cols[cIdx];
+        const col = this.cols[cIdx];
         cols[cIdx] = col.subarray(lBound, rBound);
       }
     }
@@ -758,7 +728,14 @@ class DataFrame {
 
     for (let i = 1; i < slices.length; i += 2) {
       const lBound = this.colIdx(slices[i - 1]);
-      const rBound = this.colIdx(slices[i]);
+      let rBound;
+      // is num out of bounds
+      if (slices[i].constructor.name[0] === 'N' && slices[i] >= this.nCols) {
+        log.warn(`sliceCols: upper bound > #cols, you wanted cols up to ${slices[i]}th but there are ${this.nCols}`);
+        rBound = this.nCols - 1;
+      } else {
+        rBound = this.colIdx(slices[i]);
+      }
       for (let cIdx = lBound; cIdx <= rBound; cIdx++) {
         colIds.add(cIdx);
       }
@@ -803,7 +780,7 @@ class DataFrame {
     for (let i = 0; i < col.length; i++) {
       tests[i] = f(col[i]);
     }
-    const cols = Array.from(this._cols);
+    const cols = Array.from(this.cols);
     for (let i = 0; i < this.nCols; i++) {
       cols[i] = cols[i].filter((_, idx) => tests[idx]);
     }
@@ -813,7 +790,7 @@ class DataFrame {
   /**
    * @param {!String|!Number} val
    * @param {!String|!Number} colId
-   * @param {">"|">="|"<"|"<="|"="} op
+   * @param {"is"|">"|">="|"<"|"<="|"="|"!="} op
    * @returns {!DataFrame} data frame
    */
   where(val = null, colId = null, op = '=') {
@@ -823,9 +800,12 @@ class DataFrame {
       } else {
         throw new Error('no columns specified');
       }
-    }
-    if (op === '=') {
+    } else if (op === 'is') {
+      return this.filter(x => Object.is(x, val), colId);
+    } else if (op === '=') {
       return this.filter(x => x === val, colId);
+    } else if (op === '!=') {
+      return this.filter(x => x !== val, colId);
     } else if (op === '>') {
       return this.filter(x => x > val, colId);
     } else if (op === '<') {
@@ -859,7 +839,7 @@ class DataFrame {
 
     for (let i = 0; i < this.length; i++) {
       for (const cIdx of colIdxs) {
-        const col = this._cols[cIdx];
+        const col = this.cols[cIdx];
         if (Object.is(col[i], val)) {
           tests[i] = false;
           break;
@@ -867,7 +847,7 @@ class DataFrame {
       }
     }
 
-    const cols = Array.from(this._cols);
+    const cols = Array.from(this.cols);
 
     for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
       cols[cIdx] = cols[cIdx].filter((_, idx) => tests[idx]);
@@ -887,7 +867,7 @@ class DataFrame {
       return this.dropOutliers(...this.colNames);
     }
 
-    const cols = Array.from(this._cols);
+    const cols = Array.from(this.cols);
     const numCols = this._numColIdxs;
 
     // indexes of *NUMERIC* columns
@@ -898,7 +878,7 @@ class DataFrame {
     // get column indexes
       .map((_, idx) => idx)
     // and now get all NUMERIC columns while leaving gaps to preserve indexing
-      .map(idx => (numColIdxs.has(idx) ? this._cols[idx] : null))
+      .map(idx => (numColIdxs.has(idx) ? this.cols[idx] : null))
     // and now computer IQ1 and IQ3 for all NUMERIC columns while leaving gaps to preserve indexing
       .map(maybeCol => (maybeCol === null ? null : ({ Q1: maybeCol.Q1(), Q3: maybeCol.Q3() })));
 
@@ -984,7 +964,7 @@ class DataFrame {
     const cols = Array(this.length).fill(0).map(_ => Column.empty(this.nCols, dtype));
     for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
       for (let rIdx = 0; rIdx < this.length; rIdx++) {
-        cols[rIdx][cIdx] = this._cols[cIdx][rIdx];
+        cols[rIdx][cIdx] = this.cols[cIdx][rIdx];
       }
     }
     return new DataFrame(cols, 'cols', colNames);
@@ -1028,8 +1008,8 @@ class DataFrame {
         }
 
         if (corr === undefined) {
-          const col = this._cols[yIdx];
-          const other = this._cols[xIdx];
+          const col = this.cols[yIdx];
+          const other = this.cols[xIdx];
           corr = col.corr(other);
           cache[`${yIdx}:${xIdx}`] = corr;
           log.debug(`computed and cached corr(col #${xIdx}, col #${yIdx})`);
@@ -1079,9 +1059,9 @@ class DataFrame {
     let bestCols;
 
     if (agg.constructor.name[0] === 'F') {
-      bestCols = this._cols.map((col, idx) => ({ idx, name: this.colNames[idx], score: agg(col) }));
+      bestCols = this.cols.map((col, idx) => ({ idx, name: this.colNames[idx], score: agg(col) }));
     } else {
-      bestCols = this._cols.map((col, idx) => ({ idx, name: this.colNames[idx], score: col[agg]() }));
+      bestCols = this.cols.map((col, idx) => ({ idx, name: this.colNames[idx], score: col[agg]() }));
     }
 
     bestCols = bestCols.sort((o1, o2) => (o1.score > o2.score ? -1 : o1.score < o2.score ? 1 : 0)).slice(0, n);
@@ -1091,11 +1071,11 @@ class DataFrame {
       const cols = [];
       for (const o of bestCols) {
         colNames.push(o.name);
-        cols.push(this._cols[o.idx]);
+        cols.push(this.cols[o.idx]);
       }
       return new DataFrame(cols, 'cols', colNames);
     } else {
-      return new DataFrame(bestCols.map(({ idx }) => this._cols[idx]), 'cols');
+      return new DataFrame(bestCols.map(({ idx }) => this.cols[idx]), 'cols');
     }
   }
 
@@ -1151,12 +1131,12 @@ class DataFrame {
       }
     }
     const cIdx = this.colIdx(colId);
-    const col = this._cols[cIdx];
+    const col = this.cols[cIdx];
     const colName = this.colNames[cIdx].constructor.name[0] === 'S' ? this.colNames[cIdx] : 'value';
     const df = new DataFrame(
-      col.counts(), 
-      'map', 
-      [colName, 'count'], 
+      col.counts(),
+      'map',
+      [colName, 'count'],
       [this.dtypes[cIdx], 'u32'],
     );
     return doSort ? df.sort(-1, sortOrd) : df;
@@ -1172,8 +1152,8 @@ class DataFrame {
     const counts = this.counts(colId, doSort, sortOrd);
     const total = counts.col(-1).add();
     return counts.cast(-1, `f${opts.FLOAT_PREC}`)
-                 .div(-1, total)
-                 .rename(-1, 'ps');
+      .div(-1, total)
+      .rename(-1, 'ps');
   }
 
   /**
@@ -1228,7 +1208,7 @@ class DataFrame {
       info.dtype.push(dtypes[c]);
 
       if (numCols.has(c)) {
-        const col = this._cols[c];
+        const col = this.cols[c];
         info.min[c] = col.min();
         info.max[c] = col.max();
         info.range[c] = info.max[c] - info.min[c];
@@ -1249,7 +1229,7 @@ class DataFrame {
    * @returns {!DataFrame} shallow copy of the data frame
    */
   copy() {
-    return new DataFrame(Array.from(this._cols), 'cols', Array.from(this.colNames));
+    return new DataFrame(Array.from(this.cols), 'cols', Array.from(this.colNames));
   }
 
   /**
@@ -1258,7 +1238,7 @@ class DataFrame {
   clone() {
     const newCols = [];
     for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
-      const col = this._cols[cIdx];
+      const col = this.cols[cIdx];
       newCols.push(col.clone());
     }
     return new DataFrame(newCols, 'cols', Array.from(this.colNames));
@@ -1268,11 +1248,11 @@ class DataFrame {
    * @returns {!Object<Array<!Number>|!Array<!String>>} dictionary
    * @private
    */
-  _toObj() {
+  toObj() {
     const dict = {};
     for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
       const cName = this.colNames[cIdx];
-      const col = this._cols[cIdx];
+      const col = this.cols[cIdx];
       dict[cName] = Array.from(col);
     }
     return dict;
@@ -1282,7 +1262,7 @@ class DataFrame {
    * @returns {!String} json-stringified data frame
    */
   toJSON() {
-    return JSON.stringify(this._toObj());
+    return JSON.stringify(this.toObj());
   }
 
   /**
@@ -1291,7 +1271,7 @@ class DataFrame {
    * @returns {!DataFrame} data frame
    */
   toCSV(filePath) {
-    const stringify = require("csv-stringify/lib/sync")
+    const stringify = require('csv-stringify/lib/sync');
     return stringify(Array.from(this.rowsIter));
   }
 
@@ -1334,7 +1314,7 @@ class DataFrame {
       log.warn(`bad file name ${filePath}, expected *.json file name`);
     }
     const out = createWriteStream(filePath);
-    out.end(JSON.stringify(this._toObj()));
+    out.end(JSON.stringify(this.toObj()));
     log.info(`saved JSON to ${filePath}`);
   }
 
@@ -1399,7 +1379,7 @@ class DataFrame {
   }
 
   /**
-   * @returns {!Set<!String>} datasets
+   * @returns {!Array<!String>} datasets
    */
   static get dataSets() {
     const nodeStack = Array.from(opts.DATASETS);
@@ -1417,13 +1397,13 @@ class DataFrame {
           nodeStack.push(join(path, f));
         }
       } else if (stats.isFile()) {
-        if (!!path.match(/\.(csv|json)$/)) {
+        if (path.match(/\.(csv|json)$/)) {
           datasets.add(path);
         }
       }
       i++;
     }
-    return datasets;
+    return Array.from(datasets).map(p => p.replace(process.cwd(), '.'));
   }
 
   /**
@@ -1458,193 +1438,298 @@ class DataFrame {
     return this.toString();
   }
 
+  static setPrinting(opt = 'minimal') {
+    if (opt.match(/^mini/i)) {
+      log.warn('minimal printing ON');
+      opts.UNDERLINE = ' ';
+      opts.SPACE_BETWEEN = 2;
+      opts.SHOW_MORE = false;
+      opts.EMPTY_STR = '-';
+      opts.MEM_INFO_STR = '';
+      opts.IDX_MARKER = '';
+      opts.MEM_INFO_INDEX = '';
+      opts.DOTS = '.';
+      opts.UNDERLINE_BOT = true;
+      opts.MIN_COL_WIDTH = 12;
+      opts.PAD_STR = ' ';
+    } else if (opt.match(/^def/)) {
+      log.warn('default printing ON');
+      opts.UNDERLINE = '-';
+      opts.SPACE_BETWEEN = 1;
+      opts.SHOW_MORE = true;
+      opts.EMPTY_STR = 'empty';
+      opts.MEM_INFO_STR = '';
+      opts.IDX_MARKER = '#';
+      opts.MEM_INFO_INDEX = '';
+      opts.DOTS = '..';
+      opts.UNDERLINE_BOT = true;
+      opts.MIN_COL_WIDTH = 10;
+      opts.PAD_STR = ' ';
+    } else if (opt.match(/^co[sz]y/)) {
+      log.warn('SPACE_BETWEEN = 1');
+      opts.SPACE_BETWEEN = 1;
+    } else if (opt.match(/^oct/)) {
+      log.warn('showing octal index');
+      opts.INDEX_BASE = 8;
+    } else if (opt.match(/^hex/)) {
+      log.warn('showing hex index');
+      opts.INDEX_BASE = 16;
+    } else if (opt.match(/^doub/)) {
+      opts.DOTS = '..';
+    } else if (opt.match(/^trip/)) {
+      opts.DOTS = '...';
+    } else if (opt.match(/^spac/)) {
+      opts.SPACE_BETWEEN = 4;
+    } else if (opt.match(/^index/)) {
+      log.warn('showing index ON');
+      opts.SHOW_INDEX = true;
+    } else if (opt.match(/^under/)) {
+      log.warn('showing underline ON');
+      opts.UNDERLINE_BOT = true;
+    } else if (opt.match(/^unind/)) {
+      log.warn('showing index OFF');
+      opts.SHOW_INDEX = false;
+    } else throw new Error(`unrecognised printing opt ${opt}, try "minimal" or "default"`);
+  }
+
   /**
    * @param {!Number} [n]
    * @param {!Number} [m]
    * @returns {!String} string representation of the data frame
    */
   toString(n = null, m = null) {
+    // in node debugger rows and columns are null
+    const termHeight = process.stdout.rows || 12;
+    const termWidth = process.stdout.columns || 50;
+
     if (n === null) {
-      const newN = Math.min(this.length, process.stdout.rows - 7);
+      const newN = Math.min(this.length, termHeight - 7);
       return this.toString(newN);
+
     } else if (m === null) {
       return this.toString(0, n);
+
     } else if (n < 0) {
       return this.toString(n + this.length, m);
+
     } else if (m < 0) {
       return this.toString(n, m + this.length);
+
     } else if (n > this.length) {
       log.warn(`n = ${n}, but there is ${this.length} rows`);
       return this.toString(this.length - n, this.length);
+
     } else if (m > this.length) {
       log.warn(`m = ${m}, but there is ${this.length} rows`);
       return this.toString(Math.max(0, this.length - (m - n)), this.length);
+
     } else if (this.nCols === 0) {
-      return 'Empty DataFrame';
+      return opts.EMPTY_STR;
     }
 
     const { dtypes } = this;
 
-    let colWidth = Math.max(
-      // 1 for ' ' between cols
-      Math.floor(process.stdout.columns / this.nCols),
-      opts.MIN_COL_WIDTH,
-    );
+    // always has the actual number of columns INCLUDING the optional index
+    const nCols = this.nCols + (opts.SHOW_INDEX ? 1 : 0);
+    let colWidth = opts.MIN_COL_WIDTH;
 
-    // few cols so make them larger
-    if (this.nCols <= 1) {
-      colWidth += 15;
-    } else if (this.nCols <= 2) {
-      colWidth += 10;
-    } else if (this.nCols <= 3) {
-      colWidth += 7;
-    } else if (this.nCols <= 4) {
-      colWidth += 3;
-    } else if (this.nCols <= 5) {
-      colWidth += 1;
+    // e.g. for 3 cols you have 2 * SPACE_BEWEEN so always subtract a single SPACE_BETWEEN
+    const widthTaken = (this.nCols * (colWidth + opts.SPACE_BETWEEN)) - opts.SPACE_BETWEEN;
+
+    if (widthTaken < termWidth) {
+      const perCol =  (termWidth - widthTaken) / nCols;
+      colWidth += Math.floor(perCol);
     }
 
+    // this will be concatenated and displayed
     const rows = [];
 
     // index marker
-    const headerRow = ['#'];
+    const headerRow = opts.SHOW_INDEX ? [opts.IDX_MARKER] : [];
 
     for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
+      // col name could be an int so convert
       let h = this.colNames[cIdx].toString();
-      // trunc column headings
+
+      // trunc column headings (if needed)
       if (h.length > colWidth) {
-        h = `${h.slice(0, colWidth - 2)}..`;
+        h = h.slice(0, colWidth - opts.DOTS.length) + opts.DOTS;
       }
-      // pad to reserve space for ' ' and dtype (injected later after col len is computed)
-      h = ' '.repeat(dtypes[cIdx].length + 1) + h.toString();
+
+      if (opts.PRINT_TYPES) {
+        // pad to reserve space for opts.PAD_STR and dtype (injected later after col len is computed)
+        h = opts.PAD_STR.repeat(dtypes[cIdx].length) + ' ' + h.toString();
+      } else {
+        // no padding needed
+        h = h.toString();
+      }
       headerRow.push(h);
     }
 
     rows.push(headerRow);
 
-    const midCol = Math.floor(rows[0].length / 2);
+    const midCol = Math.floor(nCols / 2);
 
-    if (n > 0) {
-      const arr = Array(this.nCols + 1).fill('...');
+    // info about not displayed rows
+    // .. ... (2 more) .. .. <- THIS
+    // 3 
+    // 4 
+    // 5
+    if (opts.SHOW_MORE && n > 0) {
+      const arr = Array(nCols).fill(opts.DOTS);
       arr[midCol] = `(${n} more)`;
       rows.push(arr);
     }
 
+    // memoize
     const numCols = this._numColIdxs;
 
+    // now the actual content of the table
+    // remember about optional index (inject AFTER)!
     for (let rIdx = n; rIdx < m; rIdx++) {
-      const row = Array(this.nCols + 1).fill(0);
-      row[0] = rIdx.toString();
+
+      // initialise
+      const row = Array(this.nCols).fill('');
+
       for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
+
         const val = this.val(rIdx, cIdx);
         const s = val.toString();
+
         const isNum = numCols.has(cIdx);
+        const isFloat = isNum && dtypes[cIdx].startsWith('f');
+
+        if (isFloat) {
+          row[cIdx] = fmtFloat(val, opts.PRINT_PREC);
+          continue;
+        }
+
         const isStr = !isNum && val.constructor.name[0] === 'S';
         const isTooLong = isStr && s.length > colWidth;
 
         if (isTooLong) {
-          row[cIdx + 1] = `${s.slice(0, colWidth - 2)}..`;
+          row[cIdx] = s.slice(0, colWidth - opts.DOTS.length) + opts.DOTS;
           continue;
         }
 
-        const isFloat = isNum && dtypes[cIdx].startsWith('f');
-
-        if (isFloat) {
-          row[cIdx + 1] = fmtFloat(val, opts.PRINT_PREC);
-          continue;
-        }
-
-        row[cIdx + 1] = s;
+        row[cIdx] = s;
+      }
+      if (opts.SHOW_INDEX) {
+        row.unshift(rIdx.toString(opts.INDEX_BASE));
       }
       rows.push(row);
     }
 
     if (this.length === 0) {
-      const emptyInfo = Array(this.nCols + 1).fill('empty');
-      emptyInfo[0] = '';
+      const emptyInfo = Array(this.nCols).fill(opts.EMPTY);
+      if (opts.SHOW_INDEX) {
+        emptyInfo.unshift('');
+      }
       rows.push(emptyInfo);
-    } else if (m < this.length) {
-      const arr = Array(this.nCols + 1).fill('...');
+
+    } else if (opts.SHOW_MORE && m < this.length) {
+      const arr = Array(nCols).fill(opts.DOTS);
       arr[midCol] = `(${this.length - m} more)`;
       rows.push(arr);
     }
 
-    const memInfo = Array(this.nCols + 1).fill(0);
-    memInfo[0] = '';
+    if (opts.MEM_INFO) {
+      // assume str
+      const memInfo = Array(this.nCols).fill(opts.MEM_INFO_STR);
 
-    for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
-      const col = this._cols[cIdx];
-      // string column
-      if (col.memory === undefined) {
-        memInfo[cIdx + 1] = '';
+      for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
+        const col = this.cols[cIdx];
+
+        // num column
+        if (col.memory !== undefined) {
+          memInfo[cIdx] = fmtFloatSI(col.memory(), opts.PRINT_PREC, 'B').replace(/\.0*$/, '');
+        }
+      }
+
+      /* different memory indiciator for index 
+      (doesn't acutally take any memory since it's just printed) */
+      if (opts.SHOW_INDEX) {
+        memInfo.unshift(opts.MEM_INFO_INDEX);
+      }
+
+      rows.push(memInfo);
+    }
+
+    // lengths of each column
+    const colWidths = Array(nCols)
+      .fill(0)
+      .map((_, cIdx) => rows
+        .map(r => r[cIdx].toString().length)
+        .reduce((len1, len2) => Math.max(len1, len2), 1));
+
+    // inject underline AFTER col headings
+    rows.splice(1, 0, colWidths.map(l => opts.UNDERLINE.repeat(l)));
+    // same for bottom but optional, the row before memory info (IF PRESENT)
+    if (opts.UNDERLINE_BOT) {
+      if (opts.MEM_INFO) {
+        rows.splice(rows.length - 1, 0, colWidths.map(l => opts.UNDERLINE.repeat(l)));
       } else {
-        memInfo[cIdx + 1] = fmtFloatSI(col.memory(), opts.PRINT_PREC, 'B').replace('.00', '');
+        rows.splice(rows.length, 0, colWidths.map(l => opts.UNDERLINE.repeat(l)));
       }
     }
 
-    rows.push(memInfo);
-
-    // lengths of each column
-    const colWidths = Array(this.nCols + 1)
-      .fill(0)
-      .map((_, idx) => rows
-        .map(r => r[idx].toString().length)
-        .reduce((x, y) => Math.max(x, y), 1));
-
-    // underline
-    rows.splice(1, 0, colWidths.map(l => '-'.repeat(l)));
-    rows.splice(rows.length - 1, 0, colWidths.map(l => '-'.repeat(l)));
-
-    // inject dtypes for all headings
-    const headerRowWithDT = Array(headerRow.length);
-    headerRowWithDT[0] = headerRow[0];
-
-    for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
-      const len = colWidths[cIdx + 1];
-      const h = headerRow[cIdx + 1];
-      const dtype = dtypes[cIdx];
-      const heading = h.trim();
-      headerRowWithDT[cIdx + 1] = `${dtype}${' '.repeat(len - heading.length - dtype.length)}${heading}`;
+    if (opts.PRINT_TYPES) {
+      if (opts.SHOW_INDEX) {
+        // inject dtypes for all headings
+        for (let cIdx = 1; cIdx < nCols; cIdx++) {
+          const len = colWidths[cIdx];
+          const dtype = dtypes[cIdx - 1];
+          const h = headerRow[cIdx].trim();
+          headerRow[cIdx] = dtype + opts.PAD_STR.repeat(len - h.length - dtype.length) + h;
+        }
+        // replace headerRow (without type labels) with typed
+        rows[0] = headerRow;
+      } else {
+        // inject dtypes for all headings
+        for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
+          const len = colWidths[cIdx];
+          const dtype = dtypes[cIdx];
+          const h = headerRow[cIdx].trim();
+          headerRow[cIdx] = dtype + opts.PAD_STR.repeat(len - h.length - dtype.length) + h;
+        }
+        // replace headerRow (without type labels) with typed
+        rows[0] = headerRow;
+      }
     }
 
-    rows[0] = headerRowWithDT;
-
     // +1 for space between cols
-    const tooLong = colWidths.reduce((l1, l2) => l1 + l2 + 2, 1) > process.stdout.columns;
+    const tooLong = colWidths.reduce((l1, l2) => l1 + l2 + opts.SPACE_BETWEEN, -opts.SPACE_BETWEEN) > termWidth;
 
     if (tooLong) {
-      /*
-       * remove cols in the middle
-       * +1 for ' ' padding
-       */
-      const nColsToShow = Math.floor(process.stdout.columns / (colWidth + 1));
+       /* remove cols in the middle
+          this ensures that there is n - 1 SPACE_BETWEEN for every n cols */
+      const nColsToShow = Math.floor((termWidth + opts.SPACE_BETWEEN) / (colWidth + opts.SPACE_BETWEEN));
 
-      /*
-       * C C C LEFT C C C RIGHT C C C
-       * should remove Cs on the left of LEFT and on the right of RIGHT
-       * C C C ... C C C
-       */
-      const left = Math.floor(nColsToShow / 2);
-      const right = rows[0].length - left;
+      /* C C C LEFT C C C RIGHT C C C
+         should remove Cs on the left of LEFT and on the right of RIGHT
+         C C C ... C C C */
+      const offset = Math.floor(nColsToShow / 2);
       for (let rIdx = 0; rIdx < rows.length; rIdx++) {
-        let s = '';
-        for (let cIdx = 0; cIdx < left; cIdx++) {
-          s += rows[rIdx][cIdx].padStart(colWidths[cIdx] + 1, ' ');
+        let s = ''; // initialise
+        for (let cIdx = 0; cIdx < offset; cIdx++) {
+          s += rows[rIdx][cIdx].padStart(colWidths[cIdx] + opts.SPACE_BETWEEN, opts.PAD_STR);
         }
-        s += ' ...';
-        for (let cIdx = right; cIdx < rows[rIdx].length; cIdx++) {
-          s += rows[rIdx][cIdx].padStart(colWidths[cIdx] + 1, ' ');
+        s += opts.PAD_STR.repeat(opts.SPACE_BETWEEN) + opts.DOTS;
+        for (let cIdx = nCols - offset; cIdx < nCols; cIdx++) {
+          s += rows[rIdx][cIdx].padStart(colWidths[cIdx] + opts.SPACE_BETWEEN, opts.PAD_STR);
         }
         rows[rIdx] = s;
       }
     } else {
-      // pad start with ' '
+      // display all (it fits on the screen)
       for (let rIdx = 0; rIdx < rows.length; rIdx++) {
-        rows[rIdx] = rows[rIdx].map((val, cIdx) => val.padStart(colWidths[cIdx] + 1, ' ')).join(' ');
+        rows[rIdx] = rows[rIdx].map((val, cIdx) => 
+          val.padStart(colWidths[cIdx], opts.PAD_STR))
+             .join(opts.PAD_STR.repeat(opts.SPACE_BETWEEN));
       }
     }
     return rows.join('\n');
   }
 }
 
-module.exports = DataFrame;
+module.exports = Object.freeze(DataFrame);

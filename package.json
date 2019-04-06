@@ -31,6 +31,7 @@
     "rand.js",
     "DataFrame.js",
     "log.js",
+    "opts.js",
     "load.js",
     "utils.js",
     "Column.js",

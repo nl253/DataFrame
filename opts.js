@@ -1,13 +1,73 @@
-const { resolve } = require('path');
-const env = {
+const {
+  resolve
+} = require('path');
+
+const opts = {
+  INDEX_BASE: 10,
+  UNDERLINE: '-',
+  PRINT_TYPES: true,
+  EMPTY_STR: 'Empty DataFrame',
+  MEM_INFO: true,
+  MEM_INFO_STR: '',
+  MEM_INFO_INDEX: '',
+  SPACE_BETWEEN: 1,
+  PAD_STR: ' ',
+  SHOW_INDEX: true,
+  IDX_MARKER: '#',
+  SHOW_MORE: true,
+  EMPTY: 'empty',
+  DOTS: '..',
   HEAD_LEN: 5,
   PARSE_NUM_RATIO: 0.7,
   SAMPLE_SIZE: 0.1,
   NBEST: 5,
+  UNDERLINE_BOT: true,
   DATASETS: [resolve(__dirname, 'datasets')],
+  AGG_ALL: ['mode', 'argMax', 'argMin'],
+  AGG_NUM: [
+    'mean',
+    'median',
+    'Q1',
+    'Q3',
+    'var',
+    'stdev',
+    'mad',
+    'min',
+    'max',
+    'range',
+    'IQR',
+    'memory',
+    'skewness',
+    'kurtosis',
+  ],
+  FUNCTS_ALL: [
+    'cum', 'map', 'replace', 'reverse', 'zipWith', 'zipWith3',
+  ],
+  FUNCTS_STR: ['labelEncode'],
+  FUNCTS_NUM: [
+    'abs',
+    'cast',
+    'cbrt',
+    'ceil',
+    'clip',
+    'cube',
+    'cum',
+    'disDiff',
+    'downcast',
+    'dropNaN',
+    'floor',
+    'kBins',
+    'normalize',
+    'pow',
+    'round',
+    'smooth',
+    'sqrt',
+    'square',
+    'trunc',
+  ],
   FLOAT_PREC: 32,
   PRINT_PREC: 2,
-  MIN_COL_WIDTH: 13,
+  MIN_COL_WIDTH: 10,
 };
 
-module.exports = env;
+module.exports = opts;

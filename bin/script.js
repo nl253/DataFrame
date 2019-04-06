@@ -5,6 +5,6 @@ const Column = require('../Column');
 
 const xs = new DF('iris');
 
-xs.print();
+xs.print(0, 10);
 
 module.exports = xs;

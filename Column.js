@@ -299,7 +299,7 @@ function enhStrArr(a) {
       return this.sample(Math.floor(this.length * n), wr);
     }
     if (wr) {
-      return Array(n).fill(0).map(_ => this[randInt(0, this.length)]);
+      return from(Array(n).fill(0).map(_ => this[randInt(0, this.length)]));
     }
     const sample = Array(n).fill(0);
     const used = new Set();
@@ -311,7 +311,7 @@ function enhStrArr(a) {
       sample[ptr] = this[idx];
       used.add(idx);
     }
-    return sample;
+    return from(sample);
   };
 
   // manipulation, views and slices
@@ -1392,4 +1392,4 @@ if (process.env.TESTING === '1')  {
   };
 }
 
-module.exports = Column;
+module.exports = Object.freeze(Column);
