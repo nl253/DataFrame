@@ -793,6 +793,20 @@ function enhTypedArr(a) {
     return muDiffX.mul(muDiffY).add() / (Math.sqrt(muDiffX.square().add()) * Math.sqrt(muDiffY.square().add()));
   };
 
+  a.cov = function (other) {
+    return other.sub(other.mean()).mul(this.sub(this.mean())).mean();
+  };
+
+  a.dist = function (other, p = 2) {
+    if (p === 1) {
+      return this.sub(other).abs().add();
+    } else if (p === 2) {
+      return Math.sqrt(this.sub(other).square().add());
+    } else {
+      return this.sub(other).abs().pow(p).add()**(1/p);
+    }
+  };
+
   a.kurtosis = function () {
     const mu = this.mean();
     const xs = this.cast(`f${opts.FLOAT_PREC}`);

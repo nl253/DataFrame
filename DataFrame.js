@@ -287,7 +287,6 @@ class DataFrame {
       }
     }
 
-
     // each function is a function (Column => Column)
     for (const f of opts.FUNCTS_ALL) {
       if (this[f] !== undefined) continue;
@@ -322,6 +321,22 @@ class DataFrame {
         };
       }
     }
+
+    this.corr = function(withNames = true) { 
+      return this.matrix('corr', withNames, true, 1);
+    };
+
+    this.cov = function(withNames = true) { 
+      return this.matrix('corr', withNames, true, null);
+    };
+
+    this.dot = function(withNames = true) { 
+      return this.matrix('dot', withNames, true, null);
+    };
+
+    this.dist = function(p = 2, withNames = true) { 
+      return this.matrix((xs, ys) => xs.dist(ys, p), withNames, true, 0);
+    };
 
     // don't assign / drop / push to this.colNames (use df.rename(newName))
     Object.freeze(this.colNames); 
@@ -1022,53 +1037,79 @@ class DataFrame {
   }
 
   /**
+   * @param {!Function|!String} f
    * @param {?Boolean} [withNames]
-   * @returns {!DataFrame} a correlation matrix
+   * @param {?Boolean} [isCommutative]
+   * @param {*|null} [identity]
    */
-  corr(withNames = true) {
+  matrix(f, withNames = true, isCommutative = true, identity = 1, ...args) {
+    if (f.constructor.name[0] === 'S') {
+      // resolve function
+      return this.matrix((xs, ys) => xs[f](ys), withNames, isCommutative);
+    }
+
+    // only run for numeric cols
     const numCols = this._numColIdxs;
     const colIdxs = [];
     const rows = [];
     const cache = {};
+    const { dtypes } = this; 
+
     for (let yIdx = 0; yIdx < this.nCols; yIdx++) {
+
+      const colPrintY = `${dtypes[yIdx]} col ${this.colNames[yIdx] === yIdx ? '#' + yIdx : this.colNames[yIdx] + ' ' + '#' + yIdx}`;
+
       if (!numCols.has(yIdx)) {
-        log.debug(`skipped correlating str col #${yIdx}`);
+        log.debug(`skipped matrix op on ${colPrintY}`);
         continue;
       }
+
       // else
       colIdxs.push(yIdx);
       rows.push([]);
+
       for (let xIdx = 0; xIdx < this.nCols; xIdx++) {
-        // every col is perfectrly correlated with itself (save some computation time)
-        if (xIdx === yIdx) {
-          log.debug('corr with self = 1, skipping');
-          rows[rows.length - 1].push(1);
-          continue;
-        }
+
+        const colPrintX = `${dtypes[yIdx]} col ${this.colNames[yIdx] === yIdx ? '#' + yIdx : this.colNames[yIdx] + ' ' + '#' + yIdx}`;
 
         if (!numCols.has(xIdx)) {
-          log.debug(`skipped correlating str col #${xIdx}`);
+          log.debug(`skipped matrix op on ${colPrintX}: not numeric`);
+          continue;
+        } 
+
+        // some ops have a fixed return value when applied to self f(xs, xs) == id
+        if (identity !== null && xIdx === yIdx) {
+          log.debug(`skipping, f(#${xIdx}, ${xIdx}) = ${identity}`);
+          rows[rows.length - 1].push(identity);
           continue;
         }
 
-        // else if numeric
-        let corr = cache[`${yIdx}:${xIdx}`];
+        const col = this.cols[yIdx];
+        const other = this.cols[xIdx];
 
-        if (corr === undefined) {
-          corr = cache[`${xIdx}:${yIdx}`];
-        }
+        let result;
 
-        if (corr === undefined) {
-          const col = this.cols[yIdx];
-          const other = this.cols[xIdx];
-          corr = col.corr(other);
-          cache[`${yIdx}:${xIdx}`] = corr;
-          log.debug(`computed and cached corr(col #${xIdx}, col #${yIdx})`);
+        // sometimes order does not matter: f(xs, ys) === f(ys, xs)
+        if (isCommutative) {
+          result = cache[`${yIdx}:${xIdx}`];
+
+          // try swap
+          if (result === undefined) {
+            result = cache[`${xIdx}:${yIdx}`];
+          }
+
+          // if fail, compute
+          if (result === undefined) {
+            result = f(col, other, ...args);
+            cache[`${yIdx}:${xIdx}`] = result;
+            log.debug(`computed and cached f(#${xIdx}, #${yIdx})`);
+          } else {
+            log.debug(`CACHE HIT for f(#${xIdx}, #${yIdx})`);
+          }
+          rows[rows.length - 1].push(result);
         } else {
-          log.debug(`found corr(col #${xIdx}, col #${yIdx}) in cache`);
+          rows[rows.length - 1].push(f(col, other, ...args));
         }
-
-        rows[rows.length - 1].push(corr);
       }
     }
 
