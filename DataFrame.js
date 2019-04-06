@@ -9,11 +9,19 @@
  * TODO document add, mul, div, sub
  * TODO document opts, printing presets
  * TODO document dataset lookup
- * TODO document examples
+ * TODO re-think the dataset lookup API
+ * TODO document examples of matrix ops, aggs, functs
+ * TODO calculate the *base* size of each column (pointers are 8B)
  */
 const util = require('util');
 const { join, resolve } = require('path');
-const { readdirSync, readFileSync, createWriteStream, existsSync, statSync } = require('fs');
+const {
+  readdirSync,
+  readFileSync,
+  createWriteStream,
+  existsSync,
+  statSync
+} = require('fs');
 
 const parseCSV = require('csv-parse/lib/sync');
 const stringifyCSV = require('csv-stringify');
@@ -21,87 +29,22 @@ const stringifyCSV = require('csv-stringify');
 const Column = require('./Column');
 const { randInt } = require('./rand');
 const { readCSV } = require('./load');
-const { fmtFloat, unify, fmtFloatSI, dtypeRegex } = require('./utils');
+const {
+  fmtFloat,
+  unify,
+  fmtFloatSI,
+  dtypeRegex,
+  transpose
+} = require('./utils');
 const log = require('./log');
 const opts = require('./opts');
 
-const PROGRAMMER_PRINTING = {
-  DOTS: '..',
-  EMPTY_STR: '--',
-  IDX_MARKER: 'hex',
-  INDEX_BASE: 16,
-  MEM_INFO: true,
-  MEM_INFO_INDEX: '--',
-  MEM_INFO_STR: '--',
-  MIN_COL_WIDTH: 12,
-  PAD_STR: ' ',
-  PRINT_TYPES: false,
-  PRINT_TYPES: true,
-  SHOW_MORE: true,
-  SPACE_BETWEEN: 3,
-  UNDERLINE: ' ',
-  UNDERLINE_BOT: true,
-};
+const {
+  prog: PROGRAMMER_PRINTING,
+  def: DEFAULT_PRINTING,
+  mini: MINIMAL_PRINTING
+} = require('./presets');
 
-const DEFAULT_PRINTING = {
-  DOTS: '..',
-  EMPTY_STR: 'empty',
-  IDX_MARKER: '#',
-  INDEX_BASE: 10,
-  MEM_INFO: true,
-  MEM_INFO_INDEX: '',
-  MEM_INFO_STR: '',
-  MIN_COL_WIDTH: 10,
-  PAD_STR: ' ',
-  PRINT_TYPES: true,
-  SHOW_MORE: true,
-  SPACE_BETWEEN: 1,
-  UNDERLINE: '-',
-  UNDERLINE_BOT: true,
-};
-
-const MINIMAL_PRINTING = {
-  DOTS: '.',
-  EMPTY_STR: '-',
-  IDX_MARKER: '',
-  MEM_INFO: false,
-  MEM_INFO_INDEX: '',
-  MEM_INFO_STR: '',
-  MIN_COL_WIDTH: 12,
-  PAD_STR: ' ',
-  PRINT_TYPES: false,
-  SHOW_MORE: false,
-  SPACE_BETWEEN: 2,
-  UNDERLINE: ' ',
-  UNDERLINE_BOT: true,
-};
-
-/**
- * @param {!Array<Array<*>>} xs
- * @returns {!Array<Array<*>>} xs^T
- * @private
- */
-function transpose(xs) {
-  /**
-   * from [1, 2 , 3] to:
-   *
-   * [[1],
-   *  [2],
-   *  [3]]
-   */
-  if (xs[0].constructor.name !== 'Array') {
-    return xs.map(x => [x]);
-  }
-  const colCount = xs[0].length; // assume equi-sized
-  const rowCount = xs.length;
-  const m = Array(colCount).fill(0).map(_ => Array(rowCount).fill(0));
-  for (let i = 0; i < xs.length; i++) {
-    for (let j = 0; j < xs[i].length; j++) {
-      m[j][i] = xs[i][j];
-    }
-  }
-  return m;
-}
 
 class DataFrame {
   /**

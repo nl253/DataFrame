@@ -104,7 +104,35 @@ function unify(dt1, dt2) {
   }
 }
 
+/**
+ * @param {!Array<Array<*>>} xs
+ * @returns {!Array<Array<*>>} xs^T
+ * @private
+ */
+function transpose(xs) {
+  /**
+   * from [1, 2 , 3] to:
+   *
+   * [[1],
+   *  [2],
+   *  [3]]
+   */
+  if (xs[0].constructor.name !== 'Array') {
+    return xs.map(x => [x]);
+  }
+  const colCount = xs[0].length; // assume equi-sized
+  const rowCount = xs.length;
+  const m = Array(colCount).fill(0).map(_ => Array(rowCount).fill(0));
+  for (let i = 0; i < xs.length; i++) {
+    for (let j = 0; j < xs[i].length; j++) {
+      m[j][i] = xs[i][j];
+    }
+  }
+  return m;
+}
+
 module.exports = {
+  transpose,
   dtypeRegex,
   fmtFloat,
   fmtFloatSI,
