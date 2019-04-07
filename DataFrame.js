@@ -1,6 +1,8 @@
 // vim:hlsearch:nu:
 /**
  * TODO loading (g)zipped csv
+ * TODO concat is broken
+ * TODO mixed types of colNames don't work
  * TODO string col hashing
  * TODO edit photos, link to in README
  * TODO document cum ops
@@ -1647,7 +1649,7 @@ class DataFrame {
 
         // num column
         if (col.memory !== undefined) {
-          memInfo[cIdx] = fmtFloatSI(col.memory(), opts.PRINT_PREC, 'B').replace(/\.0*/, '');
+          memInfo[cIdx] = fmtFloatSI(col.memory(), 1, 'B');
         }
       }
 

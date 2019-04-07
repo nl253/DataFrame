@@ -20,8 +20,6 @@ const Column = require('./Column');
 // TODO unit test for `Column.dot`
 // TODO unit test for `Column.downcast`
 // TODO unit test for `Column.drop`
-// TODO unit test for `Column.dropInfinity`
-// TODO unit test for `Column.dropNaN`
 // TODO unit test for `Column.filter`
 // TODO unit test for `Column.floor`
 // TODO unit test for `Column.head`
@@ -141,7 +139,7 @@ for (const input of [
     ['0'],
     ['0', '1'],
   ]) {
-  test(`Column.from([${input.join(', ')}]) parses ints and converts a series`, () => {
+  test(`Column.from([${input.join(', ')}]) parses ints and converts a col`, () => {
     const s = Column.from(input);
     expect(input).toHaveLength(s.length);
     expect(s).toHaveProperty('dtype');
@@ -155,7 +153,7 @@ for (const input of [
     ['0.3'],
     ['0.9999', '99919231.9'],
   ]) {
-  test(`Column.from([${input.join(', ')}]) parses floats and converts a series`, () => {
+  test(`Column.from([${input.join(', ')}]) parses floats and converts a col`, () => {
     const s = Column.from(input);
     expect(input).toHaveLength(s.length);
     expect(s).toHaveProperty('dtype');
@@ -169,7 +167,7 @@ for (const input of [
     [0.3],
     [0.9999, 99919231.9],
   ]) {
-  test(`Column.of(${input.join(', ')}) parses floats and converts a series`, () => {
+  test(`Column.of(${input.join(', ')}) parses floats and converts a col`, () => {
     const s = Column.of(...input);
     expect(input).toHaveLength(s.length);
     expect(s).toHaveProperty('dtype');
@@ -183,7 +181,7 @@ for (const input of [
     ["0.03"],
     ["0.9999", "9231.0009"],
   ]) {
-  test(`Column.of(${input.join(', ')}) parses floats and converts a series`, () => {
+  test(`Column.of(${input.join(', ')}) parses floats and converts a col`, () => {
     const s = Column.of(...input);
     expect(input).toHaveLength(s.length);
     for (let i = 0; i < s.length; i++) {
@@ -196,7 +194,7 @@ for (const input of [
     [3, 1, 3, 0],
     [-9990],
   ]) {
-  test(`Column.of(${input.join(', ')}) parses ints and converts a series`, () => {
+  test(`Column.of(${input.join(', ')}) parses ints and converts a col`, () => {
     const s = Column.of(...input);
     expect(input).toHaveLength(s.length);
     expect(s).toHaveProperty('dtype');
@@ -207,7 +205,7 @@ for (const input of [
 }
 
 for (const n of [0, 10, 99]) {
-  test(`Column.ones(${n}) creates a series full of ones`, () => {
+  test(`Column.ones(${n}) creates a col full of ones`, () => {
     const s = Column.ones(n);
     expect(s).toHaveProperty('dtype');
     expect(s).toHaveLength(n);
@@ -218,7 +216,7 @@ for (const n of [0, 10, 99]) {
 }
 
 for (const n of [0, 10, 99]) {
-  test(`Column.zeros(${n}) creates a series full of zeros`, () => {
+  test(`Column.zeros(${n}) creates a col full of zeros`, () => {
     const s = Column.zeros(n);
     expect(s).toHaveProperty('dtype');
     expect(s).toHaveLength(n);
@@ -226,7 +224,7 @@ for (const n of [0, 10, 99]) {
       expect(s[i]).toEqual(0);
     }
   });
-  test(`Column.empty(${n}) creates a series full of zeros`, () => {
+  test(`Column.empty(${n}) creates a col full of zeros`, () => {
     const s = Column.zeros(n);
     expect(s).toHaveProperty('dtype');
     expect(s).toHaveLength(n);
@@ -242,7 +240,7 @@ for (const pair of [
     [99, -231]
   ]) {
   const [n, v] = pair;
-  test(`Column.fill(${n}) creates a series full of ${n}`, () => {
+  test(`Column.fill(${n}) creates a col full of ${n}`, () => {
     const s = Column.fill(n, v);
     expect(s).toHaveProperty('dtype');
     expect(s).toHaveLength(n);
@@ -256,7 +254,7 @@ for (const n of [0, 1, 9, 222]) {
   for (const lBound of [0, 10, 100, -10, -1, -1000]) {
     const uBound = lBound + 5
     test(
-      `Column.rand(${n}, ${lBound}, ${uBound}) creates a series full of rand nums in range [${lBound}, ${uBound})`,
+      `Column.rand(${n}, ${lBound}, ${uBound}) creates a col full of rand nums in range [${lBound}, ${uBound})`,
       () => {
         const s = Column.rand(n, lBound, uBound);
         expect(s).toHaveProperty('dtype');
@@ -308,7 +306,7 @@ for (const pair of [
   ]) {
   const [lBound, uBound] = pair;
   const s = Column.rand(100, lBound - 10, uBound + 10).clip(lBound, uBound);
-  test(`after series.clip(${lBound}, ${uBound}) the series does not have any values smaller than (${lBound}) or greater than (${uBound})`, () => {
+  test(`after col.clip(${lBound}, ${uBound}) the col does not have any values smaller than (${lBound}) or greater than (${uBound})`, () => {
     for (let i = 0; i < s.length; i++) {
       expect(s[i]).toBeGreaterThanOrEqual(lBound);
       expect(s[i]).toBeLessThanOrEqual(uBound);
