@@ -41,7 +41,7 @@ const opts = {
     'kurtosis',
   ],
   FUNCTS_ALL: [
-    'cum', 'map', 'replace', 'reverse', 'zipWith', 'zipWith3',
+    'cum', 'map', 'reverse', 'zipWith', 'zipWith3',
   ],
   FUNCTS_STR: ['labelEncode'],
   FUNCTS_NUM: [
@@ -66,7 +66,7 @@ const opts = {
   ],
   FLOAT_PREC: 32,
   PRINT_PREC: 2,
-  MIN_COL_WIDTH: 10,
+  MIN_COL_WIDTH: 12,
 };
 
 module.exports = opts;

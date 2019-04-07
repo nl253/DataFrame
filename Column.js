@@ -17,28 +17,19 @@ function defineGetter(o, name, f) {
   Object.defineProperty(o, name, { get: f, configurable: true });
 }
 
-/**
- * @param {!Array<!String>|!TypedArray} a
- * @returns {!Array<!String>|!TypedArray} a
- * @private
- */
-function enhance(a) {
-  // already enhanced
-  if (a._isCol !== undefined) {
-    return a;
-  } else {
-    a._isCol = true;
-  }
+const COL_PROTO = {
+  // mark already enhanced
+  _isCol: true,
 
-  a.convert = function (dtype = null) {
+  convert(dtype = null) {
     return dtype === this.dtype 
       ? this 
       : from(this, dtype, false);
-  };
+  },
 
   // printing
 
-  a.toString = function (len = null) {
+  toString(len = null) {
     if (len === null) {
       return this.toString(opts.HEAD_LEN);
     } else if (len > this.length) {
@@ -58,22 +49,22 @@ function enhance(a) {
       parts.push(`... ${this.length - n} more`);
     }
     return `${parts[0] + parts.slice(1).join(', ')}]`;
-  };
+  },
 
-  a.print = function (n = null) {
+  print(n = null) {
     if (n === null) {
       return this.print(opts.HEAD_LEN);
     }
     return console.log(this.toString(n));
-  };
+  },
 
-  a[util.inspect.custom] = function (depth, options) {
+  [util.inspect.custom](depth, options) {
     return this.toString(opts.HEAD_LEN);
-  };
+  },
 
   // cumulative operations
 
-  a.cum = function (f = null, dtype = null) {
+  cum(f = null, dtype = null) {
     if (f === null) {
       throw new Error('you need to provide a function name / function e.g. "add"');
     } else if (this.length === 0) {
@@ -104,13 +95,13 @@ function enhance(a) {
       }
     }
     return newArr;
-  };
+  },
 
   // other
 
-  a.counts = function () { return bag(this); };
+  counts() { return bag(this); },
 
-  a.ps = function () { 
+  ps() { 
     const b = this.counts();
     let total = 0; 
     for (const k of b.keys()) {
@@ -121,17 +112,9 @@ function enhance(a) {
       ps.set(k, b.get(k) / total);
     }
     return ps;
-  };
+  },
 
-  defineGetter(a, 'randEl', function () {
-    return this[Math.floor(randInRange(0, this.length))];
-  });
-
-  defineGetter(a, 'isEmpty', function () {
-    return this.length === 0;
-  });
-
-  a.argMax = function (f) {
+  argMax(f) {
     let best = this[0];
     let bestScore = f(best);
     for (let i = 1; i < this.length; i++) {
@@ -143,9 +126,9 @@ function enhance(a) {
       }
     }
     return best;
-  };
+  },
 
-  a.argMin = function (f) {
+  argMin(f) {
     let best = this[0];
     let bestScore = f(best);
     for (let i = 1; i < this.length; i++) {
@@ -157,44 +140,42 @@ function enhance(a) {
       }
     }
     return best;
-  };
+  },
 
   // pre-processing
 
   // boolean
 
-  a.all = function (f) {
+  all(f) {
     return !this.some((v, idx, arr) => !f(v, idx, arr));
-  };
+  },
 
-  a.none = function (f) {
+  none(f) {
     return !this.some((v, idx, arr) => f(v, idx, arr));
-  };
+  },
 
-  a.contains = function (v) {
+  contains(v) {
     return this.some(x => x === v);
-  };
+  },
 
   // manipulation
   
-  a._reverse = a.reverse;
-  a.reverse = function () {
+  reverse() {
     return this.clone()._reverse();
-  };
+  },
 
-  a.drop = function (v) {
+  removeAll(v) {
     return this.filter(a => !Object.is(a, v));
-  };
+  },
 
-  a.swap = function (i, j) {
+  swap(i, j) {
     const save = this[i];
     this[i] = this[j];
     this[j] = save;
     return this;
-  };
+  },
 
-  a._sort = a.sort;
-  a.sort = function (order = 'asc') {
+  sort(order = 'asc') {
     if (order === 'asc') {
       return this.clone()._sort((a, b) => (a > b ? 1 : a < b ? -1 : 0));
     } else if (order === 'des') {
@@ -202,21 +183,21 @@ function enhance(a) {
     } else {
       return this.clone()._sort(order);
     }
-  };
+  },
 
-  a._shuffle = function () {
+  _shuffle() {
     for (let i = this.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [this[i], this[j]] = [this[j], this[i]];
     }
     return this;
-  };
+  },
 
-  a.shuffle = function () {
+  shuffle() {
     return this.clone()._shuffle();
-  };
+  },
 
-  a.mode = function () {
+  mode() {
     if (this.length === 1) return this[0];
     const counts = Array.from(bag(this)
       .entries())
@@ -229,41 +210,53 @@ function enhance(a) {
     return counts.reduce(([val1, count1], [val2, count2]) => (count2 > count1
       ? [val2, count2]
       : [val1, count1]))[0];
-  };
-
-  return a;
-}
+  },
+};
 
 /**
- * @param {!Array<*>} a
- * @returns {!Array<*>} the array
+ * @param {!Array<!String>|!TypedArray} a
+ * @returns {!Array<!String>|!TypedArray} a
  * @private
  */
-function enhStrArr(a) {
-  a = enhance(a);
-
+function enhance(a) {
   // already enhanced
-  if (a._isColStr !== undefined) {
+  if (a._isCol !== undefined) {
     return a;
-  } else {
-    a._isColStr = true;
-  }
+  } 
+
+  // hacks necessary to ensure immutability
+  a._sort = a.sort;
+  a._reverse = a.reverse;
+
+  defineGetter(a, 'randEl', function randEl() {
+    return this[Math.floor(randInRange(0, this.length))];
+  });
+
+  defineGetter(a, 'isEmpty', function isEmpty() {
+    return this.length === 0;
+  });
+
+  return Object.assign(a, COL_PROTO);
+}
+
+const COL_STR_PROTO = {
+  _isColStr: true,
 
   // memory & data type
 
-  a.dtype = 's';
+  dtype: 's',
 
-  a.clone = function () {
+  clone() {
     return enhStrArr(Array.from(this));
-  };
+  },
 
   // pre-processing
   
-  a.replace = function (pat, y) {
+  replace(pat, y) {
     return this.map(x => x.replace(pat, y));
-  };
+  },
 
-  a.labelEncode = function (dtype = null) {
+  labelEncode(dtype = null) {
     if (dtype === null) {
       return this.labelEncode('u8');
     }
@@ -283,15 +276,15 @@ function enhStrArr(a) {
     }
     newArr.labelMap = map;
     return newArr;
-  };
+  },
 
-  a.unique = function () {
+  unique() {
     return Array.from(new Set(this));
-  };
+  },
 
   // basic stats
 
-  a.sample = function (n, wr = true) {
+  sample(n, wr = true) {
     if (n === null) {
       return this.sample(this.length, wr);
     }
@@ -312,95 +305,92 @@ function enhStrArr(a) {
       used.add(idx);
     }
     return from(sample);
-  };
+  },
 
   // manipulation, views and slices
 
-  a.head = function (n = null) {
+  head(n = null) {
     if (n === null) {
       return this.head(opts.HEAD_LEN);
     }
     return this.slice(0, n);
-  };
+  },
 
-  a.tail = function (n = null) {
+  tail(n = null) {
     if (n === null) {
       return this.tail(opts.HEAD_LEN);
     }
     return this.slice(this.length - n);
-  };
+  },
 
   // functional programming
 
-  a.zipWith = function (other, f) {
+  zipWith(other, f) {
     return Array(this.length.fill(0).map((_, idx) => f(this[idx], other[idx])));
-  };
+  },
 
-  a.zipWith3 = function (xs, ys, f) {
+  zipWith3(xs, ys, f) {
     return Array(this.length.fill(0).map((_, idx) => f(this[idx], xs[idx], ys[idx])));
-  };
+  },
 
   // hacks
-
-  a._concat = a.concat;
-  a.concat = function (other) {
+  concat(other) {
     return enhStrArr(this._concat(other));
-  };
-
-  a._slice = a.slice;
-  a.slice = function (n, m) {
+  },
+  slice(n, m) {
     return enhStrArr(this._slice(n, m));
-  };
-  a.subarray = a.slice;
-
-  a._map = a.map;
-  a.map = function (f, dtype = null) {
+  },
+  map(f, dtype = null) {
     return enhStrArr(this._map(f));
-  };
-
-  a._filter = a.filter;
-  a.filter = function (f) {
+  },
+  filter(f) {
     return enhStrArr(this._filter(f));
-  };
-
-  return a;
-}
+  },
+};
 
 /**
- * @param {!TypedArray} a
- * @returns {!TypedArray} the array
+ * @param {!Array<*>} a
+ * @returns {!Array<*>} the array
  * @private
  */
-function enhTypedArr(a) {
+function enhStrArr(a) {
   a = enhance(a);
 
   // already enhanced
-  if (a._isColNum !== undefined) {
+  if (a._isColStr !== undefined) {
     return a;
-  } else {
-    a._isColNum = true;
-  }
+  } 
 
-  // memory & data type
-  defineGetter(a, 'dtype', function () {
-    const match = dtypeRegex.exec(this.constructor.name);
-    return match[1][0].toLocaleLowerCase() + match[2];
-  });
+  // hacks necessary to ensure immutability
 
-  a.memory = function () {
+  a._concat = a.concat;
+  a._slice = a.slice;
+  // consistency of API so that I can call subarray on both
+  a.subarray = a.slice; 
+
+  a._map = a.map;
+  a._filter = a.filter;
+
+  return Object.assign(a, COL_STR_PROTO);
+}
+
+
+const COL_NUM_PROTO = {
+
+  memory() {
     return this.BYTES_PER_ELEMENT * this.length;
-  };
+  },
 
-  a.cast = function (toDtype) {
+  cast(toDtype) {
     if (toDtype === this.dtype) {
       return this;
     }
     const newArr = empty(this.length, toDtype);
     newArr.set(this);
     return newArr;
-  };
+  },
 
-  a.downcast = function () {
+  downcast() {
     const guess = guessNumDtype(this);
     if (guess === this.dtype) {
       return this;
@@ -408,31 +398,31 @@ function enhTypedArr(a) {
     const newArr = empty(this.length, guess);
     newArr.set(this);
     return newArr;
-  };
+  },
 
-  a.clone = function (dtype = null) {
+  clone(dtype = null) {
     const newArr = empty(this.length, dtype === null ? this.dtype : dtype);
     newArr.set(this);
     return newArr;
-  };
+  },
 
   // manipulation, views and slices
 
-  a.head = function (n = null) {
+  head(n = null) {
     if (n === null) {
       return this.head(opts.HEAD_LEN);
     }
     return this.subarray(0, n);
-  };
+  },
 
-  a.tail = function (n = null) {
+  tail(n = null) {
     if (n === null) {
       return this.tail(opts.HEAD_LEN);
     }
     return this.subarray(this.length - n);
-  };
+  },
 
-  a.unique = function () {
+  unique() {
     const s = new Set(this);
     const newArr = empty(s.size, this.dtype);
     let i = 0;
@@ -441,15 +431,15 @@ function enhTypedArr(a) {
       i++;
     }
     return newArr;
-  };
+  },
 
-  a.takeWhile = function (f) {
+  takeWhile(f) {
     let i = 0;
     while (f(this[i]) && i < this.length) i++;
     return this.subarray(0, i);
-  };
+  },
 
-  a.concat = function (other) {
+  concat(other) {
     let dtype = `f${opts.FLOAT_PREC}`;
     if (this.dtype[0] === other.dtype[0]) {
       dtype = this.BYTES_PER_ELEMENT >= other.BYTES_PER_ELEMENT ? this.dtype : other.dtype;
@@ -464,32 +454,32 @@ function enhTypedArr(a) {
     newArr.set(this);
     newArr.set(other, this.length);
     return newArr;
-  };
+  },
 
-  a.nLargest = function (n = null) {
+  nLargest(n = null) {
     if (n === null) {
       return this.nLargest(opts.HEAD_LEN);
     }
     return this.sort('des').subarray(0, n);
-  };
+  },
 
-  a.nSmallest = function (n = null) {
+  nSmallest(n = null) {
     if (n === null) {
       return this.nSmallest(opts.HEAD_LEN);
     }
     return this.sort('asc').subarray(0, n);
-  };
+  },
 
-  a.pop = function (idx) {
+  pop(idx) {
     const newArr = empty(this.length - 1, this.dtype);
     newArr.set(this.subarray(0, idx));
     newArr.set(this.subarray(idx + 1), idx);
     return newArr;
-  };
+  },
 
   // arithmetic
 
-  a.add = function (other = null, dtype = null) {
+  add(other = null, dtype = null) {
     if (other === null) {
       return this.reduce((x, y) => x + y, 0);
     }
@@ -558,9 +548,9 @@ function enhTypedArr(a) {
       }
     }
     return empty(len, `f${opts.FLOAT_PREC}`).map((_, idx) => this[idx] * other[idx]);
-  };
+  },
 
-  a.sub = function (other = null, dtype = null) {
+  sub(other = null, dtype = null) {
     if (other === null) {
       return this.reduce((x, y) => x - y);
     } 
@@ -590,9 +580,9 @@ function enhTypedArr(a) {
     } 
 
     return empty(this.length, `f${opts.FLOAT_PREC}`).map((_, idx) => this[idx] - other);
-  };
+  },
 
-  a.mul = function (other = null, dtype = null) {
+  mul(other = null, dtype = null) {
     if (other === null) {
       return this.reduce((x, y) => x * y, 1);
     }
@@ -666,9 +656,9 @@ function enhTypedArr(a) {
       }
     }
     return empty(len, `f${opts.FLOAT_PREC}`).map((_, idx) => this[idx] * other[idx]);
-  };
+  },
 
-  a.div = function (other = null, dtype = null) {
+  div(other = null, dtype = null) {
     if (other === null) {
       return this.reduce((x, y) => x / y);
     }
@@ -710,29 +700,29 @@ function enhTypedArr(a) {
       return other.map((x, idx) => x / this[idx]);
     }
     return empty(len, `f${opts.FLOAT_PREC}`).map((_, idx) => this[idx] / other[idx]);
-  };
+  },
 
-  a.root = function (n, dtype = null) {
+  root(n, dtype = null) {
     return this.pow(1 / n, dtype);
-  };
+  },
 
-  a.sqrt = function (dtype = null) {
+  sqrt(dtype = null) {
     if (dtype === null || dtype === this.dtype) {
       return this.map(x => Math.sqrt(x));
     } else {
       return empty(this.length, dtype).map(x => Math.sqrt(x));
     }
-  };
+  },
 
-  a.cbrt = function (dtype = null) {
+  cbrt(dtype = null) {
     if (dtype === null || dtype === this.dtype) {
       return this.map(x => Math.cbrt(x));
     } else {
       return empty(this.length, dtype).map(x => Math.cbrt(x));
     }
-  };
+  },
 
-  a.pow = function (n, dtype = null) {
+  pow(n, dtype = null) {
     if (n === 0) {
       return ones(this.length, dtype);
     } else if (n === 1) {
@@ -742,62 +732,75 @@ function enhTypedArr(a) {
     } else {
       return empty(this.length, dtype).map((_, idx) => this[idx] ** n);
     }
-  };
+  },
 
-  a.cube = function (dtype = null) {
+  cube(dtype = null) {
     return this.pow(3, dtype);
-  };
+  },
 
-  a.square = function (dtype = null) {
+  square(dtype = null) {
     return this.pow(2, dtype);
-  };
+  },
 
   // basic math ops
 
-  a.abs = function () {
+  abs() {
     const { dtype } = this;
     if (dtype.startsWith('i')) {
       return this.cast(`u${Math.min(32, this.BYTES_PER_ELEMENT * 8 * 2)}`);
     } else {
       return this.map(x => Math.abs(x));
     }
-  };
+  },
 
-  for (const op of ['trunc', 'round', 'ceil', 'floor']) {
-    a[op] = function () {
-      log.info('you might want to downcast now to save memory');
-      return this.map(x => Math[op](x));
-    };
-  }
+  trunc() {
+    log.info('you might want to downcast now to save memory');
+    return this.map(x => Math.trunc(x));
+  },
+
+  ceil() {
+    log.info('you might want to downcast now to save memory');
+    return this.map(x => Math.ceil(x));
+  },
+
+  round() {
+    log.info('you might want to downcast now to save memory');
+    return this.map(x => Math.round(x));
+  },
+
+  floor() {
+    log.info('you might want to downcast now to save memory');
+    return this.map(x => Math.floor(x));
+  },
 
   // basic stats
 
-  a.max = function () {
+  max() {
     if (this.length === 1) return this[0];
     else return this.reduce((v1, v2) => Math.max(v1, v2));
-  };
+  },
 
-  a.min = function () {
+  min() {
     if (this.length === 1) return this[0];
     else return this.reduce((v1, v2) => Math.min(v1, v2));
-  };
+  },
 
-  a.skewness = function () {
+  skewness() {
     const xs = this.cast(`f${opts.FLOAT_PREC}`);
     return xs.sub(this.mean()).cube().mean() / (xs.var() ** (3 / 2));
-  };
+  },
 
-  a.corr = function (other) {
+  corr(other) {
     const muDiffX = this.cast(`f${opts.FLOAT_PREC}`).sub(this.mean());
     const muDiffY = other.cast(`f${opts.FLOAT_PREC}`).sub(other.mean());
     return muDiffX.mul(muDiffY).add() / (Math.sqrt(muDiffX.square().add()) * Math.sqrt(muDiffY.square().add()));
-  };
+  },
 
-  a.cov = function (other) {
+  cov(other) {
     return other.sub(other.mean()).mul(this.sub(this.mean())).mean();
-  };
+  },
 
-  a.dist = function (other, p = 2) {
+  dist(other, p = 2) {
     if (p === 1) {
       return this.sub(other).abs().add();
     } else if (p === 2) {
@@ -805,18 +808,18 @@ function enhTypedArr(a) {
     } else {
       return this.sub(other).abs().pow(p).add()**(1/p);
     }
-  };
+  },
 
-  a.kurtosis = function () {
+  kurtosis() {
     const mu = this.mean();
     const xs = this.cast(`f${opts.FLOAT_PREC}`);
     const subMu = xs.sub(mu);
     const numerator = subMu.pow(4).add() / this.length;
     const denominator = (subMu.square().add() / this.length) ** 2;
     return (numerator / denominator) - 3;
-  };
+  },
 
-  a.sample = function (n, wr = true) {
+  sample(n, wr = true) {
     if (n === null) {
       return this.sample(this.length, wr);
     }
@@ -837,62 +840,62 @@ function enhTypedArr(a) {
       used.add(idx);
     }
     return sample;
-  };
+  },
 
   // central tendency
 
-  a.mean = function () {
+  mean() {
     return this.add() / this.length;
-  };
+  },
 
-  a.nQuart = function (n = 2, m = 4) {
+  nQuart(n = 2, m = 4) {
     const ys = this.sort();
     if ((ys.length * n / m) % 1 !== 0) {
       return ys[Math.floor(ys.length * n / m)];
     }
     const middle = ys.length * n / m;
     return (ys[middle] + ys[middle - 1]) / 2;
-  };
+  },
 
-  a.Q1 = function () {
+  Q1() {
     return this.nQuart(1, 4);
-  };
+  },
 
-  a.median = function () {
+  median() {
     return this.nQuart(2, 4);
-  };
+  },
 
-  a.Q3 = function () {
+  Q3() {
     return this.nQuart(3, 4);
-  };
+  },
 
   // spread
 
-  a.var = function (dtype = null) {
+  var(dtype = null) {
     return this.sub(this.mean(), dtype).square(dtype).mean();
-  };
+  },
 
-  a.mad = function (dtype = null) {
+  mad(dtype = null) {
     return this.sub(this.mean(), dtype).abs().mean();
-  };
+  },
 
-  a.stdev = function (dtype = null) {
+  stdev(dtype = null) {
     return Math.sqrt(this.var(dtype));
-  };
+  },
 
-  a.range = function () {
+  range() {
     return this.max() - this.min();
-  };
+  },
 
-  a.IQR = function () {
+  IQR() {
     return this.Q3() - this.Q1();
-  };
+  },
 
   // linear algebra
 
-  a.dot = function (other) {
+  dot(other) {
     return this.mul(other).add();
-  };
+  },
 
   // pre-processing
   
@@ -921,7 +924,7 @@ function enhTypedArr(a) {
    * 5. Try to advance to next bin: 3 + binSize = 6. Out of bounds!
    *
    */
-  a.kBins = function (k = 5, dtype = null) {
+  kBins(k = 5, dtype = null) {
     if (dtype === null) {
       return this.kBins(k, 'u8');
     }
@@ -953,9 +956,9 @@ function enhTypedArr(a) {
     s.kBinsBounds = bounds;
 
     return s;
-  };
+  },
 
-  a.disDiff = function (ord = 1) {
+  disDiff(ord = 1) {
     if (ord === 0) return this;
     const newArr = empty(this.length, `f${opts.FLOAT_PREC}`);
     newArr[0] = 0;
@@ -963,9 +966,9 @@ function enhTypedArr(a) {
       newArr[i] = this[i] - this[i - 1];
     }
     return newArr.disDiff(ord - 1);
-  };
+  },
 
-  a.smooth = function (n = 2, doClone = false) {
+  smooth(n = 2, doClone = false) {
     if (n === 0) {
       throw new Error(`smoothing n must be >= 2`);
     }
@@ -983,29 +986,21 @@ function enhTypedArr(a) {
       newArr[i] = total / n;
     }
     return newArr;
-  };
+  },
 
-  a.normalize = function () {
+  normalize() {
     const smallest = this.min();
     const denominator = this.max() - smallest;
     return empty(this.length).map((_, idx) => (this[idx] - smallest) / denominator);
-  };
+  },
 
-  a.dropInfinity = function () {
-    return this.drop(Infinity);
-  };
-
-  a.dropNaN = function () {
-    return this.drop(NaN);
-  };
-
-  a.dropOutliers = function () {
+  removeAllOutliers() {
     const Q1 = this.Q1();
     const Q3 = this.Q3();
     return this.filter(x => x >= Q1 && x <= Q3);
-  };
+  },
 
-  a.clip = function (lBound = null, uBound = null) {
+  clip(lBound = null, uBound = null) {
     if (lBound !== null && uBound !== null) {
       return this.map(v => (v < lBound ? lBound : v > uBound ? uBound : v));
     } else if (lBound !== null) {
@@ -1013,45 +1008,67 @@ function enhTypedArr(a) {
     } else {
       return this.map(v => (v > uBound ? uBound : v));
     }
-  };
+  },
 
-  a.replace = function (v, y) {
-    return this.map((x, idx) => x === v ? y : x );
-  };
+  replace(v, y, delta = 0.001) {
+    return this.map((x, idx) => Math.abs(x - v) <= delta ? y : x);
+  },
 
   // functional programming
 
-  a.zipWith = function (other, f, dtype = null) {
+  zipWith(other, f, dtype = null) {
     return empty(this.length, dtype === null ? `f${opts.FLOAT_PREC}` : dtype).map((_, idx) => f(this[idx], other[idx]));
-  };
+  },
 
-  a.zipWith3 = function (xs, ys, f, dtype = null) {
+  zipWith3(xs, ys, f, dtype = null) {
     return empty(this.length, dtype === null ? `f${opts.FLOAT_PREC}` : dtype).map((_, idx) => f(this[idx], xs[idx], ys[idx]));
-  };
+  },
 
   // hacks
 
-  a._slice = a.slice;
-  a.slice = function (a, b) {
+  slice(a, b) {
     return enhTypedArr(this._slice(a, b));
-  };
+  },
 
-  a._subarray = a.subarray;
-  a.subarray = function (a, b) {
+  subarray(a, b) {
     return enhTypedArr(this._subarray(a, b));
-  };
+  },
 
-  a._map = a.map;
-  a.map = function (f) {
+  map(f) {
     return enhTypedArr(this._map(f));
-  };
+  },
 
-  a._filter = a.filter;
-  a.filter = function (f) {
+  filter(f) {
     return enhTypedArr(this._filter(f));
-  };
+  },
+};
 
-  return a;
+/**
+ * @param {!TypedArray} a
+ * @returns {!TypedArray} the array
+ * @private
+ */
+function enhTypedArr(a) {
+  a = enhance(a);
+
+  // already enhanced
+  if (a._isColNum !== undefined) {
+    return a;
+  } 
+
+  // hacks necessary to ensure immutability
+  a._slice = a.slice;
+  a._subarray = a.subarray;
+  a._map = a.map;
+  a._filter = a.filter;
+
+  // memory & data type
+  defineGetter(a, 'dtype', function dtype() {
+    const match = dtypeRegex.exec(this.constructor.name);
+    return match[1][0].toLocaleLowerCase() + match[2];
+  });
+
+  return Object.assign(a, COL_NUM_PROTO);
 }
 
 /**
@@ -1294,8 +1311,6 @@ function rand(len, lBound = null, uBound = null, dtype = null) {
   // else 
   return empty(len, dtype).map(_ => randInRange(lBound, uBound));
 }
-
-
 
 /**
  * @param {!Number} len

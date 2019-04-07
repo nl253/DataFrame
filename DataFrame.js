@@ -3,6 +3,7 @@
  * TODO loading (g)zipped csv
  * TODO string col hashing
  * TODO document cum ops
+ * TODO replace is broken
  * TODO binarizer
  * TODO document imports
  * TODO document matrix ops
@@ -257,6 +258,11 @@ class DataFrame {
       };
     }
 
+    this.replace = function (colId = null, pat, repl, ...args) {
+      const filter = pat.constructor.name[0] === 'N' ? 'num' : 'str';
+      return this.call(colId, 'replace', filter, repl, ...args);
+    };
+
     // special cases, when called *without* any param, treat as agg
     for (const op of ['add', 'sub', 'mul', 'div']) {
       if (this[op] === undefined) {
@@ -285,6 +291,7 @@ class DataFrame {
     this.dist = function (p = 2, withNames = true) { 
       return this.matrix((xs, ys) => xs.dist(ys, p), withNames, true, 0);
     };
+
 
     // don't assign / drop / push to this.colNames (use df.rename(newName))
     Object.freeze(this.colNames); 
@@ -874,11 +881,11 @@ class DataFrame {
    * @param {...!Number|...!String} colIds
    * @returns {!DataFrame} data frame
    */
-  dropOutliers(...colIds) {
+  removeAllOutliers(...colIds) {
     // by default compute for all (numeric) columns
     if (colIds.length === 0) {
-      log.info('running dropOutliers for all cols');
-      return this.dropOutliers(...this.colNames);
+      log.info('running removeAllOutliers for all cols');
+      return this.removeAllOutliers(...this.colNames);
     }
 
     const cols = Array.from(this.cols);
@@ -1489,36 +1496,6 @@ class DataFrame {
     } else if (opt.match(/^prog/)) {
       log.warn('programmer printing ON');
       Object.assign(opts, PROGRAMMER_PRINTING);
-    } else if (opt.match(/^co[sz]y/)) {
-      log.warn('SPACE_BETWEEN = 1');
-      opts.SPACE_BETWEEN = 1;
-    } else if (opt.match(/^oct/)) {
-      log.warn('showing octal index');
-      opts.INDEX_BASE = 8;
-    } else if (opt.match(/^hex/)) {
-      log.warn('showing hex index');
-      opts.INDEX_BASE = 16;
-    } else if (opt.match(/^doub/)) {
-      opts.DOTS = '..';
-    } else if (opt.match(/^trip/)) {
-      opts.DOTS = '...';
-    } else if (opt.match(/^spac/)) {
-      opts.SPACE_BETWEEN = 4;
-    } else if (opt.match(/^index/)) {
-      log.warn('showing index ON');
-      opts.SHOW_INDEX = true;
-    } else if (opt.match(/^under/)) {
-      log.warn('showing underline ON');
-      opts.UNDERLINE_BOT = true;
-    } else if (opt.match(/^unind/)) {
-      log.warn('showing index OFF');
-      opts.SHOW_INDEX = false;
-    } else if (opt.match(/^untyp/)) {
-      log.warn('showing types OFF');
-      opts.PRINT_TYPES = false;
-    } else if (opt.match(/^typ/)) {
-      log.warn('showing types ON');
-      opts.PRINT_TYPES = true;
     } else throw new Error(`unrecognised printing opt ${opt}, try "minimal", "programmer" or "default"`);
   }
 
@@ -1598,16 +1575,14 @@ class DataFrame {
 
     rows.push(headerRow);
 
-    const midCol = Math.floor(nCols / 2);
-
     // info about not displayed rows
     // .. ... (2 more) .. .. <- THIS
     // 3 
     // 4 
     // 5
-    if (opts.SHOW_MORE && n > 0) {
+    if (opts.SHOW_MORE && n > 0 && this.nCols > 0) {
       const arr = Array(nCols).fill(opts.DOTS);
-      arr[midCol] = `(${n} more)`;
+      arr[0] = `(${n} more)`;
       rows.push(arr);
     }
 
@@ -1657,9 +1632,9 @@ class DataFrame {
       }
       rows.push(emptyInfo);
 
-    } else if (opts.SHOW_MORE && m < this.length) {
+    } else if (opts.SHOW_MORE && m < this.length && this.nCols > 0) {
       const arr = Array(nCols).fill(opts.DOTS);
-      arr[midCol] = `(${this.length - m} more)`;
+      arr[0] = `(${this.length - m} more)`;
       rows.push(arr);
     }
 

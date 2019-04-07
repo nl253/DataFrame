@@ -1106,10 +1106,22 @@ Id,SepalLengthCm,SepalWidthCm,PetalLengthCm,PetalWidthCm,Species
 To set:
 
 ```javascript
-DF.set(option, value)
+DF.opts.OPTION = VALUE;
 ```
 
 ### More Advanced Examples
+
+#### Fix Column Names With Spaces (so that you can index df.Col)
+
+```javascript
+const args = df.colNames
+               // replace spaces with '_'
+               .map(c => [c, c.replace(/\s+/, '_')]) 
+               // flatten
+               .reduce((pair1, pair2) => pair1.concat(pair2), []); 
+
+df = df.rename(...args) // spread
+```
 
 #### Matrix of Normalized Differences Between Means of Columns
 
