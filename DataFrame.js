@@ -2,6 +2,7 @@
 /**
  * TODO loading (g)zipped csv
  * TODO string col hashing
+ * TODO edit photos, link to in README
  * TODO document cum ops
  * TODO replace is broken
  * TODO binarizer
@@ -29,7 +30,6 @@ const stringifyCSV = require('csv-stringify');
 
 const Column = require('./Column');
 const { randInt } = require('./rand');
-const { readCSV } = require('./load');
 const {
   fmtFloat,
   unify,
@@ -41,9 +41,9 @@ const log = require('./log');
 const opts = require('./opts');
 
 const {
-  prog: PROGRAMMER_PRINTING,
-  def: DEFAULT_PRINTING,
-  mini: MINIMAL_PRINTING
+  PROGRAMMER_PRINTING,
+  DEFAULT_PRINTING,
+  MINIMAL_PRINTING
 } = require('./presets');
 
 
@@ -1647,7 +1647,7 @@ class DataFrame {
 
         // num column
         if (col.memory !== undefined) {
-          memInfo[cIdx] = fmtFloatSI(col.memory(), opts.PRINT_PREC, 'B').replace(/\.0*$/, '');
+          memInfo[cIdx] = fmtFloatSI(col.memory(), opts.PRINT_PREC, 'B').replace(/\.0*/, '');
         }
       }
 
