@@ -69,26 +69,27 @@ class DataFrame {
         Array.from(data.dtypes),
       );
 
-      // input is String or Buffer
-    } else if (data.constructor.name[0] === 'S' || data.constructor.name[0] === 'B') {
+      // input is String
+    } else if (data.constructor.name[0] === 'S') {
+      debugger;
 
       // URL
-      if (data.match(/^http/)) {
+      if (data.startsWith('http')) {
         log.info('URL detected, making a GET request');
         const res = request('GET', data);
         const s = res.getBody().toString('utf-8')
         // URL might end with .csv or .json and give hint how to parse
         // else rely on `what` given by user
-        const newWhat = data.endsWith('.json') ? 'json' : data.endsWith('.csv') ? 'csv' : what;
+        const newWhat = data.search(/\.json$/i) >= 0 ? 'json' : data.search(/\.csv$/i) >= 0 ? 'csv' : what;
         return new DataFrame(s, newWhat, colNames, dtypes);
 
       // JSON String
-      } else if (what.match(/^json/i)) {
+      } else if (what.search(/^json/i) >= 0) {
         log.info('input is JSON String, parsing');
         return new DataFrame(JSON.parse(data), 'obj', colNames, dtypes);
 
         // CSV String
-      } else if (what.match(/^csv/i)) {
+      } else if (what.search(/^csv/i) >= 0) {
         log.info('input is CSV String, parsing');
         const rows = parseCSV(data, { skip_empty_lines: true, trim: true });
         if (colNames === null) {
@@ -101,17 +102,17 @@ class DataFrame {
         }
 
         // JSON file path
-      } else if (what.match(/^filejson/i) || (data.match(/\.json$/i) && existsSync(data))) {
+      } else if (what.search(/^fileJSON/i) >= 0 || (data.search(/\.json$/i) >= 0 && existsSync(data))) {
         log.info(`input is JSON file "${data}", reading`);
-        return new DataFrame(readFileSync(data), 'json', colNames, dtypes);
+        return new DataFrame(readFileSync(data).toString('utf-8'), 'json', colNames, dtypes);
 
         // CSV file path
-      } else if (what.match(/^filecsv/i) || (data.match(/\.csv$/i) && existsSync(data))) {
+      } else if (what.search(/^fileCSV/i) >= 0 || (data.search(/\.csv$/i) >= 0 && existsSync(data))) {
         log.info(`input is CSV file name "${data}", reading`);
-        return new DataFrame(readFileSync(data), 'csv', colNames, dtypes);
+        return new DataFrame(readFileSync(data).toString('utf-8'), 'csv', colNames, dtypes);
 
         // dataset name with *.csv ending (walk recursively)
-      } else if (data.match(/\.(csv|json)$/)) {
+      } else if (data.search(/\.(csv|json)$/i) >= 0) {
         log.info(`input is dataset file name "${data}"`);
         const nodeStack = Array.from(opts.DATASETS);
         let i = 0;
@@ -159,7 +160,7 @@ class DataFrame {
       throw new Error(`failed to find file, looked for a dataset in ${lookedIn} (you might want to push your dir to opts.DATASETS OR set 'what', see API)`);
 
       // javascript Object (PARSED)
-    } else if (what.match(/^obj/i) || data.constructor.name[0] === 'O') {
+    } else if (what.search(/^obj/i) >= 0 || data.constructor.name[0] === 'O') {
 
       log.info('received Object');
 
@@ -187,7 +188,7 @@ class DataFrame {
       );
 
       // map { col1 => col2, ... }
-    } else if (what.match(/^map/i) || data.constructor.name[0] === 'M') {
+    } else if (what.search(/^map/i) >= 0 || data.constructor.name[0] === 'M') {
 
       log.info('input is Map');
 
@@ -216,12 +217,12 @@ class DataFrame {
       );
 
       // array of rows
-    } else if (what.match(/^row/i)) {
+    } else if (what.search(/^row/i) >= 0) {
       log.info('input is Array of rows, transposing to columns');
       return new DataFrame(transpose(data), 'cols', colNames, dtypes);
 
       // array of cols
-    } else if (what.match(/^col/i)) {
+    } else if (what.search(/^col/i) >= 0) {
       log.debug(`input is Array of ${data.length} columns`);
       this.cols = data.map((c, cIdx) => {
         let printName = `col #${cIdx}`;
@@ -379,7 +380,7 @@ class DataFrame {
     const { dtypes } = this;
     const colIdxs = new Set();
     for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
-      if (dtypes[cIdx].match(dtypeRegex)) {
+      if (dtypes[cIdx].search(dtypeRegex) >= 0) {
         colIdxs.add(cIdx);
       }
     }
@@ -715,7 +716,7 @@ class DataFrame {
       }
       // is string
     } else if (axis.constructor.name[0] === 'S') {
-      if (axis.match(/^col/i)) {
+      if (axis.search(/^col/i) >= 0) {
         return this.concat(other, 0);
       } else {
         return this.concat(other, 1);
@@ -727,7 +728,7 @@ class DataFrame {
     let colNames;
 
     // if columns are indexes, shift them
-    if (other.colNames.filter(c => c.toString().match(isDigit)).length === other.colNames.length) {
+    if (other.colNames.filter(c => c.toString().search(isDigit)).length === other.colNames.length) {
       colNames = this.colNames.concat(other.colNames.map(cIdx => this.colNames.length + cIdx));
     } else {
       colNames = this.colNames.concat(other.colNames);
@@ -1078,7 +1079,7 @@ class DataFrame {
 
     bestCols = bestCols.sort((o1, o2) => (o1.score > o2.score ? -1 : o1.score < o2.score ? 1 : 0)).slice(0, n);
 
-    if (bestCols.some(({ name }) => !name.toString().match(/\d+/))) {
+    if (bestCols.some(({ name }) => name.toString().search(/\d+/) < 0)) {
       const colNames = [];
       const cols = [];
       for (const o of bestCols) {
@@ -1456,7 +1457,7 @@ class DataFrame {
    * @param {!String} filePath
    */
   saveJSON(filePath) {
-    if (!filePath.match(/\.json$/i)) {
+    if (filePath.search(/\.json$/i) < 0) {
       log.warn(`bad file name ${filePath}, expected *.json file name`);
     }
     const out = createWriteStream(filePath);
@@ -1469,7 +1470,7 @@ class DataFrame {
    * @param {!String} filePath
    */
   saveHTML(filePath) {
-    if (filePath.match(/\.x?html\d?$/i)) {
+    if (filePath.search(/\.x?html\d?$/i)) {
       const out = createWriteStream(filePath);
 
       out.write('<table>');
@@ -1504,7 +1505,7 @@ class DataFrame {
    * @param {!String} filePath
    */
   saveCSV(filePath) {
-    if (filePath.match(/\.csv$/i)) {
+    if (filePath.search(/\.csv$/i) >= 0) {
       const stringifier = stringifyCSV();
       const out = createWriteStream(filePath);
       const header = this.colNames.map(cName => cName.toString());
@@ -1533,7 +1534,7 @@ class DataFrame {
     let i = 0;
     while (i < nodeStack.length) {
       const path = resolve(nodeStack[i]);
-      if (path.match(/\.[._]\w+$|node_modules$/)) {
+      if (path.search(/\.[._]\w+$|node_modules$/) >= 0) {
         i++;
         continue;
       }
@@ -1543,7 +1544,7 @@ class DataFrame {
           nodeStack.push(join(path, f));
         }
       } else if (stats.isFile()) {
-        if (path.match(/\.(csv|json)$/)) {
+        if (path.search(/\.(csv|json)$/) >= 0) {
           datasets.add(path);
         }
       }
@@ -1585,13 +1586,13 @@ class DataFrame {
   }
 
   static setPrinting(opt = 'minimal') {
-    if (opt.match(/^mini/i)) {
+    if (opt.search(/^mini/i) >= 0) {
       log.warn('minimal printing ON');
       Object.assign(opts, MINIMAL_PRINTING);
-    } else if (opt.match(/^def/)) {
+    } else if (opt.search(/^def/) >= 0) {
       log.warn('default printing ON');
       Object.assign(opts, DEFAULT_PRINTING);
-    } else if (opt.match(/^prog/)) {
+    } else if (opt.search(/^prog/) >= 0) {
       log.warn('programmer printing ON');
       Object.assign(opts, PROGRAMMER_PRINTING);
     } else throw new Error(`unrecognised printing opt ${opt}, try "minimal", "programmer" or "default"`);
