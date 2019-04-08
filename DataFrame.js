@@ -1,8 +1,9 @@
-// vim:hlsearch:nu:
+// vim:hlsearch:nu:foldmethod=manual:sw=2:ts=4:expandtab:
 /**
  * TODO loading (g)zipped csv
  * TODO concat is broken
  * TODO mixed types of colNames don't work
+ * TODO finish typing Column.js & DataFrame.js
  * TODO string col hashing
  * TODO edit photos, link to in README
  * TODO document cum ops
@@ -18,7 +19,7 @@
  * TODO calculate the *base* size of each column (pointers are 8B)
  */
 const util = require('util');
-const { join, resolve } = require('path');
+const { join, resolve, dirname } = require('path');
 const {
   readdirSync,
   readFileSync,
@@ -27,6 +28,7 @@ const {
   statSync
 } = require('fs');
 
+const request = require('sync-request');
 const parseCSV = require('csv-parse/lib/sync');
 const stringifyCSV = require('csv-stringify');
 
@@ -51,12 +53,12 @@ const {
 
 class DataFrame {
   /**
-   * @param {!DataFrame|!Object<!Array<!String>|!Array<!Number>>|!Array<!Array<!Number|!String>>|!Array<!TypedArray|!Array<!Number>|!Array<!String>>|!Map<!Array<!Number>|!Array<!String>>} data
+   * @param {!DataFrame|!Object<!String|!Number,!Number|!String|!Array<!String>|!Array<!Number>|!ColumnStr|!ColumnNum|!TypedArray>|!Array<!Array<!Number|!String>>|!Array<!TypedArray|!Array<!Number>|!Array<!String>|!ColumnStr|!ColumnNum>|!Map<String,!Number|!String|!Array<!Number>|!Array<!String>>} data
    * @param {'cols'|'rows'|'map'|'obj'|'json'|'csv'|'df'|'file'|'fileCSV'|'fileJSON'|'dataset'} [what]
-   * @param {?Array<!String>} [colNames] labels for every column (#cols === #labels)
-   * @param {!Array<?String>} [dtypes]
+   * @param {?Array<!String>|?ColumnStr} [colNames] labels for every column (#cols === #labels)
+   * @param {?Array<?String>|?ColumnStr} [dtypes]
    */
-  constructor(data = [], what = 'cols', colNames = null, dtypes = []) {
+  constructor(data = [], what = 'cols', colNames = null, dtypes = null) {
     // another data frame, shallow copy it
     if (what === 'df' || data.constructor.name === this.constructor.name) {
       log.info('input is another DataFrame, making a shallow copy');
@@ -67,35 +69,48 @@ class DataFrame {
         Array.from(data.dtypes),
       );
 
-      // input is string
+      // input is String or Buffer
     } else if (data.constructor.name[0] === 'S' || data.constructor.name[0] === 'B') {
 
-      // json string
-      if (what.match(/^json/i)) {
-        log.info('input is JSON String, parsing');
-        return new DataFrame(JSON.parse(data), 'obj', null, dtypes);
+      // URL
+      if (data.match(/^http/)) {
+        log.info('URL detected, making a GET request');
+        const res = request('GET', data);
+        const s = res.getBody().toString('utf-8')
+        // URL might end with .csv or .json and give hint how to parse
+        // else rely on `what` given by user
+        const newWhat = data.endsWith('.json') ? 'json' : data.endsWith('.csv') ? 'csv' : what;
+        return new DataFrame(s, newWhat, colNames, dtypes);
 
-        // csv string
+      // JSON String
+      } else if (what.match(/^json/i)) {
+        log.info('input is JSON String, parsing');
+        return new DataFrame(JSON.parse(data), 'obj', colNames, dtypes);
+
+        // CSV String
       } else if (what.match(/^csv/i)) {
         log.info('input is CSV String, parsing');
-        const rows = parseCSV(data, { skip_empty_lines: true });
+        const rows = parseCSV(data, { skip_empty_lines: true, trim: true });
         if (colNames === null) {
-          return new DataFrame(rows.slice(1), 'rows', rows[0], dtypes);
+          log.warn(`column names not provided, assuming first row is column names`);
+          const header = rows.splice(0, 1)[0];
+          return new DataFrame(rows, 'rows', header, dtypes);
         } else {
+          log.debug('using provided column names');
           return new DataFrame(rows, 'rows', colNames, dtypes);
         }
 
-        // json file
+        // JSON file path
       } else if (what.match(/^filejson/i) || (data.match(/\.json$/i) && existsSync(data))) {
         log.info(`input is JSON file "${data}", reading`);
         return new DataFrame(readFileSync(data), 'json', colNames, dtypes);
 
-        // csv file
+        // CSV file path
       } else if (what.match(/^filecsv/i) || (data.match(/\.csv$/i) && existsSync(data))) {
         log.info(`input is CSV file name "${data}", reading`);
         return new DataFrame(readFileSync(data), 'csv', colNames, dtypes);
 
-        // dataset with *.csv ending (walk recursively)
+        // dataset name with *.csv ending (walk recursively)
       } else if (data.match(/\.(csv|json)$/)) {
         log.info(`input is dataset file name "${data}"`);
         const nodeStack = Array.from(opts.DATASETS);
@@ -107,10 +122,9 @@ class DataFrame {
             for (const f of readdirSync(path)) {
               nodeStack.push(join(path, f));
             }
-          } else if (stats.isFile()) {
-            if (path.indexOf(data) >= 0) {
-              return new DataFrame(path, 'file', colNames, dtypes);
-            }
+          } else if (stats.isFile() && path.endsWith(data)) {
+            log.debug(`located dataset in ${path}`);
+            return new DataFrame(path, 'file', colNames, dtypes);
           }
           i++;
         }
@@ -119,7 +133,6 @@ class DataFrame {
       } else {
         log.info(`input is dataset name ${data}`);
         const nodeStack = Array.from(opts.DATASETS);
-        const regexes = [/\.csv$/i, /\.json$/i];
         let i = 0;
         while (i < nodeStack.length) {
           const path = nodeStack[i];
@@ -129,21 +142,43 @@ class DataFrame {
               nodeStack.push(join(path, f));
             }
           } else if (stats.isFile()) {
-            for (const extRegex of regexes) {
-              if (!!path.match(extRegex) && path.indexOf(`${data}.`) >= 0) {
-                return new DataFrame(path, 'file', colNames, dtypes);
-              }
+            if (path.endsWith(`${data}.csv`)) {
+              log.debug(`located CSV dataset "${path}"`);
+              return new DataFrame(path, 'fileCSV', colNames, dtypes);
+            } else if (path.endsWith(`${data}.json`)) {
+              log.debug(`located JSON dataset "${path}"`);
+              return new DataFrame(path, 'fileJSON', colNames, dtypes);
             }
           }
           i++;
         }
       }
 
-      throw new Error(`failed to find dataset, looked in [${opts.DATASETS.join(', ')}] (you might want to push your dir to opts.DATASETS)`);
+      let lookedIn = opts.DATASETS.concat([dirname(data)]).map(p => resolve(p)).join(', ');
+      const cwd = process.cwd();
+      throw new Error(`failed to find file, looked for a dataset in ${lookedIn} (you might want to push your dir to opts.DATASETS OR set 'what', see API)`);
 
-      // object { colName => col, ... }
+      // javascript Object (PARSED)
     } else if (what.match(/^obj/i) || data.constructor.name[0] === 'O') {
-      log.info('input is Object, using keys as col names and vals as cols');
+
+      log.info('received Object');
+
+      // if { String: Number | String }
+      for (const key in data) {
+        const val = data[key];
+        if (val.constructor.name === 'N' || val.constructor.name === 'S') {
+          log.info('treating keys as column 1 and values as column 2');
+          return new DataFrame(
+            [Object.keys(data), Object.values(data)],
+            'cols',
+            colNames === null ? ['Key', 'Value'] : colNames,
+            dtypes,
+          );
+        }
+      }
+
+      // else
+      log.info('treating keys as column names and values as columns');
       return new DataFrame(
         Object.values(data),
         'cols',
@@ -153,13 +188,30 @@ class DataFrame {
 
       // map { col1 => col2, ... }
     } else if (what.match(/^map/i) || data.constructor.name[0] === 'M') {
-      log.info('input is Map, using keys as col1 and vals as col2');
+
+      log.info('input is Map');
+
+      // reverse logic to Object (above)
+
+      for (const v of data.values()) {
+        if (v.constructor.name[0] !== 'S' && v.constructor.name[0] !== 'N') {
+          log.info('using keys as column names and values as columns');
+          return new DataFrame(
+            Array.from(data.values()),
+            'cols',
+            Array.from(data.keys()),
+            dtypes,
+          );
+        }
+      }
+
+      log.info('using keys as column 1 and values as column 2');
       const keys = Array.from(data.keys());
       const values = Array.from(data.values());
       return new DataFrame(
         [keys, values],
         'cols',
-        colNames === null ? ['key', 'value'] : colNames,
+        colNames === null ? ['Key', 'Value'] : colNames,
         dtypes,
       );
 
@@ -172,10 +224,13 @@ class DataFrame {
     } else if (what.match(/^col/i)) {
       log.debug(`input is Array of ${data.length} columns`);
       this.cols = data.map((c, cIdx) => {
-        const printName = `col #${cIdx}${colNames[cIdx] ? ` (${colNames[cIdx]})` : ''}`;
+        let printName = `col #${cIdx}`;
+        if (colNames !== null && colNames[cIdx] !== undefined) {
+          printName += `  (${colNames[cIdx]})`;
+        }
         log.debug(`${printName} is already a Column`);
         const isCol = Column.isCol(c);
-        const dtypeGiven = dtypes[cIdx] !== null && dtypes[cIdx] !== undefined;
+        const dtypeGiven = dtypes !== null && dtypes[cIdx] !== null && dtypes[cIdx] !== undefined;
         const noNeedToConvert = isCol && (!dtypeGiven || c.dtype === dtypes[cIdx]);
         if (noNeedToConvert) {
           log.debug(`no need to convert ${printName}`);
@@ -183,12 +238,15 @@ class DataFrame {
         }
         log.debug(`converting col ${printName}`);
         // else
-        return Column.from(c, dtypes[cIdx] || null);
+        return Column.from(c, (dtypes !== null && dtypes[cIdx]) || null);
       });
 
-      this.colNames = Column.from(colNames === null
-        ? Array(this.nCols).fill(0).map((_, idx) => idx)
-        : colNames);
+      if (colNames === null) {
+        this.colNames = Column.range(this.nCols);
+      } else {
+        this.colNames = Column.from(colNames.map(cName => cName.toString()), 's');
+        log.debug(`used provided column names: [${this.colNames.join(', ')}]`);
+      }
     } else throw new Error('unrecognised input data');
 
     const attrNames = new Set(this.colNames);
@@ -202,20 +260,7 @@ class DataFrame {
      * easy replacement (assignment) of cols e.g. df.age = df2.age;
      * easy broadcasting e.g. df.label = 0; */
     for (const name of attrNames) {
-      Object.defineProperty(this, name, {
-        get() { return this.col(name); },
-        set(newCol) {
-          // broadcast
-          if (newCol.constructor.name[0] === 'N' || newCol.constructor.name[0] === 'S') {
-            const cIdx = this.colIdx(name);
-            for (let i = 0; i < this.length; i++) {
-              this.cols[cIdx][i] = newCol;
-            }
-          } else {
-            this.cols[this.colIdx(name)] = newCol;
-          }
-        },
-      });
+      this._registerCol(name);
     }
 
     // functs and aggs are forwarded to the underlying column
@@ -260,11 +305,6 @@ class DataFrame {
       };
     }
 
-    this.replace = function (colId = null, pat, repl, ...args) {
-      const filter = pat.constructor.name[0] === 'N' ? 'num' : 'str';
-      return this.call(colId, 'replace', filter, repl, ...args);
-    };
-
     // special cases, when called *without* any param, treat as agg
     for (const op of ['add', 'sub', 'mul', 'div']) {
       if (this[op] === undefined) {
@@ -278,28 +318,34 @@ class DataFrame {
       }
     }
 
-    this.corr = function (withNames = true) { 
-      return this.matrix('corr', withNames, true, 1);
-    };
-
-    this.cov = function (withNames = true) { 
-      return this.matrix('cov', withNames, true, null);
-    };
-
-    this.dot = function (withNames = true) { 
-      return this.matrix('dot', withNames, true, null);
-    };
-
-    this.dist = function (p = 2, withNames = true) { 
-      return this.matrix((xs, ys) => xs.dist(ys, p), withNames, true, 0);
-    };
-
-
     // don't assign / drop / push to this.colNames (use df.rename(newName))
     Object.freeze(this.colNames); 
 
     // don't assign / drop / push to this.cols (use df.drop, df.select or df.sliceCols)
     Object.freeze(this.cols);     
+  }
+
+  /**
+   * @param {!String} name
+   */
+  _registerCol(name) {
+    Object.defineProperty(this, name, {
+      get() {
+        return this.col(name);
+      },
+      set(newCol) {
+        // broadcast
+        if (newCol.constructor.name[0] === 'N' || newCol.constructor.name[0] ===
+          'S') {
+          const cIdx = this.colIdx(name);
+          for (let i = 0; i < this.length; i++) {
+            this.cols[cIdx][i] = newCol;
+          }
+        } else {
+          this.cols[this.colIdx(name)] = newCol;
+        }
+      },
+    });
   }
 
   get rowsIter() {
@@ -316,6 +362,9 @@ class DataFrame {
     }
   }
 
+  /**
+   * @param {!Number} rIdx row index
+   */
   *irow(rIdx) {
     for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
       yield this.val(rIdx, cIdx);
@@ -466,10 +515,10 @@ class DataFrame {
   }
 
   /**
-   * @returns {!Array<!String>} data types for all columns
+   * @returns {!ColumnNum|!ColumnStr} data types for all columns
    */
   get dtypes() {
-    return this.cols.map(c => c.dtype);
+    return Column.from(this.cols.map(c => c.dtype), 's');
   }
 
   /**
@@ -568,6 +617,18 @@ class DataFrame {
       }
     }
     return new DataFrame(cols, 'cols', Array.from(this.colNames));
+  }
+
+  /**
+   * @param {?Number|?String} [colId]
+   * @param {!RegExp|!String|!Number} pat
+   * @param {!String|!Number} repl
+   * @param {...*} args
+   * @returns {!DataFrame} data frame with f applied to colId
+   */
+  replace(colId = null, pat, repl, ...args) {
+    const filter = pat.constructor.name[0] === 'N' ? 'num' : 'str';
+    return this.call(colId, 'replace', filter, repl, ...args);
   }
 
   /**
@@ -993,105 +1054,6 @@ class DataFrame {
     return new DataFrame(cols, 'cols', colNames);
   }
 
-  /**
-   * @param {!Function|!String} f
-   * @param {?Boolean} [withNames]
-   * @param {?Boolean} [isCommutative]
-   * @param {*|null} [identity]
-   * @returns {!DataFrame} data frame
-   */
-  matrix(f, withNames = true, isCommutative = false, identity = null, ...args) {
-    if (f.constructor.name[0] === 'S') {
-      // resolve function
-      return this.matrix((xs, ys) => xs[f](ys), withNames, isCommutative);
-    }
-
-    // only run for numeric cols
-    const numCols = this._numColIdxs;
-    const colIdxs = [];
-    const rows = [];
-    const cache = {};
-    const { dtypes } = this; 
-
-    for (let yIdx = 0; yIdx < this.nCols; yIdx++) {
-
-      const colPrintY = `${dtypes[yIdx]} col ${this.colNames[yIdx] === yIdx ? '#' + yIdx : this.colNames[yIdx] + ' ' + '#' + yIdx}`;
-
-      if (!numCols.has(yIdx)) {
-        log.debug(`skipped matrix op on ${colPrintY}`);
-        continue;
-      }
-
-      // else
-      colIdxs.push(yIdx);
-      rows.push([]);
-
-      for (let xIdx = 0; xIdx < this.nCols; xIdx++) {
-
-        const colPrintX = `${dtypes[yIdx]} col ${this.colNames[yIdx] === yIdx ? '#' + yIdx : this.colNames[yIdx] + ' ' + '#' + yIdx}`;
-
-        if (!numCols.has(xIdx)) {
-          log.debug(`skipped matrix op on ${colPrintX}: not numeric`);
-          continue;
-        } 
-
-        // some ops have a fixed return value when applied to self f(xs, xs) == id
-        if (identity !== null && xIdx === yIdx) {
-          log.debug(`skipping, f(#${xIdx}, ${xIdx}) = ${identity}`);
-          rows[rows.length - 1].push(identity);
-          continue;
-        }
-
-        const col = this.cols[yIdx];
-        const other = this.cols[xIdx];
-
-        let result;
-
-        // sometimes order does not matter: f(xs, ys) === f(ys, xs)
-        if (isCommutative) {
-          result = cache[`${yIdx}:${xIdx}`];
-
-          // try swap
-          if (result === undefined) {
-            result = cache[`${xIdx}:${yIdx}`];
-          }
-
-          // if fail, compute
-          if (result === undefined) {
-            result = f(col, other, ...args);
-            cache[`${yIdx}:${xIdx}`] = result;
-            log.debug(`computed and cached f(#${xIdx}, #${yIdx})`);
-          } else {
-            log.debug(`CACHE HIT for f(#${xIdx}, #${yIdx})`);
-          }
-          rows[rows.length - 1].push(result);
-        } else {
-          rows[rows.length - 1].push(f(col, other, ...args));
-        }
-      }
-    }
-
-    // numeric col names in the order of appearing in the matrix
-    const colNames = this.colNames.filter((_, cIdx) => colIdxs.indexOf(cIdx) >= 0);
-
-    /*
-     * prepend a col with colum names to the left
-     *    A1 A2 A3
-     * A1
-     * A2
-     * A3
-     */
-    if (withNames) {
-      for (let rIdx = 0; rIdx < rows.length; rIdx++) {
-        const colName = this.colNames[colIdxs[rIdx]];
-        const row = rows[rIdx];
-        rows[rIdx] = [colName].concat(row);
-      }
-      return new DataFrame(rows, 'rows', ['column'].concat(colNames));
-    }
-    // else
-    return new DataFrame(rows, 'rows', colNames);
-  }
 
   /**
    * @param {?Number} [n] number of cols to select
@@ -1234,6 +1196,139 @@ class DataFrame {
   }
 
   /**
+   * @param {!Function|!String} f
+   * @param {?Boolean} [withNames]
+   * @param {?Boolean} [isCommutative]
+   * @param {*|null} [identity]
+   * @returns {!DataFrame} data frame
+   */
+  matrix(f, withNames = true, isCommutative = false, identity = null, ...args) {
+    if (f.constructor.name[0] === 'S') {
+      // resolve function
+      return this.matrix((xs, ys) => xs[f](ys), withNames, isCommutative);
+    }
+
+    // only run for numeric cols
+    const numCols = this._numColIdxs;
+    const colIdxs = [];
+    const rows = [];
+    const cache = {};
+    const { dtypes } = this; 
+
+    for (let yIdx = 0; yIdx < this.nCols; yIdx++) {
+
+      const colPrintY = `${dtypes[yIdx]} col ${this.colNames[yIdx] === yIdx ? '#' + yIdx : this.colNames[yIdx] + ' ' + '#' + yIdx}`;
+
+      if (!numCols.has(yIdx)) {
+        log.debug(`skipped matrix op on ${colPrintY}`);
+        continue;
+      }
+
+      // else
+      colIdxs.push(yIdx);
+      rows.push([]);
+
+      for (let xIdx = 0; xIdx < this.nCols; xIdx++) {
+
+        const colPrintX = `${dtypes[yIdx]} col ${this.colNames[yIdx] === yIdx ? '#' + yIdx : this.colNames[yIdx] + ' ' + '#' + yIdx}`;
+
+        if (!numCols.has(xIdx)) {
+          log.debug(`skipped matrix op on ${colPrintX}: not numeric`);
+          continue;
+        } 
+
+        // some ops have a fixed return value when applied to self f(xs, xs) == id
+        if (identity !== null && xIdx === yIdx) {
+          log.debug(`skipping, f(#${xIdx}, ${xIdx}) = ${identity}`);
+          rows[rows.length - 1].push(identity);
+          continue;
+        }
+
+        const col = this.cols[yIdx];
+        const other = this.cols[xIdx];
+
+        let result;
+
+        // sometimes order does not matter: f(xs, ys) === f(ys, xs)
+        if (isCommutative) {
+          result = cache[`${yIdx}:${xIdx}`];
+
+          // try swap
+          if (result === undefined) {
+            result = cache[`${xIdx}:${yIdx}`];
+          }
+
+          // if fail, compute
+          if (result === undefined) {
+            result = f(col, other, ...args);
+            cache[`${yIdx}:${xIdx}`] = result;
+            log.debug(`computed and cached f(#${xIdx}, #${yIdx})`);
+          } else {
+            log.debug(`CACHE HIT for f(#${xIdx}, #${yIdx})`);
+          }
+          rows[rows.length - 1].push(result);
+        } else {
+          rows[rows.length - 1].push(f(col, other, ...args));
+        }
+      }
+    }
+
+    // numeric col names in the order of appearing in the matrix
+    const colNames = this.colNames.filter((_, cIdx) => colIdxs.indexOf(cIdx) >= 0);
+
+    /*
+     * prepend a col with colum names to the left
+     *    A1 A2 A3
+     * A1
+     * A2
+     * A3
+     */
+    if (withNames) {
+      for (let rIdx = 0; rIdx < rows.length; rIdx++) {
+        const colName = this.colNames[colIdxs[rIdx]];
+        const row = rows[rIdx];
+        rows[rIdx] = [colName].concat(row);
+      }
+      return new DataFrame(rows, 'rows', ['column'].concat(colNames));
+    }
+    // else
+    return new DataFrame(rows, 'rows', colNames);
+  }
+
+  /**
+   * @param {!Number} [p]
+   * @param {?Boolean} [withNames]
+   * @returns {!DataFrame} data frame
+   */
+  dist(p = 2, withNames = true) {
+    return this.matrix((xs, ys) => xs.dist(ys, p), withNames, true, 0);
+  }
+
+  /**
+   * @param {?Boolean} [withNames]
+   * @returns {!DataFrame} data frame
+   */
+  dot(withNames = true) {
+    return this.matrix('dot', withNames, true, null);
+  }
+
+  /**
+   * @param {?Boolean} [withNames]
+   * @returns {!DataFrame} data frame
+   */
+  cov(withNames = true) {
+    return this.matrix('cov', withNames, true, null);
+  }
+
+  /**
+   * @param {?Boolean} [withNames]
+   * @returns {!DataFrame} data frame
+   */
+  corr(withNames = true) {
+    return this.matrix('corr', withNames, true, 1);
+  }
+
+  /**
    * Summaries each column.
    *
    * @returns {DataFrame} data frame
@@ -1317,12 +1412,13 @@ class DataFrame {
 
   /**
    * @param {!String} filePath
-   * @param {!Boolean|!Array<!String|!Number>} [header]
    * @returns {!DataFrame} data frame
    */
   toCSV(filePath) {
     const stringify = require('csv-stringify/lib/sync');
-    return stringify(Array.from(this.rowsIter));
+    const a = Array.from(this.rowsIter);
+    a.unshift(this.colNames);
+    return stringify(a);
   }
 
   /**
@@ -1453,13 +1549,13 @@ class DataFrame {
       }
       i++;
     }
-    return Array.from(datasets).map(p => p.replace(process.cwd(), '.'));
+    return Array.from(datasets);
   }
 
   /**
    * Construct a DataFrame from columns.
    *
-   * @param {...!Array<!String>|...!TypedArray} cols
+   * @param {...!Array<!String>|...!Array<!Number>|...!TypedArray|...!ColumnNum|...!ColumnStr} cols
    * @returns {!DataFrame}
    */
   static of(...cols) {
