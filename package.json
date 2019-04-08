@@ -35,6 +35,7 @@
     "opts.js",
     "load.js",
     "utils.js",
+    "presets.js",
     "Column.js",
     "datasets/alcohol/alcohol.csv",
     "datasets/blackFriday/blackFriday.csv",
@@ -77,5 +78,5 @@
     "loc": "tokei -- $(git ls-files | grep -E '\\.js$' | grep -v docs | grep -v bin)",
     "test": "jest"
   },
-  "version": "0.0.12-alpha"
+  "version": "0.1.12-alpha"
 }
