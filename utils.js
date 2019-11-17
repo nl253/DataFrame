@@ -1,3 +1,4 @@
+const fs = require('fs');
 const isNumRegex = /^(\d+\.?\d*|\d*\.\d+)(e-?\d+)?$/i;
 const dtypeRegex = /\s*([a-z]+)(8|16|32|64)\s*/i;
 
@@ -7,7 +8,7 @@ const dtypeRegex = /\s*([a-z]+)(8|16|32|64)\s*/i;
  * @returns {!String}
  * @private
  */
-function fmtFloat(n, prec = 2) {
+const fmtFloat = (n, prec = 2) => {
   if (Object.is(n, NaN)) {
     return 'NaN';
   }
@@ -20,7 +21,7 @@ function fmtFloat(n, prec = 2) {
   } else {
     return `${s}.${'0'.repeat(prec)}`;
   }
-}
+};
 
 /**
  * @param {!Number} n
@@ -28,7 +29,7 @@ function fmtFloat(n, prec = 2) {
  * @returns {!String}
  * @private
  */
-function fmtFloatSI(n, prec = 2, unit = 'B') {
+const fmtFloatSI = (n, prec = 2, unit = 'B') => {
 
   if (n >= 1e12) {
     return `${fmtFloat(n / 1e12, prec)}T${unit}`;
@@ -41,7 +42,7 @@ function fmtFloatSI(n, prec = 2, unit = 'B') {
   }
 
   return fmtFloat(n, prec) + unit;
-}
+};
 
 /**
  *
@@ -49,7 +50,7 @@ function fmtFloatSI(n, prec = 2, unit = 'B') {
  * @returns {'s'|'f64'|'f34'|'i32'|'i16'|'i8'|'u32'|'u16'|'u8'} type marker
  * @private
  */
-function getTypeMarker(val) {
+const getTypeMarker = val => {
   if (val.constructor.name[0] === 'S') {
     return 's';
   }
@@ -74,7 +75,7 @@ function getTypeMarker(val) {
 
   const type = isNeg ? 'i' : 'u';
   return `${type}${bits}`;
-}
+};
 
 
 /**
@@ -83,7 +84,7 @@ function getTypeMarker(val) {
  * @returns {"f32"|"f64"|"i8"|"16"|"i32"|"u8"|"u16"|"u32"|"s"} dtype
  * @private
  */
-function unify(dt1, dt2) {
+const unify = (dt1, dt2) => {
   if (dt1[0] === 's' || dt2[0] === 's') {
     return 's';
   } else if (dt1[0] === dt2[0]) {
@@ -102,14 +103,14 @@ function unify(dt1, dt2) {
     const bits2 = bitRegex.exec(dt2)[0];
     return `i${Math.min(32, Math.max(bits1 * 2, bits2))}`;
   }
-}
+};
 
 /**
  * @param {!Array<Array<*>>} xs
  * @returns {!Array<Array<*>>} xs^T
  * @private
  */
-function transpose(xs) {
+const transpose = xs => {
   /**
    * from [1, 2 , 3] to:
    *
@@ -129,14 +130,110 @@ function transpose(xs) {
     }
   }
   return m;
-}
+};
 
-module.exports = {
-  transpose,
+/**
+ * @param {*} o
+ * @param {!String} type
+ * @returns {!Boolean}
+ */
+const checkType = (o, type) => {
+  if (!o || !o.constructor || !o.constructor.name) {
+    return false;
+  }
+  return o.constructor.name[0] === type[0];
+};
+
+/**
+ * @param {*} o
+ * @returns {!Boolean}
+ */
+const isString = o => checkType(o, 'String');
+
+/**
+ * @param {*} o
+ * @returns {!Boolean}
+ */
+const isNumber = o => checkType(o, 'Number');
+
+/**
+ * @param {*} o
+ * @returns {!Boolean}
+ */
+const isBoolean = o => checkType(o, 'Boolean');
+
+/**
+ * @param {*} o
+ * @returns {!Boolean}
+ */
+const isObject = o => checkType(o, 'Object');
+
+/**
+ * @param {*} o
+ * @returns {!Boolean}
+ */
+const isFunction = o => checkType(o, 'Function');
+
+/**
+ * @param {*} o
+ * @returns {!Boolean}
+ */
+const isMap = o => checkType(o, 'Map');
+
+/**
+ * @param {*} o
+ * @returns {!Boolean}
+ */
+const isURL = o => isString(o) && o.startsWith('http');
+
+/**
+ * @param {*} o
+ * @returns {!Boolean}
+ */
+const isFile = o => isString(o) && fs.existsSync(o);
+
+/**
+ * @param {*} o
+ * @param {!String} ext
+ * @returns {!Boolean}
+ */
+const isFileWithExt = (o, ext) => isFile(o) && o.endsWith(`.${ext}`);
+
+/**
+ * @param {*} o
+ * @returns {!Boolean}
+ */
+const isFileJSON = (o) => isFileWithExt(o, 'json');
+
+/**
+ * @param {*} o
+ * @returns {!Boolean}
+ */
+const isFileCSV = (o) => isFileWithExt(o, 'json');
+
+/**
+ * @param {*} o
+ * @param {*} o2
+ * @returns {!Boolean}
+ */
+const isSameType = (o, o2) => o && o2 && o.constructor && o2.constructor && o2.constructor.name === o.constructor.name;
+
+
+module.exports = Object.freeze({
   dtypeRegex,
   fmtFloat,
   fmtFloatSI,
+  isSameType,
   getTypeMarker,
+  isBoolean,
+  isFunction,
   isNumRegex,
+  isURL,
+  isFile,
+  isNumber,
+  isMap,
+  isObject,
+  isString,
+  transpose,
   unify,
-};
+});

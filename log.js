@@ -8,9 +8,7 @@ const { createLogger, format, transports } = winston;
 const log = createLogger({
   format: format.combine(
     format.splat(),
-    format.printf(
-      ({ level, message }) => `[${level.toLocaleUpperCase()}] ${message}`,
-    ),
+    format.printf(({ level, message }) => `[${level.toLocaleUpperCase()}] ${message}`),
   ),
   level: 'info',
   transports: [new transports.File({ filename: 'error.log', level: 'error' }), new transports.File({ filename: 'log.log' })],

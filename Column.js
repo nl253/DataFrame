@@ -1,3 +1,6 @@
+/**
+ * @module
+ */
 /* eslint-disable sort-keys,no-param-reassign */
 const util = require('util');
 
@@ -13,24 +16,25 @@ const opts = require('./opts');
 
 /**
  * @typedef  {ArrayLike} Col
- * @property {'s'|DType} dtype
  * @property {!Boolean}  isEmpty
  * @property {!Boolean}  randEl
- * @property {!Function} all
- * @property {!Function} argMax
- * @property {!Function} argMin
- * @property {!Function} contains
- * @property {!Function} convert
+ * @property {!function(*): Boolean} all
+ * @property {!function(*): Number} argMax
+ * @property {!function(*): Number} argMin
+ * @property {!function(*): Boolean} contains
  * @property {!Function} counts
  * @property {!Function} cum
  * @property {!Function} filter
  * @property {!Function} map
  * @property {!Function} mode
  * @property {!Function} none
+ * @property {!function(!function(any): !Boolean): !Boolean} some
+ * @property {!function(!function(any): Boolean): Col} filter
  * @property {!Function} print
  * @property {!Function} ps
- * @property {!Function} clone
+ * @property {!function(!DType|null): Col} clone
  * @property {!Function} reduce
+ * @property {!Function} subarray
  * @property {!Function} removeAll
  * @property {!Function} unique
  * @property {!Function} reverse
@@ -39,27 +43,27 @@ const opts = require('./opts');
  * @property {!Function} sort
  * @property {!Function} swap
  * @property {!Function} takeWhile
+ * @property {!Function} zipWith
+ * @property {!Function} zipWith3
  * @property {!Function} toString
+ * @property {!String}   dtype
+ * @property {!Number}   length
  */
 
 /**
- * @typedef  {Col}       ColStr
+ * @typedef  {Col} ColStr
  * @property {'s'}       dtype
  * @property {!Function} concat
- * @property {!Function} filter
  * @property {!Function} head
  * @property {!Function} labelEncode
  * @property {!Function} pop
  * @property {!Function} replace
  * @property {!Function} sample
- * @property {!Function} subarray
  * @property {!Function} tail
- * @property {!Function} zipWith
- * @property {!Function} zipWith3
  */
 
 /**
- * @typedef  {Col}     ColNum
+ * @typedef  {Col} ColNum
  * @property {!DType}  dtype
  * @property {!Number} BYTES_PER_ELEMENT
  * @property {!Function} IQR
@@ -76,10 +80,10 @@ const opts = require('./opts');
  * @property {!Function} cube
  * @property {!Function} disDiff
  * @property {!Function} dist
+ * @property {!function(!DType|null): ColNum} convert
  * @property {!Function} div
  * @property {!Function} dot
  * @property {!Function} downcast
- * @property {!Function} filter
  * @property {!Function} floor
  * @property {!Function} head
  * @property {!Function} kBins
@@ -122,7 +126,7 @@ const opts = require('./opts');
  *
  * @param {!Object} o
  * @param {!String} name
- * @param {!Function} f
+ * @param {!function(): *} f
  * @private
  */
 const defineGetter = (o, name, f) => {
@@ -143,7 +147,7 @@ const COL_PROTO = {
     } else if (len > this.length) {
       log.warn(`len = ${len}, but there is ${this.length} items`);
     }
-    const parts = [`Col${this.dtype === undefined ? '' : this.dtype[0].toUpperCase()}${this.dtype.slice(1)} [`];
+    const parts = [`Col${this.dtype === undefined ? '' : this.dtype[0].toUpperCase()}${this.dtype !== undefined ? this.dtype.slice(1) : ''} [`];
     const n = Math.min(len, this.length);
     for (let i = 0; i < n; i++) {
       const val = this[i];
@@ -170,19 +174,11 @@ const COL_PROTO = {
     console.log(this.toString(n));
   },
 
-  /**
-   * @param {Number} depth
-   * @param {Object} options
-   * @returns {!String}
-   */
-  [util.inspect.custom](depth, options) {
-    return this.toString(opts.HEAD_LEN);
-  },
 
   // cumulative operations
 
   /**
-   * @param {!Function} f
+   * @param {!function(...*): *} f
    * @param {!DType|null} [dtype]
    * @returns {ColNum|ColStr}
    */
@@ -222,7 +218,7 @@ const COL_PROTO = {
   // other
 
   /**
-   * @param {!Function} f
+   * @param {!function(*): boolean} f
    * @returns {!ColNum|!ColStr}
    */
   takeWhile(f) {
@@ -253,7 +249,7 @@ const COL_PROTO = {
   },
 
   /**
-   * @param {!Function} f
+   * @param {!function(*): number} f
    * @returns {*}
    */
   argMax(f) {
@@ -271,7 +267,7 @@ const COL_PROTO = {
   },
 
   /**
-   * @param {!Function} f
+   * @param {!function(*): number} f
    * @returns {*}
    */
   argMin(f) {
@@ -293,19 +289,19 @@ const COL_PROTO = {
   // boolean
 
   /**
-   * @param {!Function} f
+   * @param {!function(*): boolean} f
    * @returns {!Boolean}
    */
   all(f) {
-    return !this.some((v, idx, arr) => !f(v, idx, arr));
+    return !this.some(v => !f(v));
   },
 
   /**
-   * @param {!Function} f
+   * @param {!function(*): boolean} f
    * @returns {!Boolean}
    */
   none(f) {
-    return !this.some((v, idx, arr) => f(v, idx, arr));
+    return !this.some(v => f(v));
   },
 
   /**
@@ -347,7 +343,7 @@ const COL_PROTO = {
   },
 
   /**
-   * @param {'asc'|'des'|!Function} [order]
+   * @param {'asc'|'des'|!function(*, *): number} [order]
    * @param {!DType|null} [dtype]
    * @returns {ColNum|ColStr}
    */
@@ -362,7 +358,7 @@ const COL_PROTO = {
   },
 
   /**
-   * @returns {ColNum|ColStr}
+   * @returns {Col}
    * @private
    */
   _shuffle() {
@@ -398,6 +394,15 @@ const COL_PROTO = {
       ? [val2, count2]
       : [val1, count1])[0];
   },
+
+  /**
+   * @param {Number} depth
+   * @param {Object} options
+   * @returns {!String}
+   */
+  [util.inspect.custom](depth, options) {
+    return this.toString(opts.HEAD_LEN);
+  },
 };
 
 /**
@@ -430,6 +435,17 @@ const COL_STR_PROTO = {
   // memory & data type
 
   dtype: 's',
+
+  /**
+   * @returns {!Number}
+   */
+  memory() {
+    let total = 0;
+    for (let i = 0; i < this.length; i++) {
+      total += this[i].length;
+    }
+    return total;
+  },
 
   /**
    * @returns {!ColStr}
@@ -553,7 +569,7 @@ const COL_STR_PROTO = {
 
   /**
    * @param {Iterable} other
-   * @param {Function} f
+   * @param {function(*, *): *} f
    * @returns {!ColNum|!ColStr}
    */
   zipWith(other, f) {
@@ -563,7 +579,7 @@ const COL_STR_PROTO = {
   /**
    * @param {Iterable} xs
    * @param {Iterable} ys
-   * @param {Function} f
+   * @param {function(*, *, *): *} f
    * @returns {!ColNum|!ColStr}
    */
   zipWith3(xs, ys, f) {
@@ -597,7 +613,7 @@ const COL_STR_PROTO = {
   },
 
   /**
-   * @param {Function} f
+   * @param {function(*, number, ColStr): *} f
    * @param {!DType|null} [dtype]
    * @returns {!ColStr}
    */
@@ -609,7 +625,7 @@ const COL_STR_PROTO = {
   },
 
   /**
-   * @param {Function} f
+   * @param {function(*, number, ColStr): boolean} f
    * @returns {!ColStr}
    */
   filter(f) {
@@ -626,7 +642,7 @@ const COL_STR_PROTO = {
  */
 const enhStrArr = (a) => {
   // already enhanced
-  if (a.dtype !== 's') {
+  if (a.dtype === 's') {
     return;
   }
 
@@ -1528,8 +1544,8 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @param {Function} f
-   * @returns {!ColStr}
+   * @param {function(*, number, ColNum): *} f
+   * @returns {!ColNum}
    */
   map(f) {
     const xs = this._map(f);
@@ -1539,8 +1555,8 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @param {Function} f
-   * @returns {!ColStr}
+   * @param {function(*, number, ColNum): boolean} f
+   * @returns {!ColNum}
    */
   filter(f) {
     const xs = this._filter(f);
@@ -1566,11 +1582,8 @@ const enhTypedArr = (a) => {
   a._map = a.map;
   a._filter = a.filter;
 
-  // memory & data type
-  defineGetter(a, 'dtype', function dtype() {
-    const match = dtypeRegex.exec(this.constructor.name);
-    return match[1][0].toLocaleLowerCase() + match[2];
-  });
+  const match = dtypeRegex.exec(a.constructor.name);
+  a.dtype = match[1][0].toLocaleLowerCase() + match[2];
 
   Object.assign(a, COL_NUM_PROTO);
 };
@@ -1824,13 +1837,36 @@ const empty = (len = 0, dtype = null) => {
  * @returns {!ColNum} rand array
  */
 const rand = (len, lBound = null, uBound = null, dtype = null) => {
-  if (lBound === null) {
-    return rand(len, 0, uBound);
-  } else if (uBound === null) {
-    return rand(len, lBound, lBound + 1);
+  if (dtype === 's') {
+    if (lBound === null) {
+      return rand(len, 0, uBound, dtype);
+    } else if (uBound === null) {
+      return rand(len, lBound, lBound + 1, dtype);
+    }
+    // else
+    const range = uBound - lBound;
+    const LOWER_RANGE = 122 - 97;
+    const UPPER_RANGE = 90 - 65;
+    const makeChar = () => {
+      const r = Math.random();
+      if (r < 0.5) {
+        return 97 + Math.floor(Math.random() * LOWER_RANGE);
+      } else if (r < 0.1) {
+        return 32;
+      } else {
+        return 65 + Math.floor(Math.random() * UPPER_RANGE);
+      }
+    };
+    return empty(len, dtype).map(() => String.fromCharCode(...Array(lBound + Math.floor(Math.random() * range)).fill(0).map(makeChar)));
+  } else {
+    if (lBound === null) {
+      return rand(len, 0, uBound, dtype);
+    } else if (uBound === null) {
+      return rand(len, lBound, lBound + 1, dtype);
+    }
+    // else
+    return empty(len, dtype).map(() => randInRange(lBound, uBound));
   }
-  // else
-  return empty(len, dtype).map(() => randInRange(lBound, uBound));
 };
 
 /**
@@ -1882,7 +1918,7 @@ const isColStr = xs => xs.dtype === 's';
 const isCol = xs => isColNum(xs) || isColStr(xs);
 
 /**
- * @param {!Function} f
+ * @param {!function(number): *} f
  * @param {!Number} n
  * @returns {!ColNum}
  */
