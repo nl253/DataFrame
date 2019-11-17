@@ -53,10 +53,10 @@ const {
 
 class DataFrame {
   /**
-   * @param {!DataFrame|!Object<!String|!Number,!Number|!String|!Array<!String>|!Array<!Number>|!ColumnStr|!ColumnNum|!TypedArray>|!Array<!Array<!Number|!String>>|!Array<!TypedArray|!Array<!Number>|!Array<!String>|!ColumnStr|!ColumnNum>|!Map<String,!Number|!String|!Array<!Number>|!Array<!String>>} data
+   * @param {!DataFrame|!Object<!String|!Number,!Number|!String|!Array<!String>|!Array<!Number>|!ColStr|!ColNum|!TypedArray>|!Array<!Array<!Number|!String>>|!Array<!TypedArray|!Array<!Number>|!Array<!String>|!ColStr|!ColNum>|!Map<String,!Number|!String|!Array<!Number>|!Array<!String>>} data
    * @param {'cols'|'rows'|'map'|'obj'|'json'|'csv'|'df'|'file'|'fileCSV'|'fileJSON'|'dataset'} [what]
-   * @param {?Array<!String>|?ColumnStr} [colNames] labels for every column (#cols === #labels)
-   * @param {?Array<?String>|?ColumnStr} [dtypes]
+   * @param {?Array<!String>|?ColStr} [colNames] labels for every column (#cols === #labels)
+   * @param {?Array<?String>|?ColStr} [dtypes]
    */
   constructor(data = [], what = 'cols', colNames = null, dtypes = null) {
     // another data frame, shallow copy it
@@ -320,10 +320,10 @@ class DataFrame {
     }
 
     // don't assign / drop / push to this.colNames (use df.rename(newName))
-    Object.freeze(this.colNames); 
+    Object.freeze(this.colNames);
 
     // don't assign / drop / push to this.cols (use df.drop, df.select or df.sliceCols)
-    Object.freeze(this.cols);     
+    Object.freeze(this.cols);
   }
 
   /**
@@ -516,7 +516,7 @@ class DataFrame {
   }
 
   /**
-   * @returns {!ColumnNum|!ColumnStr} data types for all columns
+   * @returns {!ColNum|!ColStr} data types for all columns
    */
   get dtypes() {
     return Column.from(this.cols.map(c => c.dtype), 's');
@@ -1214,7 +1214,7 @@ class DataFrame {
     const colIdxs = [];
     const rows = [];
     const cache = {};
-    const { dtypes } = this; 
+    const { dtypes } = this;
 
     for (let yIdx = 0; yIdx < this.nCols; yIdx++) {
 
@@ -1236,7 +1236,7 @@ class DataFrame {
         if (!numCols.has(xIdx)) {
           log.debug(`skipped matrix op on ${colPrintX}: not numeric`);
           continue;
-        } 
+        }
 
         // some ops have a fixed return value when applied to self f(xs, xs) == id
         if (identity !== null && xIdx === yIdx) {
@@ -1676,8 +1676,8 @@ class DataFrame {
 
     // info about not displayed rows
     // .. ... (2 more) .. .. <- THIS
-    // 3 
-    // 4 
+    // 3
+    // 4
     // 5
     if (opts.SHOW_MORE && n > 0 && this.nCols > 0) {
       const arr = Array(nCols).fill(opts.DOTS);
@@ -1750,7 +1750,7 @@ class DataFrame {
         }
       }
 
-      /* different memory indiciator for index 
+      /* different memory indiciator for index
       (doesn't acutally take any memory since it's just printed) */
       if (opts.SHOW_INDEX) {
         memInfo.unshift(opts.MEM_INFO_INDEX);
@@ -1827,7 +1827,7 @@ class DataFrame {
     } else {
       // display all (it fits on the screen)
       for (let rIdx = 0; rIdx < rows.length; rIdx++) {
-        rows[rIdx] = rows[rIdx].map((val, cIdx) => 
+        rows[rIdx] = rows[rIdx].map((val, cIdx) =>
           val.padStart(colWidths[cIdx], opts.PAD_STR))
              .join(opts.PAD_STR.repeat(opts.SPACE_BETWEEN));
       }

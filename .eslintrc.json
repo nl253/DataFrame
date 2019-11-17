@@ -36,10 +36,12 @@
   "parserOptions": {
     "codeFrame": false,
     "ecmaFeatures": {
+      "experimentalObjectRestSpread": true,
+      "spread": true,
       "impliedStrict": true,
       "jsx": true
     },
-    "ecmaVersion": 8,
+    "ecmaVersion": 10,
     "sourceType": "module"
   },
   "plugins": [
@@ -60,6 +62,7 @@
         "getWithoutSet": true
       }
     ],
+    "comma-dangle": 0,
     "array-bracket-newline": [
       1,
       {
@@ -67,6 +70,7 @@
         "multiline": true
       }
     ],
+    "no-confusing-arrow": 0,
     "array-callback-return": 1,
     "array-element-newline": [
       1,
@@ -83,6 +87,7 @@
       }
     ],
     "block-scoped-var": 1,
+    "newline-per-chained-call": 0,
     "callback-return": 1,
     "camelcase": 1,
     "capitalized-comments": [
@@ -228,7 +233,7 @@
       "functions"
     ],
     "no-invalid-regexp": 2,
-    "no-invalid-this": 1,
+    "no-invalid-this": 0,
     "no-irregular-whitespace": 2,
     "no-label-var": 2,
     "no-labels": [
@@ -283,8 +288,8 @@
         "allowForLoopAfterthoughts": true
       }
     ],
-    "no-process-env": 2,
-    "no-process-exit": 2,
+    "no-process-env": 0,
+    "no-process-exit": 0,
     "no-proto": 2,
     "no-prototype-builtins": 2,
     "no-redeclare": 2,
@@ -323,7 +328,7 @@
     "no-this-before-super": 2,
     "no-throw-literal": 2,
     "no-undef-init": 2,
-    "no-undefined": 2,
+    "no-undefined": 0,
     "no-underscore-dangle": [1, {"allowAfterThis": true}],
     "no-unexpected-multiline": 2,
     "no-unmodified-loop-condition": 2,

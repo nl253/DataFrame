@@ -11,6 +11,7 @@
   },
   "description": "Dataframe & Series library for statistics and tabular data manipulation (like pandas)",
   "devDependencies": {
+    "typescript": "^3.7.2",
     "eslint": "^5.15.1",
     "eslint-config-airbnb": "^17.1.0",
     "eslint-plugin-compat": "^2.7.0",
@@ -37,10 +38,11 @@
     "table",
     "dataframe",
     "array",
-    "extensions",
     "typed",
     "utilities",
-    "utils",
+    "machine-learning",
+    "ML",
+    "ml",
     "math",
     "stats",
     "statistics"

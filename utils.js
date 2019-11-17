@@ -1,5 +1,5 @@
-const isNumRegex = /^(\d+\.?\d*|\d*\.\d+)([eE]-?\d+)?$/;
-const dtypeRegex = /\s*([a-zA-Z]+)(8|16|32|64)\s*/;
+const isNumRegex = /^(\d+\.?\d*|\d*\.\d+)(e-?\d+)?$/i;
+const dtypeRegex = /\s*([a-z]+)(8|16|32|64)\s*/i;
 
 /**
  * @param {!Number} n

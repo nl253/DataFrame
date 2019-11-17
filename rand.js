@@ -4,9 +4,9 @@
  * @returns {!Number} random number
  */
 function randInRange(a, b = null) {
-  return b === null ?
-    randInRange(0, a) :
-    a + (b - a) * Math.random();
+  return b === null
+    ? randInRange(0, a)
+    : a + (b - a) * Math.random();
 }
 
 /**
