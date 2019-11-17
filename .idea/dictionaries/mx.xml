@@ -4,11 +4,15 @@
       <w>arange</w>
       <w>datasets</w>
       <w>dtype</w>
+      <w>dtypes</w>
       <w>eucl</w>
       <w>funct</w>
+      <w>functs</w>
       <w>idxs</w>
       <w>kurtosis</w>
       <w>manh</w>
+      <w>nbest</w>
+      <w>prec</w>
       <w>sqrt</w>
       <w>squre</w>
       <w>stdev</w>
