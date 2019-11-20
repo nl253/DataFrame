@@ -989,7 +989,7 @@ class DataFrame {
       case 'less than or equal': return this.where(val, colId, '<=');
 
       case '>=': return this.filter(x => x >= val, colId);
-      case 'gte': return this.where(val, colId, '<=');
+      case 'gte': return this.where(val, colId, '>=');
       case 'greater than or equal': return this.where(val, colId, '>=');
 
       default: throw new Error(`unrecognised op ${op}`);
