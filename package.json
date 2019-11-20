@@ -4,15 +4,27 @@
     "url": "https://github.com/nl253/DataFrame/issues"
   },
   "dependencies": {
-    "csv": "^5.1.1",
-    "csv-parse": "latest",
+    "csv": "^5.3.0",
+    "csv-parse": "^4.8.2",
     "sync-request": "^6.1.0",
     "winston": "^3.2.1",
-    "csv-stringify": "latest"
+    "csv-stringify": "^5.3.3"
+  },
+  "browserslist": [],
+  "engineStrict": true,
+  "contributors": [
+    {
+      "email": "norbertlogiewa96@gmail.com",
+      "name": "Norber Logiewa",
+      "url": "https://github.com/nl253"
+    }
+  ],
+  "directories": {
+    "doc": "docs",
+    "lib": "./"
   },
   "description": "Dataframe & Series library for statistics and tabular data manipulation (like pandas)",
   "devDependencies": {
-    "typescript": "^3.7.2",
     "eslint": "^5.15.1",
     "eslint-config-airbnb": "^17.1.0",
     "eslint-plugin-compat": "^2.7.0",
@@ -24,11 +36,11 @@
     "eslint-plugin-promise": "^4.0.1",
     "eslint-plugin-react": "^7.12.4",
     "eslint-plugin-security": "^1.4.0",
-    "jest": "^24.5.0",
-    "jsdoc": "^3.5.5"
+    "jest": "^24.9.0",
+    "jsdoc": "3.6.3"
   },
   "engines": {
-    "node": ">=10.15.3"
+    "node": ">=10.15.1"
   },
   "files": [
     "*.js",
@@ -52,13 +64,13 @@
   "main": "DataFrame.js",
   "name": "dataf",
   "private": false,
-  "readme": "https://github.com/nl253/DataFrame/blob/master/README.md",
+  "readme": "https://nl253.github.io/DataFrame/index.html",
   "repository": {
     "type": "git",
     "url": "https://github.com/nl253/DataFrame"
   },
   "scripts": {
-    "doc": "jsdoc -d ./docs -R ./README.md -r ./DataFrame.js Column.js log.js rand.js utils.js",
+    "doc": "echo -e 'PUBLISHING DOCS\\n' && rm -rf out docs && npx jsdoc -R README.md Column.js DataFrame.js opts.js presets.js && mv out docs && git add ./docs && git commit -am 'Update docs' -n && npm version patch && git push",
     "loc": "tokei -- $(git ls-files | grep -E '\\.js$' | grep -v docs | grep -v bin)",
     "test": "jest"
   },
