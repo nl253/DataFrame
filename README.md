@@ -8,7 +8,7 @@
 - reads CSV (only for now)
 - work in progress
 
-See [JSDoc](http://usejsdoc.org/)-generated API docs see [gh-pages](https://nl253.github.io/DataFrame/DataFrame.html).
+See [JSDoc](http://usejsdoc.org/)-generated API docs see [docs](https://nl253.github.io/DataFrame/).
 
 For more human-friendly docs keep reading.
 
