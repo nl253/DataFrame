@@ -1732,7 +1732,7 @@ const bag = (xs, vocab = null) => {
  * @returns {!ColNum|!ColStr} column
  */
 const from = (xs, toDtype = null, doClone = true) => {
-  if (toDtype === xs.dtype) {
+  if (toDtype === xs.dtype || (toDtype === null && xs.dtype !== undefined && xs.dtype !== 's')) {
     // preserve semantics of Array.from, which clones
     if (doClone) {
       log.debug(`dtype matches hint, cloning ${xs.toString()}`);
@@ -1760,7 +1760,7 @@ const from = (xs, toDtype = null, doClone = true) => {
     return ys;
   }
 
-  if (!xs.some(x => !isNumber(x))) {
+  if (!xs.some(x => !isNumber(x) && !Object.is(NaN, x))) {
     log.debug(`got array of numbers, creating ColNum`);
     const ys = empty(xs.length, toDtype);
     for (let i = 0; i < xs.length; i++) {
@@ -1835,7 +1835,7 @@ const empty = (len = 0, dtype = null) => {
     case 'i32': return ColI32(len);
     case 'i16': return ColI16(len);
     case 'i8': return ColI8(len);
-    default: throw new Error(`unrecognised dtype ${dtype}`);
+    default: throw new Error(`unrecognised dtype "${dtype}"`);
   }
 };
 

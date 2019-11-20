@@ -231,9 +231,9 @@ Signature: `iris.filter(rowTestFunc)`. <br>
 Signature: `iris.filter(valTestFunc, colId)`.<br>
 
 ```javascript
+iris.where('Iris-setosa', -1)
+// OR
 iris.filter(species => species === 'Iris-setosa', -1)
-// OR (expensive) 
-iris.filter(row => row[row.length - 1] === 'Iris-setosa')
 ```
 
 ### Accessing Values (preferred way)

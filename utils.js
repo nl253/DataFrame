@@ -113,7 +113,7 @@ const transpose = (xs) => {
  * @returns {!Boolean}
  */
 const checkType = (o, type) => {
-  if (!o || !o.constructor || !o.constructor.name) {
+  if (o === null || o === undefined || o.constructor === undefined || o.constructor === null || o.constructor.name === undefined || o.constructor.name === null) {
     return false;
   }
   return o.constructor.name[0] === type[0];
@@ -124,6 +124,12 @@ const checkType = (o, type) => {
  * @returns {!Boolean}
  */
 const isString = o => checkType(o, 'String');
+
+/**
+ * @param {*} o
+ * @returns {!Boolean}
+ */
+const isRegExp = o => checkType(o, 'RegExp');
 
 /**
  * @param {*} o
@@ -214,6 +220,7 @@ module.exports = Object.freeze({
   isObject,
   isSameType,
   isString,
+  isRegExp,
   isURL,
   transpose,
   walkFiles,
