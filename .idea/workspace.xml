@@ -2,12 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="242eafcb-65a6-4f52-8da8-5ea8e0f6ce15" name="Default Changelist" comment="Refactor conversions in the constructor">
-      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/mx.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/mx.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Column.js" beforeDir="false" afterPath="$PROJECT_DIR$/Column.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/DataFrame.js" beforeDir="false" afterPath="$PROJECT_DIR$/DataFrame.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/log.js" beforeDir="false" afterPath="$PROJECT_DIR$/log.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/opts.js" beforeDir="false" afterPath="$PROJECT_DIR$/opts.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/presets.js" beforeDir="false" afterPath="$PROJECT_DIR$/presets.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/utils.js" beforeDir="false" afterPath="$PROJECT_DIR$/utils.js" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -197,14 +194,12 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/DataFrame.js</url>
-          <line>276</line>
-          <properties lambdaOrdinal="-1" />
+          <line>261</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/DataFrame.js</url>
-          <line>248</line>
-          <properties lambdaOrdinal="-1" />
+          <line>233</line>
           <option name="timeStamp" value="2" />
         </line-breakpoint>
       </breakpoints>

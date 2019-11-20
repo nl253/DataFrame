@@ -1,5 +1,8 @@
 const util = require('util');
+const url = require('url');
 
+const { statSync, readdirSync } = require('fs');
+const { join, resolve } = require('path');
 const isNumRegex = /^(\d+\.?\d*|\d*\.\d+)(e-?\d+)?$/i;
 const dtypeRegex = /\s*([a-z]+)(8|16|32|64)\s*/i;
 
@@ -162,7 +165,13 @@ const isMap = o => util.types.isMap(o);
  * @param {*} o
  * @returns {!Boolean}
  */
-const isURL = o => isString(o) && o.startsWith('http');
+const isURL = o => {
+  if (isString(o) && o.slice(0, 4) === 'http') {
+    const { host } = new URL(o);
+    return host !== null;
+  }
+  return false;
+};
 
 
 /**
@@ -171,6 +180,25 @@ const isURL = o => isString(o) && o.startsWith('http');
  * @returns {!Boolean}
  */
 const isSameType = (o, o2) => o && o2 && o.constructor && o2.constructor && o2.constructor.name === o.constructor.name;
+
+/**
+ * @param {!String} root
+ * @return {IterableIterator<!String>}
+ */
+const walkFiles = function * (...root) {
+  const nodeStack = [...root.map(p => resolve(p))];
+  while (nodeStack.length !== 0) {
+    const path = nodeStack.pop();
+    const stats = statSync(path);
+    if (stats.isDirectory()) {
+      for (const f of readdirSync(path)) {
+        nodeStack.push(join(path, f));
+      }
+    } else if (stats.isFile()) {
+      yield path;
+    }
+  }
+};
 
 module.exports = Object.freeze({
   dtypeRegex,
@@ -188,4 +216,5 @@ module.exports = Object.freeze({
   isString,
   isURL,
   transpose,
+  walkFiles,
 });

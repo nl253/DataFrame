@@ -5,7 +5,7 @@
 const util = require('util');
 
 const { randInRange, randInt } = require('./rand');
-const { dtypeRegex, isNumRegex, fmtFloat } = require('./utils');
+const { dtypeRegex, isNumRegex, fmtFloat, isNumber } = require('./utils');
 const log = require('./log');
 const opts = require('./opts');
 
@@ -1735,7 +1735,7 @@ const from = (xs, toDtype = null, doClone = true) => {
   if (toDtype === xs.dtype) {
     // preserve semantics of Array.from, which clones
     if (doClone) {
-      log.debug('dtype matches hint, cloning Col');
+      log.debug(`dtype matches hint, cloning ${xs.toString()}`);
       return xs.clone();
     } else {
       log.debug('dtype matches hint, returning as is');
@@ -1753,22 +1753,22 @@ const from = (xs, toDtype = null, doClone = true) => {
 
   // return empty arrays
   if (xs.length === 0) {
-    log.debug(`empty input, returning empty Column`);
+    log.debug(`empty input, returning empty col ${xs.toString()}`);
     const ys = xs.constructor();
     enh(ys);
     enhStrArr(ys);
     return ys;
   }
 
-  const isNum = !xs.some(x => x.constructor.name[0] !== 'N');
-  // const isStr = !isNum;
-
-  if (isNum) {
-    log.debug(`creating numeric Column`);
-    return empty(xs.length, toDtype).map((_, idx) => xs[idx]);
+  if (!xs.some(x => !isNumber(x))) {
+    log.debug(`got array of numbers, creating ColNum`);
+    const ys = empty(xs.length, toDtype);
+    for (let i = 0; i < xs.length; i++) {
+      ys[i] = xs[i];
+    }
+    return ys;
   }
 
-  // else if (isStr)
   if (toDtype === 's') {
     log.debug('using s dtype hint to not try to parse values (saving time)');
     enh(xs);
@@ -1780,19 +1780,29 @@ const from = (xs, toDtype = null, doClone = true) => {
    * save some computation time by checking
    * if there is at least one num-like string
    */
-  if (xs.some(x => x.match(isNumRegex))) {
-    // tHEN try parsing all
-    const tryParse = empty(xs.length, toDtype).map((_, idx) => parseFloat(xs[idx]));
+  if (xs.some(x => x.search !== undefined && x.search(isNumRegex) >= 0)) {
+    // THEN try parsing all
+    // const tryParse = empty(xs.length, toDtype);
+    let okCount = 0;
+    for (let idx = 0; idx < xs.length; idx++) {
+      if (xs[idx].search !== undefined && xs[idx].search(isNumRegex) >= 0) {
+        okCount++;
+      }
+    }
 
-    // bad parsing results in NaN
-    const okRatio = tryParse.filter(x => !Object.is(NaN, x)).length / xs.length;
+    const okRatio = okCount / xs.length;
 
     // make sure most is OK
     if (okRatio >= opts.PARSE_NUM_RATIO) {
-      log.debug(`OK, parsed string array to ${tryParse.dtype} Column`);
+      log.debug(`OK ${okRatio.toFixed(2)} of strings in the array are num-like ${okRatio < 0.95 ? `(loss of ${(1 - okRatio).toFixed(2)} data)` : ''}`);
+      const tryParse = empty(xs.length, toDtype);
+      for (let idx = 0; idx < xs.length; idx++) {
+        tryParse[idx] = parseFloat(xs[idx]);
+      }
+      log.debug(`OK parsed string array to ${tryParse.dtype} Column`);
       return tryParse;
     } else {
-      log.debug(`correctness = ${okRatio}`);
+      log.debug(`FAILED to convert to ColNum, num-like rows = ${okRatio.toFixed(2)}`);
     }
   }
 
