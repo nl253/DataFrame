@@ -380,7 +380,7 @@ class DataFrame {
   /**
    * Construct a DataFrame from columns.
    *
-   * @param {...(!Array<!String>)|...(!Array<!Number>)|...!TypedArray|...!ColumnNum|...!ColumnStr} cols
+   * @param {...ArrayLike<*>} cols
    * @returns {!DataFrame}
    */
   static of(...cols) { return new DataFrame(cols, 'cols'); }
@@ -561,7 +561,7 @@ class DataFrame {
   }
 
   /**
-   * @param {...<!Number|!String|!RegExp|!function(!String|!Number):!Boolean>} params
+   * @param {...(!Number|!String|!RegExp|!function((!String|!Number)):!Boolean)} params
    * @return {!DataFrame} data frame
    */
   select(...params) {
@@ -645,7 +645,7 @@ class DataFrame {
 
   /**
    * @param {!Function|!String} [f]
-   * @param {*...} args
+   * @param {...*} args
    * @returns {!DataFrame} data frame
    */
   agg(f = xs => xs.length, ...args) {
@@ -919,7 +919,7 @@ class DataFrame {
   }
 
   /**
-   * @param {...<!Number|!String|!RegExp|!function(!String|!Number):!Boolean>} params
+   * @param {...(!Number|!String|!RegExp|!function((!String|!Number)):!Boolean)} params
    * @returns {!DataFrame} data frame
    */
   drop(...params) {

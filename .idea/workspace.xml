@@ -3,7 +3,16 @@
   <component name="ChangeListManager">
     <list default="true" id="242eafcb-65a6-4f52-8da8-5ea8e0f6ce15" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Column.js" beforeDir="false" afterPath="$PROJECT_DIR$/Column.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/DataFrame.js" beforeDir="false" afterPath="$PROJECT_DIR$/DataFrame.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/DataFrame.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/DataFrame.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/DataFrame.js.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/DataFrame.js.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/global.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/global.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/rand.js.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/rand.js.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/scripts/linenumber.js" beforeDir="false" afterPath="$PROJECT_DIR$/docs/scripts/linenumber.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/styles/jsdoc-default.css" beforeDir="false" afterPath="$PROJECT_DIR$/docs/styles/jsdoc-default.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />

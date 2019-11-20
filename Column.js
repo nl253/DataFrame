@@ -32,7 +32,7 @@ const opts = require('./opts');
  * @property {!function(!function(any): Boolean): Col} filter
  * @property {!Function} print
  * @property {!Function} ps
- * @property {!function(!DType|null): Col} clone
+ * @property {!function((!DType|null)): Col} clone
  * @property {!Function} reduce
  * @property {!Function} subarray
  * @property {!Function} removeAll
@@ -80,7 +80,7 @@ const opts = require('./opts');
  * @property {!Function} cube
  * @property {!Function} disDiff
  * @property {!Function} dist
- * @property {!function(!DType|null): ColNum} convert
+ * @property {!function((!DType|null)): ColNum} convert
  * @property {!Function} div
  * @property {!Function} dot
  * @property {!Function} downcast

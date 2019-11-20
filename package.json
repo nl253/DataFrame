@@ -58,7 +58,7 @@
     "url": "https://github.com/nl253/DataFrame"
   },
   "scripts": {
-    "doc": "jsdoc -d ./docs -R ./README.md -r ./DataFrame.js Series.js rand.js utils.js",
+    "doc": "jsdoc -d ./docs -R ./README.md -r ./DataFrame.js Column.js log.js rand.js utils.js",
     "loc": "tokei -- $(git ls-files | grep -E '\\.js$' | grep -v docs | grep -v bin)",
     "test": "jest"
   },

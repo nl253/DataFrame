@@ -94,6 +94,156 @@
     
 
     
+        <h3 class="subsection-title">Members</h3>
+
+        
+            
+<h4 class="name" id="log"><span class="type-signature">(constant) </span>log<span class="type-signature"> :winston.Logger</span></h4>
+
+
+
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">winston.Logger</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="log.js.html">log.js</a>, <a href="log.js.html#line14">line 14</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id="util"><span class="type-signature">(constant) </span>util<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    TODO loading (g)zipped csv
+TODO concat is broken
+TODO mixed types of colNames don't work
+TODO finish typing Column.js & DataFrame.js
+TODO string col hashing
+TODO edit photos, link to in README
+TODO document cum ops
+TODO replace is broken
+TODO binarizer
+TODO document imports
+TODO document matrix ops
+TODO document add, mul, div, sub
+TODO document opts, printing presets
+TODO document dataset lookup
+TODO re-think the dataset lookup API
+TODO document examples of matrix ops, aggs, functs
+TODO calculate the *base* size of each column (pointers are 8B)
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line21">line 21</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+    
 
     
         <h3 class="subsection-title">Methods</h3>
@@ -104,7 +254,7 @@
     
 
     
-    <h4 class="name" id="bag"><span class="type-signature"></span>bag<span class="signature">(xs<span class="signature-attributes">non-null</span>, vocab<span class="signature-attributes">opt, nullable</span>)</span><span class="type-signature"> &rarr; {Map.&lt;Number>}</span></h4>
+    <h4 class="name" id="checkType"><span class="type-signature"></span>checkType<span class="signature">(o, type<span class="signature-attributes">non-null</span>)</span><span class="type-signature"> &rarr; (non-null) {Boolean}</span></h4>
     
 
     
@@ -132,11 +282,7 @@
         <th>Type</th>
 
         
-        <th>Attributes</th>
-        
 
-        
-        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -148,32 +294,20 @@
 
         <tr>
             
-                <td class="name"><code>xs</code></td>
+                <td class="name"><code>o</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Iterable.&lt;*></span>
+<span class="param-type">*</span>
 
 
             
             </td>
 
             
-                <td class="attributes">
-                
 
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
             
 
             <td class="description last"></td>
@@ -183,38 +317,20 @@
 
         <tr>
             
-                <td class="name"><code>vocab</code></td>
+                <td class="name"><code>type</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Iterable.&lt;*></span>
+<span class="param-type">String</span>
 
 
             
             </td>
 
             
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
 
-                
-                    &lt;nullable><br>
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    null
-                
-                </td>
             
 
             <td class="description last"></td>
@@ -258,7 +374,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Series.js.html">Series.js</a>, <a href="Series.js.html#line1109">line 1109</a>
+        <a href="utils.js.html">utils.js</a>, <a href="utils.js.html#line115">line 115</a>
     </li></ul></dd>
     
 
@@ -281,13 +397,11 @@
 
 
 
+
+
 <h5>Returns:</h5>
 
         
-<div class="param-desc">
-    multiset
-</div>
-
 
 
 <dl>
@@ -296,7 +410,7 @@
     </dt>
     <dd>
         
-<span class="param-type">Map.&lt;Number></span>
+<span class="param-type">Boolean</span>
 
 
     </dd>
@@ -314,7 +428,7 @@
     
 
     
-    <h4 class="name" id="empty"><span class="type-signature"></span>empty<span class="signature">(len<span class="signature-attributes">opt, non-null</span>, dtype)</span><span class="type-signature"> &rarr; {TypedArray|!Array.&lt;*>}</span></h4>
+    <h4 class="name" id="isBoolean"><span class="type-signature"></span>isBoolean<span class="signature">(o)</span><span class="type-signature"> &rarr; (non-null) {Boolean}</span></h4>
     
 
     
@@ -342,11 +456,7 @@
         <th>Type</th>
 
         
-        <th>Attributes</th>
-        
 
-        
-        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -358,106 +468,20 @@
 
         <tr>
             
-                <td class="name"><code>len</code></td>
+                <td class="name"><code>o</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">*</span>
 
 
             
             </td>
 
             
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
 
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    0
-                
-                </td>
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>dtype</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">"u64"</span>
-|
-
-<span class="param-type">"u32"</span>
-|
-
-<span class="param-type">"u16"</span>
-|
-
-<span class="param-type">"u8"</span>
-|
-
-<span class="param-type">"i64"</span>
-|
-
-<span class="param-type">"i32"</span>
-|
-
-<span class="param-type">"i16"</span>
-|
-
-<span class="param-type">"i8"</span>
-|
-
-<span class="param-type">"f64"</span>
-|
-
-<span class="param-type">"f32"</span>
-|
-
-<span class="param-type">null</span>
-|
-
-<span class="param-type">"s"</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    null
-                
-                </td>
             
 
             <td class="description last"></td>
@@ -501,7 +525,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Series.js.html">Series.js</a>, <a href="Series.js.html#line1160">line 1160</a>
+        <a href="utils.js.html">utils.js</a>, <a href="utils.js.html#line144">line 144</a>
     </li></ul></dd>
     
 
@@ -524,13 +548,11 @@
 
 
 
+
+
 <h5>Returns:</h5>
 
         
-<div class="param-desc">
-    empty array
-</div>
-
 
 
 <dl>
@@ -539,10 +561,7 @@
     </dt>
     <dd>
         
-<span class="param-type">TypedArray</span>
-|
-
-<span class="param-type">!Array.&lt;*></span>
+<span class="param-type">Boolean</span>
 
 
     </dd>
@@ -560,7 +579,7 @@
     
 
     
-    <h4 class="name" id="fill"><span class="type-signature"></span>fill<span class="signature">(len<span class="signature-attributes">non-null</span>, val<span class="signature-attributes">non-null</span>, dtype)</span><span class="type-signature"> &rarr; (non-null) {TypedArray}</span></h4>
+    <h4 class="name" id="isFunction"><span class="type-signature"></span>isFunction<span class="signature">(o)</span><span class="type-signature"> &rarr; (non-null) {Boolean}</span></h4>
     
 
     
@@ -590,8 +609,6 @@
         
 
         
-        <th>Default</th>
-        
 
         <th class="last">Description</th>
     </tr>
@@ -602,13 +619,13 @@
 
         <tr>
             
-                <td class="name"><code>len</code></td>
+                <td class="name"><code>o</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">*</span>
 
 
             
@@ -616,90 +633,6 @@
 
             
 
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>val</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Number</span>
-
-
-            
-            </td>
-
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>dtype</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">"f32"</span>
-|
-
-<span class="param-type">"f64"</span>
-|
-
-<span class="param-type">"i8"</span>
-|
-
-<span class="param-type">"16"</span>
-|
-
-<span class="param-type">"i32"</span>
-|
-
-<span class="param-type">"u8"</span>
-|
-
-<span class="param-type">"u16"</span>
-|
-
-<span class="param-type">"u32"</span>
-|
-
-<span class="param-type">null</span>
-
-
-            
-            </td>
-
-            
-
-            
-                <td class="default">
-                
-                    null
-                
-                </td>
             
 
             <td class="description last"></td>
@@ -743,7 +676,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Series.js.html">Series.js</a>, <a href="Series.js.html#line1197">line 1197</a>
+        <a href="utils.js.html">utils.js</a>, <a href="utils.js.html#line156">line 156</a>
     </li></ul></dd>
     
 
@@ -766,13 +699,11 @@
 
 
 
+
+
 <h5>Returns:</h5>
 
         
-<div class="param-desc">
-    array filled with value
-</div>
-
 
 
 <dl>
@@ -781,7 +712,7 @@
     </dt>
     <dd>
         
-<span class="param-type">TypedArray</span>
+<span class="param-type">Boolean</span>
 
 
     </dd>
@@ -799,7 +730,7 @@
     
 
     
-    <h4 class="name" id="from"><span class="type-signature"></span>from<span class="signature">(xs)</span><span class="type-signature"> &rarr; {TypedArray|!Array.&lt;*>}</span></h4>
+    <h4 class="name" id="isGenerator"><span class="type-signature"></span>isGenerator<span class="signature">(o)</span><span class="type-signature"> &rarr; (non-null) {Boolean}</span></h4>
     
 
     
@@ -839,16 +770,13 @@
 
         <tr>
             
-                <td class="name"><code>xs</code></td>
+                <td class="name"><code>o</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">!Array.&lt;*></span>
-|
-
-<span class="param-type">TypedArray</span>
+<span class="param-type">*</span>
 
 
             
@@ -899,7 +827,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Series.js.html">Series.js</a>, <a href="Series.js.html#line1125">line 1125</a>
+        <a href="utils.js.html">utils.js</a>, <a href="utils.js.html#line162">line 162</a>
     </li></ul></dd>
     
 
@@ -922,13 +850,11 @@
 
 
 
+
+
 <h5>Returns:</h5>
 
         
-<div class="param-desc">
-    series
-</div>
-
 
 
 <dl>
@@ -937,10 +863,7 @@
     </dt>
     <dd>
         
-<span class="param-type">TypedArray</span>
-|
-
-<span class="param-type">!Array.&lt;*></span>
+<span class="param-type">Boolean</span>
 
 
     </dd>
@@ -958,7 +881,7 @@
     
 
     
-    <h4 class="name" id="of"><span class="type-signature"></span>of<span class="signature">(&hellip;xs)</span><span class="type-signature"> &rarr; {!Array.&lt;*>|TypedArray}</span></h4>
+    <h4 class="name" id="isMap"><span class="type-signature"></span>isMap<span class="signature">(o)</span><span class="type-signature"> &rarr; (non-null) {Boolean}</span></h4>
     
 
     
@@ -986,8 +909,6 @@
         <th>Type</th>
 
         
-        <th>Attributes</th>
-        
 
         
 
@@ -1000,23 +921,18 @@
 
         <tr>
             
-                <td class="name"><code>xs</code></td>
+                <td class="name"><code>o</code></td>
             
 
             <td class="type">
             
-            </td>
+                
+<span class="param-type">*</span>
+
 
             
-                <td class="attributes">
-                
+            </td>
 
-                
-
-                
-                    &lt;repeatable><br>
-                
-                </td>
             
 
             
@@ -1062,7 +978,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Series.js.html">Series.js</a>, <a href="Series.js.html#line1223">line 1223</a>
+        <a href="utils.js.html">utils.js</a>, <a href="utils.js.html#line168">line 168</a>
     </li></ul></dd>
     
 
@@ -1085,13 +1001,11 @@
 
 
 
+
+
 <h5>Returns:</h5>
 
         
-<div class="param-desc">
-    array
-</div>
-
 
 
 <dl>
@@ -1100,10 +1014,7 @@
     </dt>
     <dd>
         
-<span class="param-type">!Array.&lt;*></span>
-|
-
-<span class="param-type">TypedArray</span>
+<span class="param-type">Boolean</span>
 
 
     </dd>
@@ -1121,7 +1032,7 @@
     
 
     
-    <h4 class="name" id="ones"><span class="type-signature"></span>ones<span class="signature">(len<span class="signature-attributes">non-null</span>, dtype)</span><span class="type-signature"> &rarr; (non-null) {TypedArray}</span></h4>
+    <h4 class="name" id="isNumber"><span class="type-signature"></span>isNumber<span class="signature">(o)</span><span class="type-signature"> &rarr; (non-null) {Boolean}</span></h4>
     
 
     
@@ -1151,8 +1062,6 @@
         
 
         
-        <th>Default</th>
-        
 
         <th class="last">Description</th>
     </tr>
@@ -1163,13 +1072,13 @@
 
         <tr>
             
-                <td class="name"><code>len</code></td>
+                <td class="name"><code>o</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">*</span>
 
 
             
@@ -1177,63 +1086,6 @@
 
             
 
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>dtype</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">"f32"</span>
-|
-
-<span class="param-type">"f64"</span>
-|
-
-<span class="param-type">"i8"</span>
-|
-
-<span class="param-type">"16"</span>
-|
-
-<span class="param-type">"i32"</span>
-|
-
-<span class="param-type">"u8"</span>
-|
-
-<span class="param-type">"u16"</span>
-|
-
-<span class="param-type">"u32"</span>
-|
-
-<span class="param-type">null</span>
-
-
-            
-            </td>
-
-            
-
-            
-                <td class="default">
-                
-                    null
-                
-                </td>
             
 
             <td class="description last"></td>
@@ -1277,7 +1129,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Series.js.html">Series.js</a>, <a href="Series.js.html#line1206">line 1206</a>
+        <a href="utils.js.html">utils.js</a>, <a href="utils.js.html#line138">line 138</a>
     </li></ul></dd>
     
 
@@ -1300,13 +1152,11 @@
 
 
 
+
+
 <h5>Returns:</h5>
 
         
-<div class="param-desc">
-    array of zeros
-</div>
-
 
 
 <dl>
@@ -1315,7 +1165,7 @@
     </dt>
     <dd>
         
-<span class="param-type">TypedArray</span>
+<span class="param-type">Boolean</span>
 
 
     </dd>
@@ -1333,7 +1183,7 @@
     
 
     
-    <h4 class="name" id="rand"><span class="type-signature"></span>rand<span class="signature">(n<span class="signature-attributes">non-null</span>, a<span class="signature-attributes">nullable</span>, b<span class="signature-attributes">nullable</span>, dtype)</span><span class="type-signature"> &rarr; (non-null) {TypedArray}</span></h4>
+    <h4 class="name" id="isObject"><span class="type-signature"></span>isObject<span class="signature">(o)</span><span class="type-signature"> &rarr; (non-null) {Boolean}</span></h4>
     
 
     
@@ -1361,11 +1211,7 @@
         <th>Type</th>
 
         
-        <th>Attributes</th>
-        
 
-        
-        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -1377,171 +1223,20 @@
 
         <tr>
             
-                <td class="name"><code>n</code></td>
+                <td class="name"><code>o</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">*</span>
 
 
             
             </td>
 
             
-                <td class="attributes">
-                
 
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>a</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Number</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-                    &lt;nullable><br>
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    null
-                
-                </td>
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>b</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Number</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-                    &lt;nullable><br>
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    null
-                
-                </td>
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>dtype</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">"f32"</span>
-|
-
-<span class="param-type">"f64"</span>
-|
-
-<span class="param-type">"i8"</span>
-|
-
-<span class="param-type">"16"</span>
-|
-
-<span class="param-type">"i32"</span>
-|
-
-<span class="param-type">"u8"</span>
-|
-
-<span class="param-type">"u16"</span>
-|
-
-<span class="param-type">"u32"</span>
-|
-
-<span class="param-type">null</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    null
-                
-                </td>
             
 
             <td class="description last"></td>
@@ -1585,7 +1280,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Series.js.html">Series.js</a>, <a href="Series.js.html#line1179">line 1179</a>
+        <a href="utils.js.html">utils.js</a>, <a href="utils.js.html#line150">line 150</a>
     </li></ul></dd>
     
 
@@ -1608,13 +1303,11 @@
 
 
 
+
+
 <h5>Returns:</h5>
 
         
-<div class="param-desc">
-    rand array
-</div>
-
 
 
 <dl>
@@ -1623,7 +1316,634 @@
     </dt>
     <dd>
         
-<span class="param-type">TypedArray</span>
+<span class="param-type">Boolean</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="isRegExp"><span class="type-signature"></span>isRegExp<span class="signature">(o)</span><span class="type-signature"> &rarr; (non-null) {Boolean}</span></h4>
+    
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>o</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="utils.js.html">utils.js</a>, <a href="utils.js.html#line132">line 132</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Boolean</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="isSameType"><span class="type-signature"></span>isSameType<span class="signature">(o, o2)</span><span class="type-signature"> &rarr; (non-null) {Boolean}</span></h4>
+    
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>o</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>o2</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="utils.js.html">utils.js</a>, <a href="utils.js.html#line188">line 188</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Boolean</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="isString"><span class="type-signature"></span>isString<span class="signature">(o)</span><span class="type-signature"> &rarr; (non-null) {Boolean}</span></h4>
+    
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>o</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="utils.js.html">utils.js</a>, <a href="utils.js.html#line126">line 126</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Boolean</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="isURL"><span class="type-signature"></span>isURL<span class="signature">(o)</span><span class="type-signature"> &rarr; (non-null) {Boolean}</span></h4>
+    
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>o</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="utils.js.html">utils.js</a>, <a href="utils.js.html#line174">line 174</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Boolean</span>
 
 
     </dd>
@@ -1805,6 +2125,8 @@
 
     
 </dl>
+
+
 
 
 
@@ -2014,6 +2336,8 @@
 
 
 
+
+
 <h5>Returns:</h5>
 
         
@@ -2047,7 +2371,7 @@
     
 
     
-    <h4 class="name" id="range"><span class="type-signature"></span>range<span class="signature">(a<span class="signature-attributes">opt, non-null</span>, b<span class="signature-attributes">opt, non-null</span>, step<span class="signature-attributes">opt, non-null</span>)</span><span class="type-signature"> &rarr; (non-null) {TypedArray.&lt;Number>}</span></h4>
+    <h4 class="name" id="walkFiles"><span class="type-signature">(generator) </span>walkFiles<span class="signature">(&hellip;root<span class="signature-attributes">non-null</span>)</span><span class="type-signature"> &rarr; {IterableIterator.&lt;!String>}</span></h4>
     
 
     
@@ -2079,8 +2403,6 @@
         
 
         
-        <th>Default</th>
-        
 
         <th class="last">Description</th>
     </tr>
@@ -2091,485 +2413,7 @@
 
         <tr>
             
-                <td class="name"><code>a</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Number</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    0
-                
-                </td>
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>b</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Number</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    null
-                
-                </td>
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>step</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Number</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    1
-                
-                </td>
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Series.js.html">Series.js</a>, <a href="Series.js.html#line1093">line 1093</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    range
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">TypedArray.&lt;Number></span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id="rangeIter"><span class="type-signature">(generator) </span>rangeIter<span class="signature">(a<span class="signature-attributes">opt, non-null</span>, b<span class="signature-attributes">opt, nullable</span>, step<span class="signature-attributes">opt, non-null</span>)</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Attributes</th>
-        
-
-        
-        <th>Default</th>
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>a</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Number</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    0
-                
-                </td>
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>b</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Number</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-                    &lt;nullable><br>
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    null
-                
-                </td>
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>step</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Number</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    1
-                
-                </td>
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Series.js.html">Series.js</a>, <a href="Series.js.html#line1079">line 1079</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id="set"><span class="type-signature"></span>set<span class="signature">(k<span class="signature-attributes">non-null</span>, v)</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>k</code></td>
+                <td class="name"><code>root</code></td>
             
 
             <td class="type">
@@ -2582,28 +2426,15 @@
             </td>
 
             
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>v</code></td>
-            
-
-            <td class="type">
-            
+                <td class="attributes">
                 
-<span class="param-type">*</span>
 
+                
 
-            
-            </td>
-
+                
+                    &lt;repeatable><br>
+                
+                </td>
             
 
             
@@ -2649,7 +2480,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Series.js.html">Series.js</a>, <a href="Series.js.html#line1231">line 1231</a>
+        <a href="utils.js.html">utils.js</a>, <a href="utils.js.html#line194">line 194</a>
     </li></ul></dd>
     
 
@@ -2661,194 +2492,6 @@
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id="zeros"><span class="type-signature"></span>zeros<span class="signature">(len<span class="signature-attributes">non-null</span>, dtype)</span><span class="type-signature"> &rarr; (non-null) {TypedArray}</span></h4>
-    
-
-    
-
-
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-        <th>Default</th>
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>len</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Number</span>
-
-
-            
-            </td>
-
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>dtype</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">"f32"</span>
-|
-
-<span class="param-type">"f64"</span>
-|
-
-<span class="param-type">"i8"</span>
-|
-
-<span class="param-type">"16"</span>
-|
-
-<span class="param-type">"i32"</span>
-|
-
-<span class="param-type">"u8"</span>
-|
-
-<span class="param-type">"u16"</span>
-|
-
-<span class="param-type">"u32"</span>
-|
-
-<span class="param-type">null</span>
-
-
-            
-            </td>
-
-            
-
-            
-                <td class="default">
-                
-                    null
-                
-                </td>
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Series.js.html">Series.js</a>, <a href="Series.js.html#line1215">line 1215</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
 
 
 
@@ -2865,10 +2508,6 @@
 <h5>Returns:</h5>
 
         
-<div class="param-desc">
-    array of zeros
-</div>
-
 
 
 <dl>
@@ -2877,7 +2516,7 @@
     </dt>
     <dd>
         
-<span class="param-type">TypedArray</span>
+<span class="param-type">IterableIterator.&lt;!String></span>
 
 
     </dd>
@@ -2905,13 +2544,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="DataFrame.html">DataFrame</a></li></ul><h3>Global</h3><ul><li><a href="global.html#bag">bag</a></li><li><a href="global.html#empty">empty</a></li><li><a href="global.html#fill">fill</a></li><li><a href="global.html#from">from</a></li><li><a href="global.html#of">of</a></li><li><a href="global.html#ones">ones</a></li><li><a href="global.html#rand">rand</a></li><li><a href="global.html#randInRange">randInRange</a></li><li><a href="global.html#randInt">randInt</a></li><li><a href="global.html#range">range</a></li><li><a href="global.html#rangeIter">rangeIter</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#zeros">zeros</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Column.html">Column</a></li></ul><h3>Classes</h3><ul><li><a href="DataFrame.html">DataFrame</a></li></ul><h3>Global</h3><ul><li><a href="global.html#checkType">checkType</a></li><li><a href="global.html#isBoolean">isBoolean</a></li><li><a href="global.html#isFunction">isFunction</a></li><li><a href="global.html#isGenerator">isGenerator</a></li><li><a href="global.html#isMap">isMap</a></li><li><a href="global.html#isNumber">isNumber</a></li><li><a href="global.html#isObject">isObject</a></li><li><a href="global.html#isRegExp">isRegExp</a></li><li><a href="global.html#isSameType">isSameType</a></li><li><a href="global.html#isString">isString</a></li><li><a href="global.html#isURL">isURL</a></li><li><a href="global.html#log">log</a></li><li><a href="global.html#randInRange">randInRange</a></li><li><a href="global.html#randInt">randInt</a></li><li><a href="global.html#util">util</a></li><li><a href="global.html#walkFiles">walkFiles</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Apr 03 2019 17:10:13 GMT+0100 (British Summer Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Wed Nov 20 2019 15:04:37 GMT+0000 (Greenwich Mean Time)
 </footer>
 
 <script> prettyPrint(); </script>
