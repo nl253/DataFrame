@@ -451,7 +451,7 @@ const COL_STR_PROTO = {
    * @returns {!ColStr}
    */
   clone() {
-    const xs = Array.from(this);
+    const xs = [...this];
     enh(xs);
     enhStrArr(xs);
     return xs;
@@ -1503,8 +1503,8 @@ const COL_NUM_PROTO = {
    * @param {!Number} [delta]
    * @returns {!ColNum}
    */
-  replace(v, y, delta = 0.001) {
-    return this.map((x, idx) => Math.abs(x - v) <= delta ? y : x);
+  replace(v, y, delta = 0.00001) {
+    return this.map(x => Math.abs(x - v) <= delta ? y : x);
   },
 
   // functional programming

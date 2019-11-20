@@ -374,7 +374,7 @@ class DataFrame {
     // Object.freeze(this.colNames);
 
     // don't assign / drop / push to this.cols (use df.drop, df.select or df.sliceCols)
-    Object.freeze(this.cols);
+    // Object.freeze(this.cols);
   }
 
   /**
@@ -589,7 +589,7 @@ class DataFrame {
   }
 
   /**
-   * @param {...!String|...!Number|Array<!Number|!String>} params pairs of colId, newName
+   * @param {(...!String)|(...!Number)} params pairs of colId, newName
    * @returns {!DataFrame} data frame with renamed col
    */
   rename(...params) {
@@ -669,6 +669,34 @@ class DataFrame {
   }
 
   /**
+   * @param {!String|!function((!Column, !Column, !Number)): !Column} f
+   * @param {!DataFrame|null} [other]
+   * @return {!DataFrame} data frame
+   */
+  connect(f, other = null) {
+    if (other === null) {
+      return this.connect(f, this);
+    }
+    if (isString(f)) {
+      return this.connect((xs, ys, idx) => xs[f](ys, idx), other);
+    }
+    const cols = Array(this.cols.length).fill(null);
+    const colNames = Array(this.cols.length).fill(null);
+    for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
+      cols[cIdx] = f(this.cols[cIdx], other.cols[cIdx], cIdx);
+      if (!isNumber(this.colNames[cIdx])) {
+        colNames[cIdx] = this.colNames[cIdx];
+      } else if (!isNumber(other.colNames[cIdx])) {
+        colNames[cIdx] = other.colNames[cIdx];
+      } else {
+        colNames[cIdx] = null;
+      }
+    }
+    return new DataFrame(cols, 'cols', colNames);
+  }
+
+
+  /**
    * @param {!function(Col, Col): *|!String} f
    * @param {?Boolean} [withNames]
    * @param {?Boolean} [isCommutative]
@@ -735,12 +763,8 @@ class DataFrame {
     const colNames = this.colNames.filter((_, cIdx) => colIdxs.indexOf(cIdx) >= 0);
 
     const df = new DataFrame(rows, 'rows', colNames);
-    if (withNames) {
-      return df.prependCol(Column.of(...this.colNames), 'column');
-    }
-    return df;
+    return withNames ? df.prependCol(this.colNames.clone(), 'column') : df;
   }
-
 
   /**
    * @param {!Array<!String>|!Array<!Number>|TypedArray} col
@@ -748,19 +772,18 @@ class DataFrame {
    * @returns {!DataFrame} data frame
    */
   appendCol(col, name = null, dtype = null) {
-    const colNames = [...this.colNames];
     const cols = [...this.cols];
+    const colNames = [...this.colNames];
+    const dtypes = [...this.dtypes];
     cols.push(col);
-    if (name === null) {
-      colNames.push(colNames.length);
-    } else {
-      colNames.push(name);
-    }
-    if (dtype !== null) {
-      return new DataFrame(cols, 'cols', colNames, dtype);
-    } else {
-      return new DataFrame(cols, 'cols', colNames);
-    }
+    colNames.push(name === null ? colNames.length : name);
+    dtypes.push(dtype === null ? null : dtype);
+    return new DataFrame(
+      cols,
+      'cols',
+      colNames,
+      dtypes,
+    );
   }
 
   /**
@@ -768,16 +791,19 @@ class DataFrame {
    * @param {?String} [name]
    * @returns {!DataFrame} data frame
    */
-  prependCol(col, name = null) {
-    const colNames = [...this.colNames];
+  prependCol(col, name = null, dtype = null) {
     const cols = [...this.cols];
+    const colNames = [...this.colNames];
+    const dtypes = [...this.dtypes];
     cols.unshift(col);
-    if (name === null) {
-      colNames.unshift(colNames.length);
-    } else {
-      colNames.unshift(name);
-    }
-    return new DataFrame(cols, 'cols', colNames);
+    colNames.unshift(name === null ? colNames.length : name);
+    dtypes.unshift(dtype === null ? null : dtype);
+    return new DataFrame(
+      cols,
+      'cols',
+      colNames,
+      dtypes,
+    );
   }
 
   /**
@@ -790,59 +816,49 @@ class DataFrame {
       if (axis < 0) {
         return this.concat(other, axis + 2);
       } else if (axis === 0) {
-        const cols = [...this.cols];
-        const {nCols} = this;
-        for (let c = 0; c < nCols; c++) {
-          const myCol = cols[c];
-          const otherCol = other.cols[c];
-          cols[c] = myCol.concat(otherCol);
+        return this.connect('concat', other);
+      } else if (axis === 1) {
+        // else if concat HORIZONTALLY
+        const isDigit = /^\d+$/; // check if has proper column names or just indexes
+        // if columns are indexes, shift them
+        let colNames;
+        if (other.colNames.filter(c => c.toString().search(isDigit)).length === other.colNames.length) {
+          colNames = this.colNames.concat(other.colNames.map(cIdx => this.colNames.length + cIdx));
+        } else {
+          colNames = this.colNames.concat(other.colNames);
         }
-        return new DataFrame(cols, 'cols', [...this.colNames]);
+
+        let renamed;
+
+        /*
+         * deal with duplicate col names (add a num to the -- e.g.: Age, Salary, Age2 ...)
+         * make sure that name clash didn't arise as a result of previous renaming
+         */
+        do {
+          renamed = false; // clear
+          for (let cIdx = 0; cIdx < colNames.length; cIdx++) {
+            const name = colNames[cIdx];
+            let count = 2;
+            for (let ptr = cIdx + 1; ptr < colNames.length; ptr++) {
+              const name2 = colNames[ptr];
+              if (name === name2) {
+                colNames[ptr] += count.toString();
+                renamed = true;
+                count++;
+              }
+            }
+          }
+        } while (renamed);
+        return new DataFrame(this.cols.concat(other.cols), 'cols', colNames);
       }
-      // is string
     } else if (isString(axis)) {
       if (axis.search(/^col/i) >= 0) {
         return this.concat(other, 0);
-      } else {
+      } else if (axis.search(/^row/i) >= 0) {
         return this.concat(other, 1);
       }
     }
-
-    // else if concat HORIZONTALLY {
-    const isDigit = /^\d+$/; // check if has proper column names or just indexes
-    let colNames;
-
-    // if columns are indexes, shift them
-    if (other.colNames.filter(c => c.toString().search(isDigit)).length === other.colNames.length) {
-      colNames = this.colNames.concat(other.colNames.map(cIdx => this.colNames.length + cIdx));
-    } else {
-      colNames = this.colNames.concat(other.colNames);
-    }
-
-    let renamed;
-
-    /*
-     * deal with duplicate col names (add a num to the -- e.g.: Age, Salary, Age2 ...)
-     * make sure that name clash didn't arise as a result of previous renaming {
-     */
-    do {
-      renamed = false; // clear
-      for (let cIdx = 0; cIdx < colNames.length; cIdx++) {
-        const name = colNames[cIdx];
-        let count = 2;
-        for (let ptr = cIdx + 1; ptr < colNames.length; ptr++) {
-          const name2 = colNames[ptr];
-          if (name === name2) {
-            colNames[ptr] += count.toString();
-            renamed = true;
-            count++;
-          }
-        }
-      }
-    } while (renamed);
-
-    const cols = this.cols.concat(other.cols);
-    return new DataFrame(cols, 'cols', colNames);
+    throw new Error(`${this.constructor.name}.concat() invalid axis argument ${axis}, try 0, 1, 'rows' or 'cols'`);
   }
 
   /**
@@ -1019,11 +1035,7 @@ class DataFrame {
    * @returns {!DataFrame} data frame with f applied to colId
    */
   replace(colId = null, pat, repl, ...args) {
-    if (isNumber(pat)) {
-      return this.numeric.call(colId, 'replace', repl, ...args);
-    } else {
-      return this.nominal.call(colId, 'replace', repl, ...args);
-    }
+    return this[isNumber(pat) ? 'numeric' : 'nominal'].call(colId, 'replace', pat, repl, ...args);
   }
 
   /**
@@ -1045,11 +1057,11 @@ class DataFrame {
 
     // store {Q1, Q3, idx} for every *NUMERIC* column
     const IQRs = this.colNames
-    // get column indexes
+      // get column indexes
       .map((_, idx) => idx)
-    // and now get all NUMERIC columns while leaving gaps to preserve indexing
+      // and now get all NUMERIC columns while leaving gaps to preserve indexing
       .map(idx => (numColIdxs.has(idx) ? this.cols[idx] : null))
-    // and now computer IQ1 and IQ3 for all NUMERIC columns while leaving gaps to preserve indexing
+      // and now computer IQ1 and IQ3 for all NUMERIC columns while leaving gaps to preserve indexing
       .map(maybeCol => (maybeCol === null ? null : ({ Q1: maybeCol.Q1(), Q3: maybeCol.Q3() })));
 
     // store results of testing for all rows
@@ -1229,8 +1241,8 @@ class DataFrame {
   ps(colId = null, doSort = true, sortOrd = 'des') {
     const counts = this.counts(colId, doSort, sortOrd);
     return counts.cast(-1, `f${opts.FLOAT_PREC}`)
-                 .div(-1, counts.col(-1).add())
-                 .rename(-1, 'ps');
+      .div(-1, counts.col(-1).add())
+      .rename(-1, 'ps');
   }
 
   /**
@@ -1699,8 +1711,8 @@ class DataFrame {
     const tooLong = colWidths.reduce((l1, l2) => l1 + l2 + opts.SPACE_BETWEEN, -opts.SPACE_BETWEEN) > termWidth;
 
     if (tooLong) {
-       /* remove cols in the middle
-          this ensures that there is n - 1 SPACE_BETWEEN for every n cols */
+      /* remove cols in the middle
+         this ensures that there is n - 1 SPACE_BETWEEN for every n cols */
       const nColsToShow = Math.floor((termWidth + opts.SPACE_BETWEEN) / (colWidth + opts.SPACE_BETWEEN));
 
       /* C C C LEFT C C C RIGHT C C C
@@ -1722,8 +1734,8 @@ class DataFrame {
       // display all (it fits on the screen)
       for (let rIdx = 0; rIdx < rows.length; rIdx++) {
         rows[rIdx] = rows[rIdx].map((val, cIdx) =>
-          val.padStart(colWidths[cIdx], opts.PAD_STR))
-             .join(opts.PAD_STR.repeat(opts.SPACE_BETWEEN));
+            val.padStart(colWidths[cIdx], opts.PAD_STR))
+          .join(opts.PAD_STR.repeat(opts.SPACE_BETWEEN));
       }
     }
     return rows.join('\n');
