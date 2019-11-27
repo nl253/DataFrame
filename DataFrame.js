@@ -612,7 +612,7 @@ class DataFrame {
 
   /**
    * @param {...(!Number|!String|!RegExp|!function((!String|!Number)):!Boolean)} params
-   * @return {!DataFrame} data frame
+   * @returns {!DataFrame} data frame
    */
   selectRows(...params) {
     if (params.length === 0) {
@@ -1185,14 +1185,15 @@ class DataFrame {
         throw new Error('you need to select a column (e.g. df.sort(0))');
       }
     }
-    const cIdx = this.colIdx(colId);
     if (isFunction(ord)) {
       return new DataFrame([...this.rowsIter].sort(ord), 'rows', [...this.colNames], [...this.dtypes]);
-    } else if (ord.search(/^asc/i) >= 0) {
-      return this.sort(cIdx, (r1, r2) => (r1[cIdx] > r2[cIdx] ? 1 : r1[cIdx] < r2[cIdx] ? -1 : 0));
-    } else {
-      return this.sort(cIdx, (r1, r2) => (r1[cIdx] > r2[cIdx] ? -1 : r1[cIdx] < r2[cIdx] ? 1 : 0));
     }
+    const cIdx = this.colIdx(colId);
+    return this.sort(cIdx, ord.search(/^asc/i) >= 0
+      // eslint-disable-next-line no-nested-ternary
+      ? ((r1, r2) => r1[cIdx] > r2[cIdx] ? 1 : r1[cIdx] < r2[cIdx] ? -1 : 0)
+      // eslint-disable-next-line no-nested-ternary
+      : ((r1, r2) => r1[cIdx] > r2[cIdx] ? -1 : r1[cIdx] < r2[cIdx] ? 1 : 0));
   }
 
   /**

@@ -74,7 +74,7 @@ for (const triplet of [
     [[   2 ** 8,   0], 'u16', 'u16'],
     [[  2 ** 16,   0], 'u32', 'u32'],
     [[-(2 ** 8),   0], 'i16', 'i16'],
-    [[.8],             'f64', 'f32'],
+    [[           0.8], 'f64', 'f32'],
   ]) {
   const [arr, dtype, dtype2] = triplet;
   test('correct guesses dtype [-1,2] to be i8 ', () => {
@@ -88,18 +88,16 @@ for (const triplet of [
 }
 
 for (const pair of [
-    [0, 1],
-    [-10, 10],
-  ]) {
+  [0, 1],
+  [-10, 10],
+]) {
   const [lBound, uBound] = pair;
   const arr = Column.rand(100);
   for (let i = 0; i < arr.length; i++) {
-    test(
-      `rand generated rand array with nums in range [${lBound}, ${uBound}) has element ${i} (${arr[i]}) in the range`,
-      () => {
-        expect(arr[i]).toBeLessThan(uBound);
-        expect(arr[i]).toBeGreaterThanOrEqual(lBound);
-      });
+    test(`rand generated rand array with nums in range [${lBound}, ${uBound}) has element ${i} (${arr[i]}) in the range`, () => {
+      expect(arr[i]).toBeLessThan(uBound);
+      expect(arr[i]).toBeGreaterThanOrEqual(lBound);
+    });
   }
 }
 
@@ -111,19 +109,17 @@ test('inserting 1, 2, 3, 1, 1 into a bag has 1x3, 2x1, 3x1', () => {
 });
 
 for (const pair of [
-    [  0, 10],
-    [  0, 30],
-    [-10, 99]
-  ]) {
+  [  0, 10],
+  [  0, 30],
+  [-10, 99]
+]) {
   const [lBound, uBound] = pair;
   const arr = Column.range(lBound, uBound);
   for (let i = 0; i < arr.length; i++) {
-    test(
-      `range(${lBound}, ${uBound}) has all element ${lBound} <= ${i}th element (${arr[i]}) < ${uBound}`,
-      () => {
-        expect(arr[i]).toBeGreaterThanOrEqual(lBound);
-        expect(arr[i]).toBeLessThan(uBound);
-      });
+    test(`range(${lBound}, ${uBound}) has all element ${lBound} <= ${i}th element (${arr[i]}) < ${uBound}`, () => {
+      expect(arr[i]).toBeGreaterThanOrEqual(lBound);
+      expect(arr[i]).toBeLessThan(uBound);
+    });
   }
 }
 
@@ -261,18 +257,16 @@ for (const pair of [
 
 for (const n of [0, 1, 9, 222]) {
   for (const lBound of [0, 10, 100, -10, -1, -1000]) {
-    const uBound = lBound + 5
-    test(
-      `Column.rand(${n}, ${lBound}, ${uBound}) creates a col full of rand nums in range [${lBound}, ${uBound})`,
-      () => {
-        const s = Column.rand(n, lBound, uBound);
-        expect(s).toHaveProperty('dtype');
-        expect(s).toHaveLength(n);
-        for (let i = 0; i < s.length; i++) {
-          expect(s[i]).toBeGreaterThanOrEqual(lBound);
-          expect(s[i]).toBeLessThan(uBound);
-        }
-      });
+    const uBound = lBound + 5;
+    test(`Column.rand(${n}, ${lBound}, ${uBound}) creates a col full of rand nums in range [${lBound}, ${uBound})`, () => {
+      const s = Column.rand(n, lBound, uBound);
+      expect(s).toHaveProperty('dtype');
+      expect(s).toHaveLength(n);
+      for (let i = 0; i < s.length; i++) {
+        expect(s[i]).toBeGreaterThanOrEqual(lBound);
+        expect(s[i]).toBeLessThan(uBound);
+      }
+    });
   }
 }
 
@@ -300,7 +294,7 @@ test('mean of Column [1, 2, 3] is 2', () => {
 
 for (const f of ['mad', 'stdev', 'var']) {
   test(`${f} of Column [1, 1, 1] is 0 (${f} measure of spread should give 0 if there is no spread)`, () => {
-    expect(Column.of(1, 1, 1)[f]()).toEqual(0)
+    expect(Column.of(1, 1, 1)[f]()).toEqual(0);
   });
 }
 

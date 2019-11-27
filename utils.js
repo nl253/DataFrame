@@ -1,8 +1,7 @@
 const util = require('util');
-const url = require('url');
-
 const { statSync, readdirSync } = require('fs');
 const { join, resolve } = require('path');
+
 const isNumRegex = /^(\d+\.?\d*|\d*\.\d+)(e-?\d+)?$/i;
 const dtypeRegex = /\s*([a-z]+)(8|16|32|64)\s*/i;
 
@@ -58,7 +57,7 @@ const getTypeMarker = (val) => {
   }
   const isFloat = !Number.isInteger(val);
   if (isFloat) {
-    return `f${env.FLOAT_PREC}`;
+    return `f${process.env.FLOAT_PREC}`;
   }
   let bitsNeeded = Math.ceil(Math.log(val + 1));
   const isNeg = val < 0;
@@ -171,7 +170,7 @@ const isMap = o => util.types.isMap(o);
  * @param {*} o
  * @returns {!Boolean}
  */
-const isURL = o => {
+const isURL = (o) => {
   if (isString(o) && o.slice(0, 4) === 'http') {
     const { host } = new URL(o);
     return host !== null;

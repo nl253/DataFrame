@@ -2,8 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="242eafcb-65a6-4f52-8da8-5ea8e0f6ce15" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.github/workflows/test.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/test.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.eslintrc.json" beforeDir="false" afterPath="$PROJECT_DIR$/.eslintrc.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Column.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/Column.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DataFrame.js" beforeDir="false" afterPath="$PROJECT_DIR$/DataFrame.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils.js" beforeDir="false" afterPath="$PROJECT_DIR$/utils.js" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -117,9 +120,9 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Jest.Unnamed" />
       <item itemvalue="Jest.concat typed arrays [-1,2,3], [3,4.5] and []  gives [-1,2,3,3,4.5]" />
       <item itemvalue="Jest.manhattan distance between [0,-8,33] and [99] is 99" />
+      <item itemvalue="Jest.Unnamed" />
       <item itemvalue="Node.js.REPL DF" />
     </list>
     <recent_temporary>
@@ -194,7 +197,14 @@
       <option name="project" value="LOCAL" />
       <updated>1574871159509</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Fix eslint CI/CD">
+      <created>1574871698789</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1574871698789</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -233,7 +243,8 @@
     <MESSAGE value="Fix JSDoc" />
     <MESSAGE value="Fix tests" />
     <MESSAGE value="Re-order CI/CD testing steps" />
-    <option name="LAST_COMMIT_MESSAGE" value="Re-order CI/CD testing steps" />
+    <MESSAGE value="Fix eslint CI/CD" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fix eslint CI/CD" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
