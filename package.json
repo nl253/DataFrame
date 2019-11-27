@@ -46,7 +46,7 @@
     "*.js",
     "datasets/*.csv"
   ],
-  "homepage": "https://github.com/nl253/JS-Typed-Array-Exensions#readme",
+  "homepage": "https://github.com/nl253/DataFrame",
   "keywords": [
     "table",
     "dataframe",

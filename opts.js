@@ -46,6 +46,7 @@ const opts = {
   },
   FUNCTS: {
     all: [
+      'convert',
       'cum',
       'map',
       'reverse',

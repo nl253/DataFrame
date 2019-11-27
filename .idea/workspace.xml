@@ -5,7 +5,7 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Column.js" beforeDir="false" afterPath="$PROJECT_DIR$/Column.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/DataFrame.js" beforeDir="false" afterPath="$PROJECT_DIR$/DataFrame.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/opts.js" beforeDir="false" afterPath="$PROJECT_DIR$/opts.js" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -40,7 +40,7 @@
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="javascript.nodejs.core.library.configured.version" value="12.2.0" />
     <property name="js.last.introduce.type" value="CONST" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../GP" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.standard" value="true" />
     <property name="node.js.detected.package.stylelint" value="true" />
@@ -168,7 +168,14 @@
       <option name="project" value="LOCAL" />
       <updated>1574261378073</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Fix bug">
+      <created>1574270608312</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1574270608312</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -203,22 +210,11 @@
     <MESSAGE value="Refactor conversions in the constructor" />
     <MESSAGE value="Remove fileter from call, agg and matrix (handled by new methods)" />
     <MESSAGE value="Fix checktype" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fix checktype" />
+    <MESSAGE value="Fix bug" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fix bug" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/DataFrame.js</url>
-          <line>262</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/DataFrame.js</url>
-          <line>234</line>
-          <option name="timeStamp" value="2" />
-        </line-breakpoint>
-      </breakpoints>
       <default-breakpoints>
         <breakpoint enabled="true" type="javascript-exception" />
       </default-breakpoints>

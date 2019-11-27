@@ -601,6 +601,14 @@ const COL_STR_PROTO = {
   },
 
   /**
+   * @param {!DType|null} [dtype]
+   * @returns {ColNum}
+   */
+  convert(dtype = null) {
+    return from(this, dtype, false);
+  },
+
+  /**
    * @param {!Number} n
    * @param {!Number} m
    * @returns {!ColStr}
@@ -661,15 +669,6 @@ const enhStrArr = (a) => {
 
 const COL_NUM_PROTO = {
 
-  /**
-   * @param {!DType|null} [dtype]
-   * @returns {ColNum}
-   */
-  convert(dtype = null) {
-    return dtype === this.dtype
-      ? this
-      : from(this, dtype, false);
-  },
 
   /**
    * @returns {!Number}
@@ -1732,7 +1731,18 @@ const bag = (xs, vocab = null) => {
  * @returns {!ColNum|!ColStr} column
  */
 const from = (xs, toDtype = null, doClone = true) => {
-  if (toDtype === xs.dtype || (toDtype === null && xs.dtype !== undefined && xs.dtype !== 's')) {
+  if (toDtype === xs.dtype) {
+    // preserve semantics of Array.from, which clones
+    if (doClone) {
+      log.debug(`dtype matches hint, cloning ${xs.toString()}`);
+      return xs.clone();
+    } else {
+      log.debug('dtype matches hint, returning as is');
+      return xs;
+    }
+  }
+
+  if (toDtype === null && xs.dtype !== undefined && xs.dtype !== 's') {
     // preserve semantics of Array.from, which clones
     if (doClone) {
       log.debug(`dtype matches hint, cloning ${xs.toString()}`);
