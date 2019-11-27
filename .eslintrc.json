@@ -203,6 +203,7 @@
     "no-extra-label": 2,
     "object-curly-spacing": 1,
     "implicit-arrow-linebreak": 1,
+    "linebreak-style": 0,
     "no-extra-parens": [
       1,
       "functions"
