@@ -16,6 +16,7 @@ jobs:
         node: ['12', '10', '8']
         os: [windows-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
+ # https://github.com/davglass/license-checker
     steps:
       - uses: actions/checkout@v1
         with:
@@ -23,6 +24,10 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node }}
+      - name: Check Dependencies Licensing
+        run: npx license-checker --summary
+      - name: Check Security Vulnerabilities 
+        run: npx retire --js
       - name: Install Node Modules
         run: npm install
       - name: Lint Code
