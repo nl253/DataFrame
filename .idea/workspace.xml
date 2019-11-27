@@ -3,7 +3,8 @@
   <component name="ChangeListManager">
     <list default="true" id="242eafcb-65a6-4f52-8da8-5ea8e0f6ce15" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DataFrame.js" beforeDir="false" afterPath="$PROJECT_DIR$/DataFrame.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Column.js" beforeDir="false" afterPath="$PROJECT_DIR$/Column.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Column.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/Column.test.js" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -173,7 +174,14 @@
       <option name="project" value="LOCAL" />
       <updated>1574270608312</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Fix JSDoc">
+      <created>1574866318480</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1574866318481</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -209,7 +217,8 @@
     <MESSAGE value="Remove fileter from call, agg and matrix (handled by new methods)" />
     <MESSAGE value="Fix checktype" />
     <MESSAGE value="Fix bug" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fix bug" />
+    <MESSAGE value="Fix JSDoc" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fix JSDoc" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

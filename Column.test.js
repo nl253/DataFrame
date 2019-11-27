@@ -71,7 +71,7 @@ for (const pair of [
     [[    -0.99,   2], 'f64'],
     [[   2 ** 8,   0], 'u16'],
     [[  2 ** 16,   0], 'u32'],
-    [[-(2 ** 8),   0], 'i32'],
+    [[-(2 ** 8),   0], 'i16'],
     [[.8],             'f64'],
   ]) {
   const [arr, dtype] = pair;
@@ -158,7 +158,7 @@ for (const input of [
     expect(input).toHaveLength(s.length);
     expect(s).toHaveProperty('dtype');
     for (let i = 0; i < s.length; i++) {
-      expect(s[i]).toEqual(parseFloat(input[i]));
+      expect(s[i]).toBeCloseTo(parseFloat(input[i]));
     }
   });
 }
@@ -172,7 +172,7 @@ for (const input of [
     expect(input).toHaveLength(s.length);
     expect(s).toHaveProperty('dtype');
     for (let i = 0; i < s.length; i++) {
-      expect(s[i]).toEqual(input[i]);
+      expect(s[i]).toBeCloseTo(input[i]);
     }
   });
 }
@@ -185,7 +185,7 @@ for (const input of [
     const s = Column.of(...input);
     expect(input).toHaveLength(s.length);
     for (let i = 0; i < s.length; i++) {
-      expect(s[i]).toEqual(parseFloat(input[i]));
+      expect(s[i]).toBeCloseTo(parseFloat(input[i]));
     }
   });
 }
@@ -240,8 +240,8 @@ for (const pair of [
     [99, -231]
   ]) {
   const [n, v] = pair;
-  test(`Column.fill(${n}) creates a col full of ${n}`, () => {
-    const s = Column.fill(n, v);
+  test(`Column.repeat(${n}) creates a col full of ${n}`, () => {
+    const s = Column.repeat(n, v);
     expect(s).toHaveProperty('dtype');
     expect(s).toHaveLength(n);
     for (let i = 0; i < s.length; i++) {
@@ -288,14 +288,14 @@ for (const pair of [
 
 test('mean of Column [1, 2, 3] is 2', () => {
   expect(Column.of(1, 2, 3).mean()).toEqual(2);
-})
+});
 
 for (const f of ['mad', 'stdev', 'var']) {
   test(
     `${f} of Column [1, 1, 1] is 0 (${f} measure of spread should give 0 if there is no spread)`,
     () => {
       expect(Column.of(1, 1, 1)[f]()).toEqual(0);
-    })
+    });
 }
 
 

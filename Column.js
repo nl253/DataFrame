@@ -1987,7 +1987,7 @@ module.exports = Object.freeze(
     zeros,
   }),
   ...PRODUCERS,
-  ...(process.env.TESTING === '1' ? {
+  ...(process.env.NODE_ENV === 'development' ? {
     bag,
     constFromDtype,
     guessNumDtype,
