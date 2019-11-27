@@ -12,16 +12,14 @@ jobs:
     strategy:
       max-parallel: 4
       fail-fast: true
+      matrix:
+        node: [ '10', '8' ]
     runs-on: windows-latest
     steps:
-      - name: List Dir
-        run: ls
-      - name: Clone Repository
-        run: git clone "https://github.com/${{ github.repository }}" repository
-      - name: Enter Repository
-        run: cd repository
-      - name: Checkout ${{ github.ref }} branch
-        run: git checkout ${{ github.ref }}
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node }}
       - name: Install Node Modules
         run: npm install
       - name: Lint Code
