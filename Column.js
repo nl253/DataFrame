@@ -351,9 +351,9 @@ const COL_PROTO = {
    */
   sort(order = 'asc', dtype = null) {
     return this.clone(dtype)._sort(order === 'asc'
-      ? ((a, b) => a > b ? 1 : a < b ? -1 : 0)
+      ? (a, b) => a > b ? 1 : a < b ? -1 : 0
       : order === 'des'
-        ? ((a, b) => a > b ? -1 : a < b ? 1 : 0)
+        ? (a, b) => a > b ? -1 : a < b ? 1 : 0
         : order);
   },
 
@@ -1791,8 +1791,10 @@ const from = (xs, toDtype = null, doClone = true) => {
    * if there is at least one num-like string
    */
   if (xs.some(x => x.search !== undefined && x.search(isNumRegex) >= 0)) {
-    // THEN try parsing all
-    // const tryParse = empty(xs.length, toDtype);
+    /*
+     * THEN try parsing all
+     * const tryParse = empty(xs.length, toDtype);
+     */
     let okCount = 0;
     for (let idx = 0; idx < xs.length; idx++) {
       if (xs[idx].search !== undefined && xs[idx].search(isNumRegex) >= 0) {
@@ -1945,7 +1947,9 @@ const isCol = xs => isColNum(xs) || isColStr(xs);
 const fromFunct = (f, n) => empty(n, `f${opts.FLOAT_PREC}`).map((_, idx) => f(idx));
 
 const PRODUCERS = {};
-for (const p of ['Uint8', 'Uint16', 'Uint32', 'Int8', 'Int16', 'Int32', 'Float32', 'Float64']) {
+for (const p of [
+  'Uint8', 'Uint16', 'Uint32', 'Int8', 'Int16', 'Int32', 'Float32', 'Float64'
+]) {
   const dtype = p.toLowerCase()
     .replace('uint', 'U')
     .replace('float', 'F')
@@ -1973,26 +1977,26 @@ Object.setPrototypeOf(COL_NUM_PROTO, COL_PROTO);
 
 module.exports = Object.freeze(
   { ...({
-      empty,
-      repeat,
-      from,
-      fromFunct,
-      isCol,
-      isColNum,
-      isColStr,
-      of,
-      ones,
-      opts,
-      rand,
-      range,
-      zeros,
-    }),
-    ...PRODUCERS,
-    ...({
-      bag,
-      constFromDtype,
-      guessNumDtype,
-      rangeIter,
-    })
+    empty,
+    repeat,
+    from,
+    fromFunct,
+    isCol,
+    isColNum,
+    isColStr,
+    of,
+    ones,
+    opts,
+    rand,
+    range,
+    zeros,
+  }),
+  ...PRODUCERS,
+  ...({
+    bag,
+    constFromDtype,
+    guessNumDtype,
+    rangeIter,
+  })
   },
 );

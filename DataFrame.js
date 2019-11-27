@@ -1,4 +1,4 @@
-/* eslint-disable no-nested-ternary */
+/* eslint-disable no-nested-ternary,max-lines */
 /**
  * TODO concat is broken
  * TODO mixed types of colNames don't work
@@ -80,13 +80,10 @@ class DataFrame {
         [...data.colNames],
         data.dtypes,
       );
-
     } else if (isSameType(this, data)) {
       info(`detected ${this.constructor.name}`);
       return new DataFrame(data, 'df', colNames, dtypes);
-
     } else if (isString(data)) {
-
       if (what.startsWith('url')) {
         info(`GET ${data}`);
         let newWhat;
@@ -97,11 +94,9 @@ class DataFrame {
         }
         const s = request('GET', data).getBody().toString('utf-8');
         return new DataFrame(s, newWhat, colNames, dtypes);
-
       } else if (isURL(data)) {
         info('detected URL');
         return new DataFrame(data, `url${what}`, colNames, dtypes);
-
       } else if (what.startsWith('json')) {
         info('data is JSON string, parsing');
         if (what === 'json') {
@@ -112,7 +107,6 @@ class DataFrame {
           info(`using further hint "${hint}"`);
           return new DataFrame(JSON.parse(data), hint, colNames, dtypes);
         }
-
       } else if (what.startsWith('csv')) {
         info('data is CSV string, parsing');
         const rows = parseCSV(data, { skip_empty_lines: true, trim: true });
@@ -124,7 +118,6 @@ class DataFrame {
           debug(`using provided column names ${colNames.toString()}`);
           return new DataFrame(rows, 'rows', colNames, dtypes);
         }
-
       } else if (what.startsWith('file')) {
         info(`data is file "${data}"`);
         if (what === 'file') {
@@ -136,7 +129,6 @@ class DataFrame {
           info(`using provided hint for file content type "${newWhat}"`);
           return new DataFrame(readFileSync(data).toString('utf-8'), newWhat, colNames, dtypes);
         }
-
       } else if (existsSync(data)) {
         info(`detected existing file "${data}"`);
         return new DataFrame(data, 'file', colNames, dtypes);
@@ -164,7 +156,6 @@ class DataFrame {
 
       const lookedIn = opts.DATASETS.concat([dirname(data)]).map(p => resolve(p)).join(', ');
       throw new Error(`failed to find file, looked for a dataset in ${lookedIn} (you might want to push your dir to opts.DATASETS OR set 'what', see API)`);
-
     } else if (what.startsWith('gen')) {
       info(`input is generator`);
       const rows = [];
@@ -178,7 +169,6 @@ class DataFrame {
         info('assuming row generator');
       }
       return new DataFrame(rows, newWhat, colNames, dtypes);
-
     } else if (isGenerator(data)) {
       info(`input is row generator`);
       return new DataFrame(data, 'gen', colNames, dtypes);
@@ -209,14 +199,12 @@ class DataFrame {
         Object.keys(data),
         dtypes,
       );
-
     } else if (isObject(data)) {
       info('detected Object');
       return new DataFrame(data, `obj${what}`, colNames, dtypes);
 
       // map { col1 => col2, ... }
     } else if (what.startsWith('map')) {
-
       info(`data is Map (len is ${data.size})`);
 
       // reverse logic to Object (above)
@@ -242,7 +230,6 @@ class DataFrame {
         colNames === null ? ['Key', 'Value'] : colNames,
         dtypes,
       );
-
     } else if (isMap(data)) {
       info('detected Map');
       return new DataFrame(data, `map${what}`, colNames, dtypes);
@@ -279,10 +266,8 @@ class DataFrame {
         this.colNames = Column.from(colNames.map(cName => cName.toString()), 's');
         debug(`used provided column names: [${this.colNames.join(', ')}]`);
       }
-
     } else if (what === '') {
       return new DataFrame(data, 'cols', colNames, dtypes);
-
     } else throw new Error('unrecognised input data');
 
     const attrNames = new Set(this.colNames);
@@ -292,9 +277,11 @@ class DataFrame {
       attrNames.add(cIdx);
     }
 
-    /* easy access e.g. df.age, df.salary
+    /*
+     * easy access e.g. df.age, df.salary
      * easy replacement (assignment) of cols e.g. df.age = df2.age;
-     * easy broadcasting e.g. df.label = 0; */
+     * easy broadcasting e.g. df.label = 0;
+     */
     for (const name of attrNames) {
       if (this[name] === undefined && isString(name)) {
         Object.defineProperty(this, name, {
@@ -375,7 +362,9 @@ class DataFrame {
     }
 
     // special cases, when called *without* any param, treat as agg
-    for (const f of ['add', 'sub', 'mul', 'div', 'pow'].filter(isUndef)) {
+    for (const f of [
+      'add', 'sub', 'mul', 'div', 'pow'
+    ].filter(isUndef)) {
       this[f] = function (...args) {
         if (args.length === 0) {
           debug(`no args to this.${f}() so treating as aggregate`);
@@ -387,11 +376,15 @@ class DataFrame {
       };
     }
 
-    // don't assign / drop / push to this.colNames (use df.rename(newName))
-    // Object.freeze(this.colNames);
+    /*
+     * don't assign / drop / push to this.colNames (use df.rename(newName))
+     * Object.freeze(this.colNames);
+     */
 
-    // don't assign / drop / push to this.cols (use df.drop, df.select or df.sliceCols)
-    // Object.freeze(this.cols);
+    /*
+     * don't assign / drop / push to this.cols (use df.drop, df.select or df.sliceCols)
+     * Object.freeze(this.cols);
+     */
   }
 
   /**
@@ -403,14 +396,14 @@ class DataFrame {
   static of(...cols) { return new DataFrame(cols, 'cols'); }
 
   get rowsIter() {
-    return (function* () {
+    return function* () {
       for (let r = 0; r < this.length; r++) {
         yield this.row(r);
       }
-    }).bind(this)();
+    }.bind(this)();
   }
 
-  *[Symbol.iterator]() {
+  * [Symbol.iterator]() {
     for (let r = 0; r < this.length; r++) {
       yield this.row(r);
     }
@@ -419,7 +412,7 @@ class DataFrame {
   /**
    * @param {!Number} rIdx row index
    */
-  *irow(rIdx) {
+  * irow(rIdx) {
     for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
       yield this.val(rIdx, cIdx);
     }
@@ -579,7 +572,7 @@ class DataFrame {
 
   /**
    * @param {...(!Number|!String|!RegExp|!function((!String|!Number)):!Boolean)} params
-   * @return {!DataFrame} data frame
+   * @returns {!DataFrame} data frame
    */
   select(...params) {
     if (params.length === 0) {
@@ -790,13 +783,11 @@ class DataFrame {
     const debug = m => log.debug(msg(m));
 
     for (let yIdx = 0; yIdx < nCols; yIdx++) {
-
       // else
       colIdxs.push(yIdx);
       rows.push([]);
 
       for (let xIdx = 0; xIdx < nCols; xIdx++) {
-
         // some ops have a fixed return value when applied to self f(xs, xs) == id
         if (identity !== null && xIdx === yIdx) {
           debug(`[skipping identity yIdx == xIdx, f(${this._colName(xIdx)}, ${this._colName(yIdx)}) = ${identity}`);
@@ -987,7 +978,7 @@ class DataFrame {
 
     // collect column idxs
     const colIds = new Set();
-    const {nCols} = this;
+    const { nCols } = this;
 
     for (let i = 1; i < slices.length; i += 2) {
       const lBound = this.colIdx(slices[i - 1]);
@@ -1141,7 +1132,7 @@ class DataFrame {
     // store results of testing for all rows
     const tests = Array(this.length).fill(true);
 
-    const {nCols} = this;
+    const { nCols } = this;
 
     // see if this row is an outlier by looking at each numeric column
     for (let rIdx = 0; rIdx < this.length; rIdx++) {
@@ -1186,9 +1177,9 @@ class DataFrame {
     const cIdx = this.colIdx(colId);
     return this.sort(cIdx, ord.search(/^asc/i) >= 0
       // eslint-disable-next-line no-nested-ternary
-      ? ((r1, r2) => r1[cIdx] > r2[cIdx] ? 1 : r1[cIdx] < r2[cIdx] ? -1 : 0)
+      ? (r1, r2) => r1[cIdx] > r2[cIdx] ? 1 : r1[cIdx] < r2[cIdx] ? -1 : 0
       // eslint-disable-next-line no-nested-ternary
-      : ((r1, r2) => r1[cIdx] > r2[cIdx] ? -1 : r1[cIdx] < r2[cIdx] ? 1 : 0));
+      : (r1, r2) => r1[cIdx] > r2[cIdx] ? -1 : r1[cIdx] < r2[cIdx] ? 1 : 0);
   }
 
   /**
@@ -1223,8 +1214,8 @@ class DataFrame {
       return this.nBest(this.nCols, agg);
     }
     return this.agg(agg, ...args)
-               .sort(-1, 'des')
-               .slice(0, n);
+      .sort(-1, 'des')
+      .slice(0, n);
   }
 
   /**
@@ -1409,7 +1400,7 @@ class DataFrame {
       return undefined;
     }
     const dict = {};
-    const {nCols} = this;
+    const { nCols } = this;
     for (let cIdx = 0; cIdx < nCols; cIdx++) {
       const cName = this.colNames[cIdx];
       const col = this.cols[cIdx];
@@ -1554,24 +1545,18 @@ class DataFrame {
     if (n === null) {
       const newN = Math.min(this.length, termHeight - 7);
       return this.toString(newN);
-
     } else if (m === null) {
       return this.toString(0, n);
-
     } else if (n < 0) {
       return this.toString(n + this.length, m);
-
     } else if (m < 0) {
       return this.toString(n, m + this.length);
-
     } else if (n > this.length) {
       log.warn(`${this.constructor.name}.toString(n = ${n}), but there is ${this.length} rows`);
       return this.toString(this.length - n, this.length);
-
     } else if (m > this.length) {
       log.warn(`${this.constructor.name}.toString(m = ${m}), but there is ${this.length} rows`);
       return this.toString(Math.max(0, this.length - (m - n)), this.length);
-
     } else if (this.nCols === 0) {
       return opts.EMPTY_STR;
     }
@@ -1607,7 +1592,7 @@ class DataFrame {
 
       if (opts.PRINT_TYPES) {
         // pad to reserve space for opts.PAD_STR and dtype (injected later after col len is computed)
-        h = opts.PAD_STR.repeat(dtypes[cIdx].length) + ' ' + h.toString();
+        h = `${opts.PAD_STR.repeat(dtypes[cIdx].length)} ${h.toString()}`;
       } else {
         // no padding needed
         h = h.toString();
@@ -1617,11 +1602,13 @@ class DataFrame {
 
     rows.push(headerRow);
 
-    // info about not displayed rows
-    // .. ... (2 more) .. .. <- THIS
-    // 3
-    // 4
-    // 5
+    /*
+     * info about not displayed rows
+     * .. ... (2 more) .. .. <- THIS
+     * 3
+     * 4
+     * 5
+     */
     if (opts.SHOW_MORE && n > 0 && this.nCols > 0) {
       const arr = Array(nCols).fill(opts.DOTS);
       arr[0] = `(${n} more)`;
@@ -1631,15 +1618,15 @@ class DataFrame {
     // memoize
     const numCols = this.numColIdxs;
 
-    // now the actual content of the table
-    // remember about optional index (inject AFTER)!
+    /*
+     * now the actual content of the table
+     * remember about optional index (inject AFTER)!
+     */
     for (let rIdx = n; rIdx < m; rIdx++) {
-
       // initialise
       const row = Array(this.nCols).fill('');
 
       for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
-
         const val = this.val(rIdx, cIdx);
         const s = val.toString();
 
@@ -1673,7 +1660,6 @@ class DataFrame {
         emptyInfo.unshift('');
       }
       rows.push(emptyInfo);
-
     } else if (opts.SHOW_MORE && m < this.length && this.nCols > 0) {
       const arr = Array(nCols).fill(opts.DOTS);
       arr[0] = `(${this.length - m} more)`;
@@ -1693,8 +1679,10 @@ class DataFrame {
         }
       }
 
-      /* different memory indiciator for index
-      (doesn't acutally take any memory since it's just printed) */
+      /*
+       * different memory indiciator for index
+       *(doesn't acutally take any memory since it's just printed)
+       */
       if (opts.SHOW_INDEX) {
         memInfo.unshift(opts.MEM_INFO_INDEX);
       }
@@ -1748,13 +1736,17 @@ class DataFrame {
     const tooLong = colWidths.reduce((l1, l2) => l1 + l2 + opts.SPACE_BETWEEN, -opts.SPACE_BETWEEN) > termWidth;
 
     if (tooLong) {
-      /* remove cols in the middle
-         this ensures that there is n - 1 SPACE_BETWEEN for every n cols */
+      /*
+       * remove cols in the middle
+       *this ensures that there is n - 1 SPACE_BETWEEN for every n cols
+       */
       const nColsToShow = Math.floor((termWidth + opts.SPACE_BETWEEN) / (colWidth + opts.SPACE_BETWEEN));
 
-      /* C C C LEFT C C C RIGHT C C C
-         should remove Cs on the left of LEFT and on the right of RIGHT
-         C C C ... C C C */
+      /*
+       * C C C LEFT C C C RIGHT C C C
+       * should remove Cs on the left of LEFT and on the right of RIGHT
+       *C C C ... C C C
+       */
       const offset = Math.floor(nColsToShow / 2);
       for (let rIdx = 0; rIdx < rows.length; rIdx++) {
         let s = ''; // initialise
@@ -1770,8 +1762,7 @@ class DataFrame {
     } else {
       // display all (it fits on the screen)
       for (let rIdx = 0; rIdx < rows.length; rIdx++) {
-        rows[rIdx] = rows[rIdx].map((val, cIdx) =>
-            val.padStart(colWidths[cIdx], opts.PAD_STR))
+        rows[rIdx] = rows[rIdx].map((val, cIdx) => val.padStart(colWidths[cIdx], opts.PAD_STR))
           .join(opts.PAD_STR.repeat(opts.SPACE_BETWEEN));
       }
     }
