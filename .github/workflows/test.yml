@@ -33,6 +33,7 @@ jobs:
       - name: Lint Code
         run: npx eslint
       - name: Check JSDoc Types
+        shell: bash
         run: npx jsdoc --pedantic --destination ./docs *.js
       - name: Test Code
         run: npm test
