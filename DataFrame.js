@@ -641,7 +641,7 @@ class DataFrame {
   }
 
   /**
-   * @param {(...!String)|(...!Number)} params pairs of colId, newName
+   * @param {...(!String|!Number)} params pairs of colId, newName
    * @returns {!DataFrame} data frame with renamed col
    */
   rename(...params) {
@@ -748,9 +748,9 @@ class DataFrame {
   }
 
   /**
-   * @param {!String|!function((!Column, !Column, !Number)): !Column} f
+   * @param {!String|!function(Column, Column, Number): !Column} f
    * @param {!DataFrame|null} [other]
-   * @return {!DataFrame} data frame
+   * @returns {!DataFrame} data frame
    */
   connect(f, other = null) {
     if (other === null) {
