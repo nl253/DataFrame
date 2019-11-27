@@ -15,7 +15,9 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Clone Repository
-        run: git clone https://github.com/${{ github.repository }}
+        run: git clone "https://github.com/${{ github.repository }}" repository
+      - name: Enter Repository
+        run: cd repository
       - name: Checkout ${{ github.ref }} branch
         run: git checkout ${{ github.ref }}
       - name: Install Node Modules
@@ -23,8 +25,6 @@ jobs:
       - name: Lint Code
         timeout-minutes: 15
         run: npx eslint
-      - name: Editor Config Lint
-        uses: zbeekman/EditorConfig-Action@v1.1.1
       - name: Test Code
         run: npm test
       - name: Audit NPM Packages
