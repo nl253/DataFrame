@@ -15,7 +15,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: List Dir
-        run: ls -a
+        run: ls
       - name: Clone Repository
         run: git clone "https://github.com/${{ github.repository }}" repository
       - name: Enter Repository
