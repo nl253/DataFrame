@@ -37,4 +37,5 @@ jobs:
       - name: Test Code
         run: npm test
       - name: Audit NPM Packages
+        if: matrix.node >= 10
         run: npm audit
