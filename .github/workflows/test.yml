@@ -13,8 +13,9 @@ jobs:
       max-parallel: 4
       fail-fast: true
       matrix:
-        node: [ '10', '8' ]
-    runs-on: windows-latest
+        node: ['10', '8']
+        os: [windows-latest, ubuntu-lates]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
