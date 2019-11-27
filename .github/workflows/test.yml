@@ -1,0 +1,35 @@
+name: Test CI
+
+on: [push, pull_request]
+
+env:
+  DEBUG: 1
+  NODE_ENV: development
+
+jobs:
+  test:
+    name: Test
+    strategy:
+      max-parallel: 4
+      fail-fast: true
+    runs-on: [windows-latest, ubuntu-latest]
+    steps:
+      - id: checkout-${{ github.ref }}
+        name: Checkout ${{ github.ref }} branch
+        run: git checkout ${{ github.ref }}
+      - id: install-node-modules
+        name: Install Node Modules
+        run: npm install
+      - id: lint-code
+        name: Lint Code
+        timeout-minutes: 15
+        run: npx eslint
+      - name: Editor Config Lint
+        uses: zbeekman/EditorConfig-Action@v1.1.1
+      - id: test-code
+        name: Test Code
+        run: npm test
+      - id: audit-npm-packages
+        name: Audit NPM Packages
+        timeout-minutes: 15
+        run: npm audit
