@@ -12,7 +12,7 @@ jobs:
     strategy:
       max-parallel: 4
       fail-fast: true
-    runs-on: [windows-latest, ubuntu-latest]
+    runs-on: windows-latest
     steps:
       - name: Checkout ${{ github.ref }} branch
         run: git checkout ${{ github.ref }}
