@@ -1,11 +1,7 @@
-// vim:hlsearch:nu:foldmethod=manual:sw=2:ts=4:expandtab:
+/* eslint-disable no-nested-ternary */
 /**
- * TODO loading (g)zipped csv
  * TODO concat is broken
  * TODO mixed types of colNames don't work
- * TODO finish typing Column.js & DataFrame.js
- * TODO string col hashing
- * TODO edit photos, link to in README
  * TODO document cum ops
  * TODO replace is broken
  * TODO binarizer
@@ -14,7 +10,6 @@
  * TODO document add, mul, div, sub
  * TODO document opts, printing presets
  * TODO document dataset lookup
- * TODO re-think the dataset lookup API
  * TODO document examples of matrix ops, aggs, functs
  * TODO calculate the *base* size of each column (pointers are 8B)
  */

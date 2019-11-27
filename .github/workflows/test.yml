@@ -30,7 +30,7 @@ jobs:
       - name: Check Security Vulnerabilities
         run: npx retire --js
       - name: Lint Code
-        run: npx eslint *.js
+        run: npm run lint
       - name: Check JSDoc Types
         shell: bash
         run: npx jsdoc --pedantic --destination ./docs *.js

@@ -57,7 +57,7 @@
     "security/detect-object-injection": "off",
     "node/shebang": "off",
     "accessor-pairs": [
-      2,
+      1,
       {
         "getWithoutSet": true
       }

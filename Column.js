@@ -1,3 +1,5 @@
+/* eslint-disable no-nested-ternary,max-lines */
+
 /**
  * @module
  */
@@ -348,13 +350,11 @@ const COL_PROTO = {
    * @returns {ColNum|ColStr}
    */
   sort(order = 'asc', dtype = null) {
-    if (order === 'asc') {
-      return this.clone(dtype)._sort((a, b) => a > b ? 1 : a < b ? -1 : 0);
-    } else if (order === 'des') {
-      return this.clone(dtype)._sort((a, b) => a > b ? -1 : a < b ? 1 : 0);
-    } else {
-      return this.clone(dtype)._sort(order);
-    }
+    return this.clone(dtype)._sort(order === 'asc'
+      ? ((a, b) => a > b ? 1 : a < b ? -1 : 0)
+      : order === 'des'
+        ? ((a, b) => a > b ? -1 : a < b ? 1 : 0)
+        : order);
   },
 
   /**
@@ -1410,10 +1410,10 @@ const COL_NUM_PROTO = {
 
     for (let i = 0; i < this.length; i++) {
       const val = this[i];
-      for (let boundIdx = 0; boundIdx < k; boundIdx++) {
-        const boundVal = bounds[boundIdx];
+      for (let boundIndex = 0; boundIndex < k; boundIndex++) {
+        const boundVal = bounds[boundIndex];
         if (val < boundVal) {
-          s[i] = boundIdx;
+          s[i] = boundIndex;
           break;
         }
       }
@@ -1862,8 +1862,8 @@ const rand = (len, lBound = null, uBound = null, dtype = null) => {
       return rand(len, 0, uBound, dtype);
     } else if (uBound === null) {
       return rand(len, lBound, lBound + 1, dtype);
-    }
-    // else
+    } /* else */
+    // eslint-disable-next-line no-shadow
     const range = uBound - lBound;
     const LOWER_RANGE = 122 - 97;
     const UPPER_RANGE = 90 - 65;
@@ -1965,6 +1965,7 @@ for (const p of ['Uint8', 'Uint16', 'Uint32', 'Int8', 'Int16', 'Int32', 'Float32
   };
 }
 
+// eslint-disable-next-line no-unused-vars
 const { ColF32, ColF64, ColU8, ColU16, ColU32, ColI8, ColI16, ColI32 } = PRODUCERS;
 
 Object.setPrototypeOf(COL_STR_PROTO, COL_PROTO);
@@ -1972,25 +1973,26 @@ Object.setPrototypeOf(COL_NUM_PROTO, COL_PROTO);
 
 module.exports = Object.freeze(
   { ...({
-    empty,
-    repeat,
-    from,
-    fromFunct,
-    isCol,
-    isColNum,
-    isColStr,
-    of,
-    ones,
-    opts,
-    rand,
-    range,
-    zeros,
-  }),
-  ...PRODUCERS,
-  ...(true ? {
-    bag,
-    constFromDtype,
-    guessNumDtype,
-    rangeIter,
-  } : {}) },
+      empty,
+      repeat,
+      from,
+      fromFunct,
+      isCol,
+      isColNum,
+      isColStr,
+      of,
+      ones,
+      opts,
+      rand,
+      range,
+      zeros,
+    }),
+    ...PRODUCERS,
+    ...({
+      bag,
+      constFromDtype,
+      guessNumDtype,
+      rangeIter,
+    })
+  },
 );

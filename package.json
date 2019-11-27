@@ -72,6 +72,7 @@
     "url": "https://github.com/nl253/DataFrame"
   },
   "scripts": {
+    "lint": "eslint *.js",
     "doc": "echo -e 'PUBLISHING DOCS\\n' && rm -rf out docs && npx jsdoc -R README.md Column.js DataFrame.js opts.js presets.js && mv out docs && git add ./docs && git commit -am 'Update docs' -n && npm version patch && git push",
     "loc": "tokei -- $(git ls-files | grep -E '\\.js$' | grep -v docs | grep -v bin)",
     "test": "jest"
