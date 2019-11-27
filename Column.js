@@ -1,4 +1,4 @@
-/* eslint-disable no-nested-ternary,max-lines */
+/* eslint-disable no-nested-ternary,max-lines,no-magic-numbers */
 
 /**
  * @module
@@ -1728,6 +1728,7 @@ const bag = (xs, vocab = null) => {
 /**
  * @param {!Array<!number>|!Array<!String>|!TypedArray|!ColNum|!ColStr} xs
  * @param {!DType|null} [toDtype]
+ * @param {!Boolean] [doClone]
  * @returns {!ColNum|!ColStr} column
  */
 const from = (xs, toDtype = null, doClone = true) => {
@@ -1957,6 +1958,7 @@ for (const p of [
 
   /**
    * @param {!Number} [len]
+   * @return {!ColNum}
    */
   PRODUCERS[`Col${dtype}`] = (len = 0) => {
     const match = dtypeRegex.exec(dtype);

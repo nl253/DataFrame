@@ -552,7 +552,7 @@ class DataFrame {
   }
 
   /**
-   * @param {...!String|...!Number} colIds
+   * @param {...(!String|!Number)} colIds
    * @returns {!DataFrame} data frame
    */
   dtype(...colIds) {
@@ -964,7 +964,7 @@ class DataFrame {
    * E.g. sliceCols(0)         -> sliceCols(0, end).
    * E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
    *
-   * @param {...!Number|...!String} slices
+   * @param {...(!Number|!String)} slices
    * @returns {!DataFrame} data frame
    */
   sliceCols(...slices) {

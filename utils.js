@@ -1,3 +1,4 @@
+/* eslint-disable no-magic-numbers */
 const util = require('util');
 const { statSync, readdirSync } = require('fs');
 const { join, resolve } = require('path');
@@ -29,6 +30,7 @@ const fmtFloat = (n, prec = 2) => {
 /**
  * @param {!Number} n
  * @param {!Number} [prec]
+ * @param {!String} [unit]
  * @returns {!String}
  * @private
  */
@@ -47,7 +49,7 @@ const fmtFloatSI = (n, prec = 2, unit = 'B') => {
 
 /**
  *
- * @param {!Number|!String} xs
+ * @param {!Number|!String} val
  * @returns {'s'|'f64'|'f34'|'i32'|'i16'|'i8'|'u32'|'u16'|'u8'} type marker
  * @private
  */
@@ -188,9 +190,9 @@ const isSameType = (o, o2) => o && o2 && o.constructor && o2.constructor && o2.c
 
 /**
  * @param {!String} root
- * @return {IterableIterator<!String>}
+ * @returns {IterableIterator<!String>}
  */
-const walkFiles = function * (...root) {
+const walkFiles = function* (...root) {
   const nodeStack = [...root.map(p => resolve(p))];
   while (nodeStack.length !== 0) {
     const path = nodeStack.pop();
@@ -214,12 +216,12 @@ module.exports = Object.freeze({
   isFunction,
   isGenerator,
   isMap,
-  isNumber,
   isNumRegex,
+  isNumber,
   isObject,
+  isRegExp,
   isSameType,
   isString,
-  isRegExp,
   isURL,
   transpose,
   walkFiles,

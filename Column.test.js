@@ -1,81 +1,84 @@
+/* eslint-disable no-magic-numbers,array-element-newline,no-multi-spaces,array-bracket-spacing,max-lines,array-bracket-newline */
 const Column = require('./Column');
 
 const FLOAT_DELTA = 0.001;
 
-// TODO unit test for `Column.IQR`
-// TODO unit test for `Column.Q1`
-// TODO unit test for `Column.Q3`
-// TODO unit test for `Column.abs`
-// TODO unit test for `Column.add`
-// TODO unit test for `Column.all`
-// TODO unit test for `Column.argMax`
-// TODO unit test for `Column.argMin`
-// TODO unit test for `Column.cast`
-// TODO unit test for `Column.ceil`
-// [X]  unit test for `Column.clip`
-// TODO unit test for `Column.clone`
-// TODO unit test for `Column.concat`
-// TODO unit test for `Column.contains`
-// TODO unit test for `Column.counts`
-// TODO unit test for `Column.cube`
-// TODO unit test for `Column.div`
-// TODO unit test for `Column.dot`
-// TODO unit test for `Column.downcast`
-// TODO unit test for `Column.drop`
-// TODO unit test for `Column.filter`
-// TODO unit test for `Column.floor`
-// TODO unit test for `Column.head`
-// TODO unit test for `Column.mad`
-// TODO unit test for `Column.magnitude`
-// TODO unit test for `Column.map`
-// TODO unit test for `Column.max`
-// [X]  unit test for `Column.mean`
-// TODO unit test for `Column.median`
-// TODO unit test for `Column.min`
-// TODO unit test for `Column.mode`
-// TODO unit test for `Column.mul`
-// TODO unit test for `Column.nLargest`
-// TODO unit test for `Column.nQuart`
-// TODO unit test for `Column.nSmallest`
-// TODO unit test for `Column.none`
-// TODO unit test for `Column.normalize`
-// TODO unit test for `Column.pop`
-// TODO unit test for `Column.pow`
-// TODO unit test for `Column.print`
-// TODO unit test for `Column.range`
-// TODO unit test for `Column.replace`
-// TODO unit test for `Column.reverse`
-// TODO unit test for `Column.round`
-// TODO unit test for `Column.sample`
-// TODO unit test for `Column.shuffle`
-// TODO unit test for `Column.skewness`
-// TODO unit test for `Column.slice`
-// TODO unit test for `Column.sort`
-// TODO unit test for `Column.square`
-// TODO unit test for `Column.std`
-// TODO unit test for `Column.sub`
-// TODO unit test for `Column.subarray`
-// TODO unit test for `Column.swap`
-// TODO unit test for `Column.tail`
-// TODO unit test for `Column.takeWhile`
-// TODO unit test for `Column.trimOutliers`
-// TODO unit test for `Column.trunc`
-// TODO unit test for `Column.unique`
-// TODO unit test for `Column.var`
-// TODO unit test for `Column.zipWith`
-// TODO unit test for `Column.zipWith3`
+/*
+ * TODO unit test for `Column.IQR`
+ * TODO unit test for `Column.Q1`
+ * TODO unit test for `Column.Q3`
+ * TODO unit test for `Column.abs`
+ * TODO unit test for `Column.add`
+ * TODO unit test for `Column.all`
+ * TODO unit test for `Column.argMax`
+ * TODO unit test for `Column.argMin`
+ * TODO unit test for `Column.cast`
+ * TODO unit test for `Column.ceil`
+ * [X]  unit test for `Column.clip`
+ * TODO unit test for `Column.clone`
+ * TODO unit test for `Column.concat`
+ * TODO unit test for `Column.contains`
+ * TODO unit test for `Column.counts`
+ * TODO unit test for `Column.cube`
+ * TODO unit test for `Column.div`
+ * TODO unit test for `Column.dot`
+ * TODO unit test for `Column.downcast`
+ * TODO unit test for `Column.drop`
+ * TODO unit test for `Column.filter`
+ * TODO unit test for `Column.floor`
+ * TODO unit test for `Column.head`
+ * TODO unit test for `Column.mad`
+ * TODO unit test for `Column.magnitude`
+ * TODO unit test for `Column.map`
+ * TODO unit test for `Column.max`
+ * [X]  unit test for `Column.mean`
+ * TODO unit test for `Column.median`
+ * TODO unit test for `Column.min`
+ * TODO unit test for `Column.mode`
+ * TODO unit test for `Column.mul`
+ * TODO unit test for `Column.nLargest`
+ * TODO unit test for `Column.nQuart`
+ * TODO unit test for `Column.nSmallest`
+ * TODO unit test for `Column.none`
+ * TODO unit test for `Column.normalize`
+ * TODO unit test for `Column.pop`
+ * TODO unit test for `Column.pow`
+ * TODO unit test for `Column.print`
+ * TODO unit test for `Column.range`
+ * TODO unit test for `Column.replace`
+ * TODO unit test for `Column.reverse`
+ * TODO unit test for `Column.round`
+ * TODO unit test for `Column.sample`
+ * TODO unit test for `Column.shuffle`
+ * TODO unit test for `Column.skewness`
+ * TODO unit test for `Column.slice`
+ * TODO unit test for `Column.sort`
+ * TODO unit test for `Column.square`
+ * TODO unit test for `Column.std`
+ * TODO unit test for `Column.sub`
+ * TODO unit test for `Column.subarray`
+ * TODO unit test for `Column.swap`
+ * TODO unit test for `Column.tail`
+ * TODO unit test for `Column.takeWhile`
+ * TODO unit test for `Column.trimOutliers`
+ * TODO unit test for `Column.trunc`
+ * TODO unit test for `Column.unique`
+ * TODO unit test for `Column.var`
+ * TODO unit test for `Column.zipWith`
+ * TODO unit test for `Column.zipWith3`
+ */
 
 // Tests for Functions
 
 for (const triplet of [
-    [[        1,   2],  'u8',  'u8'],
-    [[       -1,   2],  'i8',  'i8'],
-    [[    -0.99,   2], 'f64', 'f32'],
-    [[   2 ** 8,   0], 'u16', 'u16'],
-    [[  2 ** 16,   0], 'u32', 'u32'],
-    [[-(2 ** 8),   0], 'i16', 'i16'],
-    [[           0.8], 'f64', 'f32'],
-  ]) {
+  [[        1,   2],  'u8',  'u8'],
+  [[       -1,   2],  'i8',  'i8'],
+  [[    -0.99,   2], 'f64', 'f32'],
+  [[   2 ** 8,   0], 'u16', 'u16'],
+  [[  2 ** 16,   0], 'u32', 'u32'],
+  [[-(2 ** 8),   0], 'i16', 'i16'],
+  [[           0.8], 'f64', 'f32'],
+]) {
   const [arr, dtype, dtype2] = triplet;
   test('correct guesses dtype [-1,2] to be i8 ', () => {
     const guess = Column.guessNumDtype(arr);
@@ -124,11 +127,11 @@ for (const pair of [
 }
 
 for (const input of [
-    ["a", "b"],
-    ["a"],
-    ["a123"],
-    [],
-  ]) {
+  ['a', 'b'],
+  ['a'],
+  ['a123'],
+  [],
+]) {
   test(`Column.from([${input.join(', ')}]) gives a normal array`, () => {
     const col = Column.from(input);
     expect(input).toHaveLength(col.length);
@@ -139,9 +142,9 @@ for (const input of [
 }
 
 for (const input of [
-    ['0'],
-    ['0', '1'],
-  ]) {
+  ['0'],
+  ['0', '1'],
+]) {
   test(`Column.from([${input.join(', ')}]) parses ints and converts a col`, () => {
     const s = Column.from(input);
     expect(input).toHaveLength(s.length);
@@ -153,9 +156,9 @@ for (const input of [
 }
 
 for (const input of [
-    ['0.3'],
-    ['0.9999', '99231.9'],
-  ]) {
+  ['0.3'],
+  ['0.9999', '99231.9'],
+]) {
   test(`Column.from([${input.join(', ')}]) parses floats and converts a col`, () => {
     const col = Column.from(input);
     expect(input).toHaveLength(col.length);
@@ -168,9 +171,9 @@ for (const input of [
 }
 
 for (const input of [
-    [0.3],
-    [0.9999, 99911.9],
-  ]) {
+  [0.3],
+  [0.9999, 99911.9],
+]) {
   test(`Column.of(${input.join(', ')}) parses floats and converts a col`, () => {
     const col = Column.from(input);
     expect(input).toHaveLength(col.length);
@@ -183,9 +186,9 @@ for (const input of [
 }
 
 for (const input of [
-    ["0.03"],
-    ["0.9999", "9231.0009"],
-  ]) {
+  ['0.03'],
+  ['0.9999', '9231.0009'],
+]) {
   test(`Column.of(${input.join(', ')}) parses floats and converts a col`, () => {
     const col = Column.of(...input);
     expect(input).toHaveLength(col.length);
@@ -196,9 +199,9 @@ for (const input of [
 }
 
 for (const input of [
-    [3, 1, 3, 0],
-    [-9990],
-  ]) {
+  [3, 1, 3, 0],
+  [-9990],
+]) {
   test(`Column.of(${input.join(', ')}) parses ints and converts a col`, () => {
     const col = Column.of(...input);
     expect(input).toHaveLength(col.length);
@@ -240,10 +243,10 @@ for (const n of [0, 10, 99]) {
 }
 
 for (const pair of [
-    [0, 0.1],
-    [10, 99],
-    [99, -231]
-  ]) {
+  [0, 0.1],
+  [10, 99],
+  [99, -231]
+]) {
   const [n, v] = pair;
   test(`Column.repeat(${n}) creates a col full of ${n}`, () => {
     const col = Column.repeat(n, v);
@@ -271,15 +274,15 @@ for (const n of [0, 1, 9, 222]) {
 }
 
 for (const pair of [
-    [ 'u8',   'Uint8Array'],
-    ['u16',  'Uint16Array'],
-    ['u32',  'Uint32Array'],
-    [ 'i8',    'Int8Array'],
-    ['i16',   'Int16Array'],
-    ['i32',   'Int32Array'],
-    ['f32', 'Float32Array'],
-    ['f64', 'Float64Array'],
-  ]) {
+  [ 'u8',   'Uint8Array'],
+  ['u16',  'Uint16Array'],
+  ['u32',  'Uint32Array'],
+  [ 'i8',    'Int8Array'],
+  ['i16',   'Int16Array'],
+  ['i32',   'Int32Array'],
+  ['f32', 'Float32Array'],
+  ['f64', 'Float64Array'],
+]) {
   const [col, cons] = pair;
   test(`correct creates constructor ${cons.constructor.name} from string "${col}"`, () => {
     expect(Column.constFromDtype(col).name).toEqual(cons);
@@ -299,10 +302,10 @@ for (const f of ['mad', 'stdev', 'var']) {
 }
 
 for (const pair of [
-    [    0,   1],
-    [   -5,   5],
-    [-0.99, 1.1],
-  ]) {
+  [    0,   1],
+  [   -5,   5],
+  [-0.99, 1.1],
+]) {
   const [lBound, uBound] = pair;
   const col = Column.rand(100, lBound - 10, uBound + 10).clip(lBound, uBound);
   test(`after col.clip(${lBound}, ${uBound}) the col does not have any values smaller than (${lBound}) or greater than (${uBound})`, () => {
