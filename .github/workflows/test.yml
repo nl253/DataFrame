@@ -23,12 +23,12 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node }}
-      - name: Check Dependencies Licensing
-        run: npx license-checker --summary
-      - name: Check Security Vulnerabilities 
-        run: npx retire --js
       - name: Install Node Modules
         run: npm install
+      - name: Check Dependencies Licensing
+        run: npx license-checker --summary
+      - name: Check Security Vulnerabilities
+        run: npx retire --js
       - name: Lint Code
         run: npx eslint
       - name: Check JSDoc Types

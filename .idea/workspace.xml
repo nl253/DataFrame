@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="242eafcb-65a6-4f52-8da8-5ea8e0f6ce15" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/Column.js" beforeDir="false" afterPath="$PROJECT_DIR$/Column.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/workflows/test.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/test.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Column.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/Column.test.js" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -117,9 +118,9 @@
       <method v="2" />
     </configuration>
     <list>
+      <item itemvalue="Jest.Unnamed" />
       <item itemvalue="Jest.concat typed arrays [-1,2,3], [3,4.5] and []  gives [-1,2,3,3,4.5]" />
       <item itemvalue="Jest.manhattan distance between [0,-8,33] and [99] is 99" />
-      <item itemvalue="Jest.Unnamed" />
       <item itemvalue="Node.js.REPL DF" />
     </list>
     <recent_temporary>
@@ -180,7 +181,14 @@
       <option name="project" value="LOCAL" />
       <updated>1574866318481</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Fix tests">
+      <created>1574870552833</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1574870552833</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -217,7 +225,9 @@
     <MESSAGE value="Fix checktype" />
     <MESSAGE value="Fix bug" />
     <MESSAGE value="Fix JSDoc" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fix JSDoc" />
+    <MESSAGE value="Fix tests" />
+    <MESSAGE value="Re-order CI/CD testing steps" />
+    <option name="LAST_COMMIT_MESSAGE" value="Re-order CI/CD testing steps" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

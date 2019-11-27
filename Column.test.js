@@ -1,5 +1,7 @@
 const Column = require('./Column');
 
+const FLOAT_DELTA = 0.001;
+
 // TODO unit test for `Column.IQR`
 // TODO unit test for `Column.Q1`
 // TODO unit test for `Column.Q3`
@@ -132,10 +134,10 @@ for (const input of [
     [],
   ]) {
   test(`Column.from([${input.join(', ')}]) gives a normal array`, () => {
-    const s = Column.from(input);
-    expect(input).toHaveLength(s.length);
-    for (let i = 0; i < s.length; i++) {
-      expect(s[i]).toEqual(input[i]);
+    const col = Column.from(input);
+    expect(input).toHaveLength(col.length);
+    for (let i = 0; i < col.length; i++) {
+      expect(col[i]).toEqual(input[i]);
     }
   });
 }
@@ -189,10 +191,10 @@ for (const input of [
     ["0.9999", "9231.0009"],
   ]) {
   test(`Column.of(${input.join(', ')}) parses floats and converts a col`, () => {
-    const s = Column.of(...input);
-    expect(input).toHaveLength(s.length);
-    for (let i = 0; i < s.length; i++) {
-      expect(s[i]).toBeCloseTo(parseFloat(input[i]));
+    const col = Column.of(...input);
+    expect(input).toHaveLength(col.length);
+    for (let i = 0; i < col.length; i++) {
+      expect(col[i]).toBeCloseTo(parseFloat(input[i]));
     }
   });
 }
@@ -202,11 +204,11 @@ for (const input of [
     [-9990],
   ]) {
   test(`Column.of(${input.join(', ')}) parses ints and converts a col`, () => {
-    const s = Column.of(...input);
-    expect(input).toHaveLength(s.length);
-    expect(s).toHaveProperty('dtype');
-    for (let i = 0; i < s.length; i++) {
-      expect(s[i]).toEqual(parseInt(input[i]));
+    const col = Column.of(...input);
+    expect(input).toHaveLength(col.length);
+    expect(col).toHaveProperty('dtype');
+    for (let i = 0; i < col.length; i++) {
+      expect(col[i]).toEqual(parseInt(input[i]));
     }
   });
 }
@@ -224,19 +226,19 @@ for (const n of [0, 10, 99]) {
 
 for (const n of [0, 10, 99]) {
   test(`Column.zeros(${n}) creates a col full of zeros`, () => {
-    const s = Column.zeros(n);
-    expect(s).toHaveProperty('dtype');
-    expect(s).toHaveLength(n);
-    for (let i = 0; i < s.length; i++) {
-      expect(s[i]).toEqual(0);
+    const col = Column.zeros(n);
+    expect(col).toHaveProperty('dtype');
+    expect(col).toHaveLength(n);
+    for (let i = 0; i < col.length; i++) {
+      expect(col[i]).toEqual(0);
     }
   });
   test(`Column.empty(${n}) creates a col full of zeros`, () => {
-    const s = Column.zeros(n);
-    expect(s).toHaveProperty('dtype');
-    expect(s).toHaveLength(n);
-    for (let i = 0; i < s.length; i++) {
-      expect(s[i]).toEqual(0);
+    const col = Column.zeros(n);
+    expect(col).toHaveProperty('dtype');
+    expect(col).toHaveLength(n);
+    for (let i = 0; i < col.length; i++) {
+      expect(col[i]).toEqual(0);
     }
   });
 }
@@ -248,11 +250,11 @@ for (const pair of [
   ]) {
   const [n, v] = pair;
   test(`Column.repeat(${n}) creates a col full of ${n}`, () => {
-    const s = Column.repeat(n, v);
-    expect(s).toHaveProperty('dtype');
-    expect(s).toHaveLength(n);
-    for (let i = 0; i < s.length; i++) {
-      expect(s[i]).toEqual(v);
+    const col = Column.repeat(n, v);
+    expect(col).toHaveProperty('dtype');
+    expect(col).toHaveLength(n);
+    for (let i = 0; i < col.length; i++) {
+      expect(col[i]).toEqual(v);
     }
   });
 }
@@ -284,12 +286,11 @@ for (const pair of [
     ['f32', 'Float32Array'],
     ['f64', 'Float64Array'],
   ]) {
-  const [s, cons] = pair;
-  test(`correct creates constructor ${cons.constructor.name} from string "${s}"`, () => {
-    expect(Column.constFromDtype(s).name).toEqual(cons);
+  const [col, cons] = pair;
+  test(`correct creates constructor ${cons.constructor.name} from string "${col}"`, () => {
+    expect(Column.constFromDtype(col).name).toEqual(cons);
   });
 }
-
 
 // Tests for Methods
 
@@ -298,13 +299,10 @@ test('mean of Column [1, 2, 3] is 2', () => {
 });
 
 for (const f of ['mad', 'stdev', 'var']) {
-  test(
-    `${f} of Column [1, 1, 1] is 0 (${f} measure of spread should give 0 if there is no spread)`,
-    () => {
-      expect(Column.of(1, 1, 1)[f]()).toEqual(0);
-    });
+  test(`${f} of Column [1, 1, 1] is 0 (${f} measure of spread should give 0 if there is no spread)`, () => {
+    expect(Column.of(1, 1, 1)[f]()).toEqual(0)
+  });
 }
-
 
 for (const pair of [
     [    0,   1],
@@ -312,11 +310,11 @@ for (const pair of [
     [-0.99, 1.1],
   ]) {
   const [lBound, uBound] = pair;
-  const s = Column.rand(100, lBound - 10, uBound + 10).clip(lBound, uBound);
+  const col = Column.rand(100, lBound - 10, uBound + 10).clip(lBound, uBound);
   test(`after col.clip(${lBound}, ${uBound}) the col does not have any values smaller than (${lBound}) or greater than (${uBound})`, () => {
-    for (let i = 0; i < s.length; i++) {
-      expect(s[i]).toBeGreaterThanOrEqual(lBound - 0.001);
-      expect(s[i]).toBeLessThanOrEqual(uBound + 0.001);
+    for (let i = 0; i < col.length; i++) {
+      expect(col[i]).toBeGreaterThanOrEqual(lBound - FLOAT_DELTA);
+      expect(col[i]).toBeLessThanOrEqual(uBound + FLOAT_DELTA);
     }
   });
 }
