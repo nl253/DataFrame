@@ -1,7 +1,5 @@
 /* eslint-disable no-nested-ternary,max-lines */
 /**
- * TODO concat is broken
- * TODO mixed types of colNames don't work
  * TODO document cum ops
  * TODO replace is broken
  * TODO binarizer
@@ -259,11 +257,12 @@ class DataFrame {
         return Column.from(c, !dtypes || !dtypes[cIdx] ? null : dtypes[cIdx], false);
       });
 
+      const { nCols } = this;
       if (colNames === null) {
-        this.colNames = Column.from(Array(this.nCols).fill('').map((_, idx) => `col${idx}`));
+        this.colNames = Column.from(Array(nCols).fill('').map((_, idx) => `col${idx}`));
       } else {
         this.colNames = Column.from(colNames.map(cName => cName.toString()), 's');
-        for (let i = 0; i < this.nCols; i++) {
+        for (let i = 0; i < nCols; i++) {
           const colName = this.colNames[i];
           const attributes = {
             get() { return this[i]; },
@@ -283,8 +282,10 @@ class DataFrame {
 
     const attrNames = new Set(this.colNames);
 
+    const { nCols } = this;
+
     // index using cols integers AND column names
-    for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
+    for (let cIdx = 0; cIdx < nCols; cIdx++) {
       attrNames.add(cIdx);
     }
 
@@ -339,7 +340,8 @@ class DataFrame {
               const numDF = this.numeric.call(colId, f, ...args);
               const { numColIdxs } = this;
               let numCIdx = 0;
-              for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
+              const { nCols } = this;
+              for (let cIdx = 0; cIdx < nCols; cIdx++) {
                 if (numColIdxs.has(cIdx)) {
                   resultDF.cols[cIdx] = numDF.cols[numCIdx];
                   numCIdx++;
@@ -354,7 +356,8 @@ class DataFrame {
               const strDF = this.nominal.call(colId, f, ...args);
               const { numColIdxs } = this;
               let strCIdx = 0;
-              for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
+              const { nCols } = this;
+              for (let cIdx = 0; cIdx < nCols; cIdx++) {
                 if (!numColIdxs.has(cIdx)) {
                   resultDF.cols[cIdx] = strDF.cols[strCIdx];
                   strCIdx++;
@@ -466,9 +469,9 @@ class DataFrame {
    * @returns {!Set<!Number>} set of column indexes
    */
   get numColIdxs() {
-    const { dtypes } = this;
     const colIdxs = new Set();
-    for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
+    const { dtypes, nCols } = this;
+    for (let cIdx = 0; cIdx < nCols; cIdx++) {
       if (dtypes[cIdx].search(dtypeRegex) >= 0) {
         colIdxs.add(cIdx);
       }
@@ -713,7 +716,8 @@ class DataFrame {
     }
     const colNames = [];
     const aggResults = [];
-    for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
+    const nCols = this.nCols;
+    for (let cIdx = 0; cIdx < nCols; cIdx++) {
       const col = this.cols[cIdx];
       const colName = this.colNames[cIdx];
       colNames.push(colName);
@@ -768,7 +772,8 @@ class DataFrame {
     }
     const cols = Array(this.cols.length).fill(null);
     const colNames = Array(this.cols.length).fill(null);
-    for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
+    const nCols = this.nCols;
+    for (let cIdx = 0; cIdx < nCols; cIdx++) {
       cols[cIdx] = f(this.cols[cIdx], other.cols[cIdx], cIdx);
       if (!isNumber(this.colNames[cIdx])) {
         colNames[cIdx] = this.colNames[cIdx];
