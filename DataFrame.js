@@ -419,13 +419,13 @@ class DataFrame {
       /**
        * @param {!Column[]} cols
        * @param {!Number} idx
-       * @returns {*[]}
+       * @returns {Array<*>}
        */
       get(cols, idx) { return cols.map(col => col[idx]); },
       /**
        *
        * @param {!Column[]} cols
-       * @param {*[]} row
+       * @param {Array<*>} row
        * @returns {!Boolean}
        */
       has(cols, row) {
@@ -451,7 +451,7 @@ class DataFrame {
       /**
        * @param {!Column[]} cols
        * @param {!Number} rIdx
-       * @param {*[]} val
+       * @param {Array<*>} val
        */
       set(cols, rIdx, val) {
         for (let cIdx = 0; cIdx < cols.length; cIdx++) {
@@ -532,28 +532,7 @@ class DataFrame {
    * @param {!String|!Number} colId
    * @returns {Array<String>|TypedArray} column
    */
-  col(colId) {
-    return this.cols[this.colIdx(colId)];
-  }
-
-  /**
-   * @param {!Number} idx
-   * @returns {!Array<*>} row
-   */
-  row(idx) {
-    return Array(this.nCols)
-      .fill(0)
-      .map((_, cIdx) => this.val(idx, cIdx));
-  }
-
-  /**
-   * @param {!Number} rowIdx
-   * @param {!String|!Number} colId
-   * @returns {!Number|!String} selects a val
-   */
-  val(rowIdx, colId) {
-    return this.col(colId)[rowIdx];
-  }
+  col(colId) { return this.cols[this.colIdx(colId)]; }
 
   /**
    * @param {?Number} [n]
@@ -591,9 +570,7 @@ class DataFrame {
   /**
    * @returns {!Number} number of columns
    */
-  get nCols() {
-    return this.cols.length;
-  }
+  get nCols() { return this.cols.length; }
 
   /**
    * @param {...(!String|!Number)} colIds
@@ -610,9 +587,7 @@ class DataFrame {
   /**
    * @returns {!ColStr} data types for all columns
    */
-  get dtypes() {
-    return Column.from(this.cols.map(c => c.dtype), 's');
-  }
+  get dtypes() { return Column.from(this.cols.map(c => c.dtype), 's'); }
 
   /**
    * @param {...(!Number|!String|!RegExp|!function((!String|!Number)):!Boolean)} params
@@ -1234,10 +1209,11 @@ class DataFrame {
   shuffle() {
     const rIdxs = Array(this.length).fill(0).map((_, idx) => idx);
     const rows = [];
+    const rs = this.rows;
     for (let i = 0; i < this.length; i++) {
       const idx = Math.floor(Math.random() * rIdxs.length);
       const rIdx = rIdxs[idx];
-      rows.push(this.row(rIdx));
+      rows.push(rs[rIdx]);
       rIdxs.splice(idx, 1);
     }
     return new DataFrame(rows, 'rows', [...this.colNames], [...this.dtypes]);
@@ -1278,14 +1254,14 @@ class DataFrame {
       return this.sample(this.length - 1, wr);
     }
     const rows = [];
+    const rs = this.rows;
     if (wr) {
       while (rows.length < n) {
         const rIdx = randInt(0, this.length);
-        rows.push(this.row(rIdx));
+        rows.push(rs[rIdx]);
       }
     } else {
       const idxs = Array(this.length).fill(0).map((_, idx) => idx);
-      const rs = this.rows;
       while (rows.length < n) {
         // this is a bit confusing because you are indexing an index
         const i = randInt(0, idxs.length);
@@ -1304,9 +1280,7 @@ class DataFrame {
    * @param {!String|!Number} colId
    * @returns {!DataFrame} data frame of counts
    */
-  counts(colId) {
-    return this.groupBy(colId, xs => xs.length);
-  }
+  counts(colId) { return this.groupBy(colId, xs => xs.length); }
 
   /**
    * Produce a ps table for values of a column.
@@ -1314,9 +1288,7 @@ class DataFrame {
    * @param {!String|!Number} colId
    * @returns {!DataFrame} data frame of pss
    */
-  ps(colId) {
-    return this.counts(colId).map(-1, x => x / this.length);
-  }
+  ps(colId) { return this.counts(colId).map(-1, x => x / this.length); }
 
   /**
    * One hot encode a column.
@@ -1672,8 +1644,9 @@ class DataFrame {
       // initialise
       const row = Array(this.nCols).fill('');
 
+      const rs = this.rows;
       for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
-        const val = this.val(rIdx, cIdx);
+        const val = rs[rIdx][cIdx];
         const s = val.toString();
 
         const isNum = numCols.has(cIdx);
