@@ -7,7 +7,6 @@
  * TODO document matrix ops
  * TODO document add, mul, div, sub
  * TODO document opts, printing presets
- * TODO document dataset lookup
  * TODO document examples of matrix ops, aggs, functs
  * TODO calculate the *base* size of each column (pointers are 8B)
  */
@@ -340,7 +339,6 @@ class DataFrame {
               const numDF = this.numeric.call(colId, f, ...args);
               const { numColIdxs } = this;
               let numCIdx = 0;
-              const { nCols } = this;
               for (let cIdx = 0; cIdx < nCols; cIdx++) {
                 if (numColIdxs.has(cIdx)) {
                   resultDF.cols[cIdx] = numDF.cols[numCIdx];
@@ -356,7 +354,6 @@ class DataFrame {
               const strDF = this.nominal.call(colId, f, ...args);
               const { numColIdxs } = this;
               let strCIdx = 0;
-              const { nCols } = this;
               for (let cIdx = 0; cIdx < nCols; cIdx++) {
                 if (!numColIdxs.has(cIdx)) {
                   resultDF.cols[cIdx] = strDF.cols[strCIdx];
@@ -389,16 +386,6 @@ class DataFrame {
         }
       };
     }
-
-    /*
-     * don't assign / drop / push to this.colNames (use df.rename(newName))
-     * Object.freeze(this.colNames);
-     */
-
-    /*
-     * don't assign / drop / push to this.cols (use df.drop, df.select or df.sliceCols)
-     * Object.freeze(this.cols);
-     */
   }
 
   /**

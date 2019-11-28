@@ -1720,7 +1720,7 @@ const bag = (xs, vocab = null) => {
 /**
  * @param {!Array<!number>|!Array<!String>|!TypedArray|!ColNum|!ColStr} xs
  * @param {!DType|null} [toDtype]
- * @param {!Boolean] [doClone]
+ * @param {!Boolean} [doClone]
  * @returns {!ColNum|!ColStr} column
  */
 const from = (xs, toDtype = null, doClone = true) => {

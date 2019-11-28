@@ -36,7 +36,6 @@
   "parserOptions": {
     "codeFrame": false,
     "ecmaFeatures": {
-      "experimentalObjectRestSpread": true,
       "spread": true,
       "impliedStrict": true,
       "jsx": true
