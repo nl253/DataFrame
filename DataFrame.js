@@ -53,7 +53,6 @@ const {
   MINIMAL_PRINTING
 } = require('./presets');
 
-
 class DataFrame {
   /**
    * @param {!DataFrame|!GeneratorFunction|!Object<!String|!Number,!Number|!String|!Array<!String>|!Array<!Number>|!ColStr|!ColNum|!TypedArray>|!Array<!Array<!Number|!String>>|!Array<!TypedArray|!Array<!Number>|!Array<!String>|!ColStr|!ColNum>|!Map<String,!Number|!String|!Array<!Number>|!Array<!String>>} data
@@ -261,9 +260,21 @@ class DataFrame {
       });
 
       if (colNames === null) {
-        this.colNames = Column.range(this.nCols);
+        this.colNames = Column.from(Array(this.nCols).fill('').map((_, idx) => `col${idx}`));
       } else {
         this.colNames = Column.from(colNames.map(cName => cName.toString()), 's');
+        for (let i = 0; i < this.nCols; i++) {
+          const colName = this.colNames[i];
+          const attributes = {
+            get() { return this[i]; },
+            set(newCol) {
+              this[i] = Column.from(newCol);
+              debug(`column ${colName} replaced with ${this[i].toString()}`);
+            },
+          };
+          Object.defineProperty(this.cols, colName, attributes);
+          debug(`registered col.${colName} to point to col[${i}]`);
+        }
         debug(`used provided column names: [${this.colNames.join(', ')}]`);
       }
     } else if (what === '') {
