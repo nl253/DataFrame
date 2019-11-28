@@ -1322,8 +1322,8 @@ class DataFrame {
    * @param {?Boolean} [withNames]
    * @returns {!DataFrame} data frame
    */
-  dist(p = 2, withNames = true) {
-    return this.numeric.matrix('dist', withNames, true, 0, p);
+  distance(p = 2, withNames = true) {
+    return this.numeric.matrix('distance', withNames, true, 0, p);
   }
 
   /**

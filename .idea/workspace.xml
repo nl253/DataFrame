@@ -117,9 +117,9 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Jest.Unnamed" />
       <item itemvalue="Jest.concat typed arrays [-1,2,3], [3,4.5] and []  gives [-1,2,3,3,4.5]" />
       <item itemvalue="Jest.manhattan distance between [0,-8,33] and [99] is 99" />
+      <item itemvalue="Jest.Unnamed" />
       <item itemvalue="Node.js.REPL DF" />
     </list>
     <recent_temporary>

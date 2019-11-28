@@ -81,7 +81,7 @@ const opts = require('./opts');
  * @property {!Function} cov
  * @property {!Function} cube
  * @property {!Function} disDiff
- * @property {!Function} dist
+ * @property {!Function} distance
  * @property {!function((!DType|null)): ColNum} convert
  * @property {!Function} div
  * @property {!Function} dot
@@ -1218,7 +1218,7 @@ const COL_NUM_PROTO = {
    * @param {!Number} [p]
    * @returns {*}
    */
-  dist(other, p = 2) {
+  distance(other, p = 2) {
     if (p === 1) {
       return this.sub(other).abs().add();
     } else if (p === 2) {

@@ -574,9 +574,9 @@ For a correlation of each column with each other column (matrix):
 iris.corr()      // .corr(false) to *not* print the first column
 // iris.cov()    // covariance
 // iris.dot()    // dot product between each col
-// iris.dist(1)  // manhattan distance
-// iris.dist(2)  // euclidian distance
-// iris.dist(2+) // minkowsky distance
+distance
+distance
+distance
 ```
 
 ```
