@@ -120,8 +120,6 @@ const opts = require('./opts');
  * @property {!Function} takeWhile
  * @property {!Function} trunc
  * @property {!Function} var
- * @property {!Function} zipWith
- * @property {!Function} zipWith3
  */
 
 /**
@@ -395,6 +393,29 @@ const COL_PROTO = {
       : [val1, count1])[0];
   },
 
+  // functional programming
+
+  /**
+   * @param {Iterable} other
+   * @param {function(*, *): *} f
+   * @param {!DType|'s'|null} [dtype]
+   * @returns {!ColNum|!ColStr}
+   */
+  zipWith(other, f, dtype = null) {
+    return from(Array(this.length).fill(0).map((_, idx) => f(this[idx], other[idx])), dtype);
+  },
+
+  /**
+   * @param {Iterable} xs
+   * @param {Iterable} ys
+   * @param {function(*, *, *): *} f
+   * @param {!DType|'s'|null} [dtype]
+   * @returns {!ColNum|!ColStr}
+   */
+  zipWith3(xs, ys, f, dtype = null) {
+    return from(Array(this.length).fill(0).map((_, idx) => f(this[idx], xs[idx], ys[idx])), dtype);
+  },
+
   /**
    * @param {Number} depth
    * @param {Object} options
@@ -566,25 +587,6 @@ const COL_STR_PROTO = {
   },
 
   // functional programming
-
-  /**
-   * @param {Iterable} other
-   * @param {function(*, *): *} f
-   * @returns {!ColNum|!ColStr}
-   */
-  zipWith(other, f) {
-    return from(Array(this.length.fill(0).map((_, idx) => f(this[idx], other[idx]))));
-  },
-
-  /**
-   * @param {Iterable} xs
-   * @param {Iterable} ys
-   * @param {function(*, *, *): *} f
-   * @returns {!ColNum|!ColStr}
-   */
-  zipWith3(xs, ys, f) {
-    return from(Array(this.length.fill(0).map((_, idx) => f(this[idx], xs[idx], ys[idx]))));
-  },
 
 
   // hacks
@@ -1504,16 +1506,6 @@ const COL_NUM_PROTO = {
    */
   replace(v, y, delta = 0.00001) {
     return this.map(x => Math.abs(x - v) <= delta ? y : x);
-  },
-
-  // functional programming
-
-  zipWith(other, f, dtype = null) {
-    return empty(this.length, dtype === null ? `f${opts.FLOAT_PREC}` : dtype).map((_, idx) => f(this[idx], other[idx]));
-  },
-
-  zipWith3(xs, ys, f, dtype = null) {
-    return empty(this.length, dtype === null ? `f${opts.FLOAT_PREC}` : dtype).map((_, idx) => f(this[idx], xs[idx], ys[idx]));
   },
 
   // hacks
