@@ -406,27 +406,60 @@ class DataFrame {
    */
   static of(...cols) { return new DataFrame(cols, 'cols'); }
 
-  get rowsIter() {
-    return function* () {
-      for (let r = 0; r < this.length; r++) {
-        yield this.row(r);
-      }
-    }.bind(this)();
-  }
-
   * [Symbol.iterator]() {
-    for (let r = 0; r < this.length; r++) {
-      yield this.row(r);
+    const { rows } = this;
+    const n = this.length;
+    for (let rIdx = 0; rIdx < n; rIdx++) {
+      yield rows[rIdx];
     }
   }
 
-  /**
-   * @param {!Number} rIdx row index
-   */
-  * irow(rIdx) {
-    for (let cIdx = 0; cIdx < this.nCols; cIdx++) {
-      yield this.val(rIdx, cIdx);
-    }
+  get rows() {
+    return new Proxy(this.cols, {
+      /**
+       * @param {!Column[]} cols
+       * @param {!Number} idx
+       * @returns {*[]}
+       */
+      get(cols, idx) { return cols.map(col => col[idx]); },
+      /**
+       *
+       * @param {!Column[]} cols
+       * @param {*[]} row
+       * @returns {!Boolean}
+       */
+      has(cols, row) {
+        const nCols = cols.length;
+        if (nCols === 0) {
+          return false;
+        }
+        const nRows = cols[0].length;
+        for (let rIdx = 0; rIdx < nRows; rIdx++) {
+          let eq = true;
+          for (let cIdx = 0; cIdx < nCols; cIdx++) {
+            if (row[cIdx] !== cols[cIdx][rIdx]) {
+              eq = false;
+              break;
+            }
+          }
+          if (eq) {
+            return true;
+          }
+        }
+        return false;
+      },
+      /**
+       * @param {!Column[]} cols
+       * @param {!Number} rIdx
+       * @param {*[]} val
+       */
+      set(cols, rIdx, val) {
+        for (let cIdx = 0; cIdx < cols.length; cIdx++) {
+          // eslint-disable-next-line no-param-reassign
+          cols[cIdx][rIdx] = val[cIdx];
+        }
+      }
+    });
   }
 
   /**
@@ -731,7 +764,7 @@ class DataFrame {
     }
     const cIdx = this.colIdx(colId);
     const index = new Map();
-    for (const r of this.rowsIter) {
+    for (const r of this) {
       const v = r[cIdx];
       const maybe = index.get(v);
       if (maybe === undefined) {
@@ -1183,7 +1216,7 @@ class DataFrame {
       }
     }
     if (isFunction(ord)) {
-      return new DataFrame([...this.rowsIter].sort(ord), 'rows', [...this.colNames], [...this.dtypes]);
+      return new DataFrame([...this].sort(ord), 'rows', [...this.colNames], [...this.dtypes]);
     }
     const cIdx = this.colIdx(colId);
     return this.sort(cIdx, ord.search(/^asc/i) >= 0
@@ -1252,13 +1285,14 @@ class DataFrame {
       }
     } else {
       const idxs = Array(this.length).fill(0).map((_, idx) => idx);
+      const rs = this.rows;
       while (rows.length < n) {
         // this is a bit confusing because you are indexing an index
         const i = randInt(0, idxs.length);
         const rowIdx = idxs[i];
-        const row = this.row(rowIdx);
+        const row = rs[rowIdx];
         rows.push(row);
-        idxs.pop(i); // remove i from possible idxs
+        idxs.splice(i, 1); // remove i from possible idxs
       }
     }
     return new DataFrame(rows, 'rows', [...this.colNames]);
@@ -1270,7 +1304,7 @@ class DataFrame {
    * @param {!String|!Number} colId
    * @returns {!DataFrame} data frame of counts
    */
-  counts(colId = null) {
+  counts(colId) {
     return this.groupBy(colId, xs => xs.length);
   }
 
@@ -1280,7 +1314,7 @@ class DataFrame {
    * @param {!String|!Number} colId
    * @returns {!DataFrame} data frame of pss
    */
-  ps(colId = null) {
+  ps(colId) {
     return this.counts(colId).map(-1, x => x / this.length);
   }
 
@@ -1444,7 +1478,7 @@ class DataFrame {
       return undefined;
     }
     const stringify = require('csv-stringify/lib/sync');
-    const a = [...this.rowsIter];
+    const a = [...this];
     a.unshift(this.colNames);
     return stringify(a);
   }
@@ -1475,7 +1509,8 @@ class DataFrame {
     for (let rIdx = 0; rIdx < this.length; rIdx++) {
       chunks.push('<tr>');
 
-      for (const val of this.irow(rIdx)) {
+      const { rows } = this;
+      for (const val of rows[rIdx]) {
         chunks.push(`<td>${val.toString()}</td>`);
       }
 
