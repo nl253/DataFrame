@@ -3,16 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="242eafcb-65a6-4f52-8da8-5ea8e0f6ce15" name="Default Changelist" comment="Fix">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/Column.js.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/Column.js.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/DataFrame.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/DataFrame.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/DataFrame.js.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/DataFrame.js.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/global.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/global.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/module-Column.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/module-Column.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/log.js" beforeDir="false" afterPath="$PROJECT_DIR$/log.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../GeneticAlgo-JS/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../GeneticAlgo-JS/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../WebScraper/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../WebScraper/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WebScraper/spider.js" beforeDir="false" afterPath="$PROJECT_DIR$/../WebScraper/spider.js" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -29,7 +20,7 @@
     </option>
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../GeneticAlgo-JS" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../WebScraper" />
   </component>
   <component name="JsBowerSettings">
     <node-interpreter value="project" />
@@ -306,7 +297,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/../WebScraper/spider.js</url>
-          <line>286</line>
+          <line>327</line>
           <properties lambdaOrdinal="-1" />
           <option name="timeStamp" value="3" />
         </line-breakpoint>
