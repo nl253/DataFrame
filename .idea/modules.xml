@@ -2,6 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../GeneticAlgo-JS/.idea/GA.iml" filepath="$PROJECT_DIR$/../GeneticAlgo-JS/.idea/GA.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../WebScraper/.idea/WebScraper.iml" filepath="$PROJECT_DIR$/../WebScraper/.idea/WebScraper.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/array_utils.iml" filepath="$PROJECT_DIR$/.idea/array_utils.iml" />
     </modules>
   </component>

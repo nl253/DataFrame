@@ -237,6 +237,7 @@
       1,
       {
         "ignore": [
+          0.5,
           -1,
           -2,
           0,
@@ -307,7 +308,8 @@
       2,
       {
         "builtinGlobals": false,
-        "hoist": "functions"
+        "hoist": "functions",
+        "allow": ["_"]
       }
     ],
     "no-shadow-restricted-names": 2,
@@ -405,7 +407,7 @@
       2,
       "never"
     ],
-    "padded-blocks": 1,
+    "padded-blocks": [1, {"classes":  "never", "switches":  "never"}],
     "semi-spacing": [
       2,
       {

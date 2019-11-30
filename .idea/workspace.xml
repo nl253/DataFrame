@@ -2,10 +2,32 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="242eafcb-65a6-4f52-8da8-5ea8e0f6ce15" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../WebScraper/.eslintrc.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../WebScraper/.github/ISSUE_TEMPLATE/bug_report.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../WebScraper/.github/ISSUE_TEMPLATE/feature_request.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../WebScraper/.github/issue_label_bot.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../WebScraper/.github/workflows/npmpublish.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../WebScraper/.github/workflows/test.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../WebScraper/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../WebScraper/jest.config.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.eslintrc.json" beforeDir="false" afterPath="$PROJECT_DIR$/.eslintrc.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/ISSUE_TEMPLATE/bug_report.md" beforeDir="false" afterPath="$PROJECT_DIR$/.github/ISSUE_TEMPLATE/bug_report.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/ISSUE_TEMPLATE/feature_request.md" beforeDir="false" afterPath="$PROJECT_DIR$/.github/ISSUE_TEMPLATE/feature_request.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/array_utils.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/array_utils.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/mx.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/mx.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/jsLibraryMappings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/jsLibraryMappings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Column.js" beforeDir="false" afterPath="$PROJECT_DIR$/Column.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DataFrame.js" beforeDir="false" afterPath="$PROJECT_DIR$/DataFrame.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../GeneticAlgo-JS/.github/ISSUE_TEMPLATE/bug_report.md" beforeDir="false" afterPath="$PROJECT_DIR$/../GeneticAlgo-JS/.github/ISSUE_TEMPLATE/bug_report.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../GeneticAlgo-JS/.github/ISSUE_TEMPLATE/feature_request.md" beforeDir="false" afterPath="$PROJECT_DIR$/../GeneticAlgo-JS/.github/ISSUE_TEMPLATE/feature_request.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WebScraper/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/../WebScraper/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WebScraper/example.js" beforeDir="false" afterPath="$PROJECT_DIR$/../WebScraper/example.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WebScraper/exporting/sqlite.js" beforeDir="false" afterPath="$PROJECT_DIR$/../WebScraper/exporting/sqlite.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WebScraper/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../WebScraper/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WebScraper/spider.js" beforeDir="false" afterPath="$PROJECT_DIR$/../WebScraper/spider.js" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -22,7 +44,7 @@
     </option>
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../WebScraper" />
   </component>
   <component name="JsBowerSettings">
     <node-interpreter value="project" />
@@ -36,18 +58,21 @@
     <auto-save>true</auto-save>
   </component>
   <component name="ProjectId" id="1TZkFpXF6ArQEY5vS4E46Q2c6Wd" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="javascript.nodejs.core.library.configured.version" value="12.2.0" />
     <property name="js.last.introduce.type" value="CONST" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../GP" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../WebScraper/.github/ISSUE_TEMPLATE" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.standard" value="true" />
     <property name="node.js.detected.package.stylelint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
     <property name="node.js.path.for.package.standard" value="project" />
     <property name="node.js.path.for.package.stylelint" value="project" />
-    <property name="node.js.selected.package.eslint" value="$PROJECT_DIR$/node_modules/eslint" />
+    <property name="node.js.selected.package.eslint" value="(autodetect)" />
     <property name="node.js.selected.package.standard" value="" />
     <property name="node.js.selected.package.stylelint" value="" />
     <property name="nodejs.jest.jest_package" value="$PROJECT_DIR$/node_modules/jest" />
@@ -55,12 +80,17 @@
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="nodejs_package_manager_path" value="npm" />
     <property name="restartRequiresConfirmation" value="false" />
-    <property name="settings.editor.selected.configurable" value="editor.preferences.fonts.default" />
+    <property name="settings.editor.selected.configurable" value="settings.javascript.linters.eslint" />
     <property name="ts.external.directory.path" value="$APPLICATION_HOME_DIR$/plugins/JavaScriptLanguage/jsLanguageServicesImpl/external" />
+    <property name="two.files.diff.last.used.file" value="$PROJECT_DIR$/../WebScraper/package.json" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/../WebScraper/.github/ISSUE_TEMPLATE" />
+      <recent name="$PROJECT_DIR$/../GeneticAlgo-JS/.github/ISSUE_TEMPLATE" />
+      <recent name="$PROJECT_DIR$/../WebScraper" />
       <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/../GeneticAlgo-JS" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -259,7 +289,8 @@
     <MESSAGE value="Fix eslint CI/CD" />
     <MESSAGE value="Remove df.col, df.val and fix JSDocs" />
     <MESSAGE value="Rename dist to distance" />
-    <option name="LAST_COMMIT_MESSAGE" value="Rename dist to distance" />
+    <MESSAGE value="Fix" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fix" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
