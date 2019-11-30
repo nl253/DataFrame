@@ -1,33 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="242eafcb-65a6-4f52-8da8-5ea8e0f6ce15" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/LICENSE" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../WebScraper/.eslintrc.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../WebScraper/.github/ISSUE_TEMPLATE/bug_report.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../WebScraper/.github/ISSUE_TEMPLATE/feature_request.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../WebScraper/.github/issue_label_bot.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../WebScraper/.github/workflows/npmpublish.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../WebScraper/.github/workflows/test.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../WebScraper/LICENSE" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../WebScraper/jest.config.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.eslintrc.json" beforeDir="false" afterPath="$PROJECT_DIR$/.eslintrc.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/ISSUE_TEMPLATE/bug_report.md" beforeDir="false" afterPath="$PROJECT_DIR$/.github/ISSUE_TEMPLATE/bug_report.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/ISSUE_TEMPLATE/feature_request.md" beforeDir="false" afterPath="$PROJECT_DIR$/.github/ISSUE_TEMPLATE/feature_request.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/array_utils.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/array_utils.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/mx.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/mx.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/jsLibraryMappings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/jsLibraryMappings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+    <list default="true" id="242eafcb-65a6-4f52-8da8-5ea8e0f6ce15" name="Default Changelist" comment="Fix">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/Column.js.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/Column.js.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/DataFrame.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/DataFrame.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/DataFrame.js.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/DataFrame.js.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/global.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/global.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/module-Column.html" beforeDir="false" afterPath="$PROJECT_DIR$/docs/module-Column.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/log.js" beforeDir="false" afterPath="$PROJECT_DIR$/log.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../GeneticAlgo-JS/.github/ISSUE_TEMPLATE/bug_report.md" beforeDir="false" afterPath="$PROJECT_DIR$/../GeneticAlgo-JS/.github/ISSUE_TEMPLATE/bug_report.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../GeneticAlgo-JS/.github/ISSUE_TEMPLATE/feature_request.md" beforeDir="false" afterPath="$PROJECT_DIR$/../GeneticAlgo-JS/.github/ISSUE_TEMPLATE/feature_request.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../WebScraper/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/../WebScraper/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../WebScraper/example.js" beforeDir="false" afterPath="$PROJECT_DIR$/../WebScraper/example.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../WebScraper/exporting/sqlite.js" beforeDir="false" afterPath="$PROJECT_DIR$/../WebScraper/exporting/sqlite.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../GeneticAlgo-JS/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../GeneticAlgo-JS/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../WebScraper/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../WebScraper/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../WebScraper/spider.js" beforeDir="false" afterPath="$PROJECT_DIR$/../WebScraper/spider.js" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -44,7 +29,7 @@
     </option>
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../WebScraper" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../GeneticAlgo-JS" />
   </component>
   <component name="JsBowerSettings">
     <node-interpreter value="project" />
@@ -65,7 +50,7 @@
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="javascript.nodejs.core.library.configured.version" value="12.2.0" />
     <property name="js.last.introduce.type" value="CONST" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../WebScraper/.github/ISSUE_TEMPLATE" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../WebScraper" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.standard" value="true" />
     <property name="node.js.detected.package.stylelint" value="true" />
@@ -86,9 +71,9 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/../WebScraper" />
       <recent name="$PROJECT_DIR$/../WebScraper/.github/ISSUE_TEMPLATE" />
       <recent name="$PROJECT_DIR$/../GeneticAlgo-JS/.github/ISSUE_TEMPLATE" />
-      <recent name="$PROJECT_DIR$/../WebScraper" />
       <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/../GeneticAlgo-JS" />
     </key>
@@ -105,7 +90,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Node.js.REPL DF">
+  <component name="RunManager" selected="npm.doc">
     <configuration name="Unnamed" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <node-options value="" />
@@ -148,14 +133,38 @@
     <configuration name="REPL DF" type="NodeJSConfigurationType" node-parameters="-i" working-dir="$PROJECT_DIR$">
       <method v="2" />
     </configuration>
+    <configuration name="doc" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="doc" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration name="example" type="js.build_tools.npm" temporary="true">
+      <package-json value="$PROJECT_DIR$/../WebScraper/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="example" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
     <list>
       <item itemvalue="Jest.concat typed arrays [-1,2,3], [3,4.5] and []  gives [-1,2,3,3,4.5]" />
       <item itemvalue="Jest.manhattan distance between [0,-8,33] and [99] is 99" />
       <item itemvalue="Jest.Unnamed" />
       <item itemvalue="Node.js.REPL DF" />
+      <item itemvalue="npm.example" />
+      <item itemvalue="npm.doc" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="npm.doc" />
+        <item itemvalue="npm.example" />
         <item itemvalue="Jest.manhattan distance between [0,-8,33] and [99] is 99" />
         <item itemvalue="Jest.concat typed arrays [-1,2,3], [3,4.5] and []  gives [-1,2,3,3,4.5]" />
         <item itemvalue="Jest.Unnamed" />
@@ -294,6 +303,14 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/../WebScraper/spider.js</url>
+          <line>286</line>
+          <properties lambdaOrdinal="-1" />
+          <option name="timeStamp" value="3" />
+        </line-breakpoint>
+      </breakpoints>
       <default-breakpoints>
         <breakpoint enabled="true" type="javascript-exception" />
       </default-breakpoints>

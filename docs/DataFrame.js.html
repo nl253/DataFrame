@@ -26,14 +26,8 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>// vim:hlsearch:nu:foldmethod=manual:sw=2:ts=4:expandtab:
+            <pre class="prettyprint source linenums"><code>/* eslint-disable no-nested-ternary,max-lines */
 /**
- * TODO loading (g)zipped csv
- * TODO concat is broken
- * TODO mixed types of colNames don't work
- * TODO finish typing Column.js &amp; DataFrame.js
- * TODO string col hashing
- * TODO edit photos, link to in README
  * TODO document cum ops
  * TODO replace is broken
  * TODO binarizer
@@ -41,8 +35,6 @@
  * TODO document matrix ops
  * TODO document add, mul, div, sub
  * TODO document opts, printing presets
- * TODO document dataset lookup
- * TODO re-think the dataset lookup API
  * TODO document examples of matrix ops, aggs, functs
  * TODO calculate the *base* size of each column (pointers are 8B)
  */
@@ -86,7 +78,6 @@ const {
   MINIMAL_PRINTING
 } = require('./presets');
 
-
 class DataFrame {
   /**
    * @param {!DataFrame|!GeneratorFunction|!Object&lt;!String|!Number,!Number|!String|!Array&lt;!String>|!Array&lt;!Number>|!ColStr|!ColNum|!TypedArray>|!Array&lt;!Array&lt;!Number|!String>>|!Array&lt;!TypedArray|!Array&lt;!Number>|!Array&lt;!String>|!ColStr|!ColNum>|!Map&lt;String,!Number|!String|!Array&lt;!Number>|!Array&lt;!String>>} data
@@ -104,7 +95,7 @@ class DataFrame {
       debug(`lowercasing "${what}"`);
       return new DataFrame(data, what.toLowerCase(), colNames, dtypes);
 
-    // another data frame, shallow copy it
+      // another data frame, shallow copy it
     } else if (what === 'df') {
       info(`data is another ${this.constructor.name}, making a shallow copy`);
       return new DataFrame(
@@ -113,13 +104,10 @@ class DataFrame {
         [...data.colNames],
         data.dtypes,
       );
-
     } else if (isSameType(this, data)) {
       info(`detected ${this.constructor.name}`);
       return new DataFrame(data, 'df', colNames, dtypes);
-
     } else if (isString(data)) {
-
       if (what.startsWith('url')) {
         info(`GET ${data}`);
         let newWhat;
@@ -130,11 +118,9 @@ class DataFrame {
         }
         const s = request('GET', data).getBody().toString('utf-8');
         return new DataFrame(s, newWhat, colNames, dtypes);
-
       } else if (isURL(data)) {
         info('detected URL');
         return new DataFrame(data, `url${what}`, colNames, dtypes);
-
       } else if (what.startsWith('json')) {
         info('data is JSON string, parsing');
         if (what === 'json') {
@@ -145,7 +131,6 @@ class DataFrame {
           info(`using further hint "${hint}"`);
           return new DataFrame(JSON.parse(data), hint, colNames, dtypes);
         }
-
       } else if (what.startsWith('csv')) {
         info('data is CSV string, parsing');
         const rows = parseCSV(data, { skip_empty_lines: true, trim: true });
@@ -157,7 +142,6 @@ class DataFrame {
           debug(`using provided column names ${colNames.toString()}`);
           return new DataFrame(rows, 'rows', colNames, dtypes);
         }
-
       } else if (what.startsWith('file')) {
         info(`data is file "${data}"`);
         if (what === 'file') {
@@ -169,7 +153,6 @@ class DataFrame {
           info(`using provided hint for file content type "${newWhat}"`);
           return new DataFrame(readFileSync(data).toString('utf-8'), newWhat, colNames, dtypes);
         }
-
       } else if (existsSync(data)) {
         info(`detected existing file "${data}"`);
         return new DataFrame(data, 'file', colNames, dtypes);
@@ -197,7 +180,6 @@ class DataFrame {
 
       const lookedIn = opts.DATASETS.concat([dirname(data)]).map(p => resolve(p)).join(', ');
       throw new Error(`failed to find file, looked for a dataset in ${lookedIn} (you might want to push your dir to opts.DATASETS OR set 'what', see API)`);
-
     } else if (what.startsWith('gen')) {
       info(`input is generator`);
       const rows = [];
@@ -211,7 +193,6 @@ class DataFrame {
         info('assuming row generator');
       }
       return new DataFrame(rows, newWhat, colNames, dtypes);
-
     } else if (isGenerator(data)) {
       info(`input is row generator`);
       return new DataFrame(data, 'gen', colNames, dtypes);
@@ -242,14 +223,12 @@ class DataFrame {
         Object.keys(data),
         dtypes,
       );
-
     } else if (isObject(data)) {
       info('detected Object');
       return new DataFrame(data, `obj${what}`, colNames, dtypes);
 
       // map { col1 => col2, ... }
     } else if (what.startsWith('map')) {
-
       info(`data is Map (len is ${data.size})`);
 
       // reverse logic to Object (above)
@@ -275,7 +254,6 @@ class DataFrame {
         colNames === null ? ['Key', 'Value'] : colNames,
         dtypes,
       );
-
     } else if (isMap(data)) {
       info('detected Map');
       return new DataFrame(data, `map${what}`, colNames, dtypes);
@@ -306,36 +284,49 @@ class DataFrame {
         return Column.from(c, !dtypes || !dtypes[cIdx] ? null : dtypes[cIdx], false);
       });
 
+      const { nCols } = this;
       if (colNames === null) {
-        this.colNames = Column.range(this.nCols);
+        this.colNames = Column.from(Array(nCols).fill('').map((_, idx) => `col${idx}`));
       } else {
         this.colNames = Column.from(colNames.map(cName => cName.toString()), 's');
+        for (let i = 0; i &lt; nCols; i++) {
+          const colName = this.colNames[i];
+          const attributes = {
+            get() { return this[i]; },
+            set(newCol) {
+              this[i] = Column.from(newCol);
+              debug(`column ${colName} replaced with ${this[i].toString()}`);
+            },
+          };
+          Object.defineProperty(this.cols, colName, attributes);
+          debug(`registered col.${colName} to point to col[${i}]`);
+        }
         debug(`used provided column names: [${this.colNames.join(', ')}]`);
       }
-
     } else if (what === '') {
       return new DataFrame(data, 'cols', colNames, dtypes);
-
     } else throw new Error('unrecognised input data');
 
     const attrNames = new Set(this.colNames);
 
+    const { nCols } = this;
+
     // index using cols integers AND column names
-    for (let cIdx = 0; cIdx &lt; this.nCols; cIdx++) {
+    for (let cIdx = 0; cIdx &lt; nCols; cIdx++) {
       attrNames.add(cIdx);
     }
 
-    /* easy access e.g. df.age, df.salary
+    /*
+     * easy access e.g. df.age, df.salary
      * easy replacement (assignment) of cols e.g. df.age = df2.age;
-     * easy broadcasting e.g. df.label = 0; */
+     * easy broadcasting e.g. df.label = 0;
+     */
     for (const name of attrNames) {
-      if (this[name] === undefined) {
+      if (this[name] === undefined &amp;&amp; isString(name)) {
         Object.defineProperty(this, name, {
-          get() {
-            return this.col(name);
-          },
+          get() { return this.col(name); },
           set(val) {
-            this.cols[(this.colIdx(name))] = isNumber(val) || isString(val)
+            this.cols[this.colIdx(name)] = isNumber(val) || isString(val)
               // broadcast
               ? Column.repeat(this.length, val)
               // replace
@@ -371,10 +362,34 @@ class DataFrame {
       for (const f of opts.FUNCTS[section].filter(isUndef)) {
         switch (section) {
           case 'num':
-            this[f] = function (colId = null, ...args) { return this.numeric.call(colId, f, ...args); };
+            this[f] = function (colId = null, ...args) {
+              const resultDF = this.clone();
+              const numDF = this.numeric.call(colId, f, ...args);
+              const { numColIdxs } = this;
+              let numCIdx = 0;
+              for (let cIdx = 0; cIdx &lt; nCols; cIdx++) {
+                if (numColIdxs.has(cIdx)) {
+                  resultDF.cols[cIdx] = numDF.cols[numCIdx];
+                  numCIdx++;
+                }
+              }
+              return resultDF;
+            };
             break;
           case 'str':
-            this[f] = function (colId = null, ...args) { return this.nominal.call(colId, f, ...args); };
+            this[f] = function (colId = null, ...args) {
+              const resultDF = this.clone();
+              const strDF = this.nominal.call(colId, f, ...args);
+              const { numColIdxs } = this;
+              let strCIdx = 0;
+              for (let cIdx = 0; cIdx &lt; nCols; cIdx++) {
+                if (!numColIdxs.has(cIdx)) {
+                  resultDF.cols[cIdx] = strDF.cols[strCIdx];
+                  strCIdx++;
+                }
+              }
+              return resultDF;
+            };
             break;
           case 'all':
             this[f] = function (colId = null, ...args) { return this.call(colId, f, ...args); };
@@ -386,7 +401,9 @@ class DataFrame {
     }
 
     // special cases, when called *without* any param, treat as agg
-    for (const f of ['add', 'sub', 'mul', 'div', 'pow'].filter(isUndef)) {
+    for (const f of [
+      'add', 'sub', 'mul', 'div', 'pow'
+    ].filter(isUndef)) {
       this[f] = function (...args) {
         if (args.length === 0) {
           debug(`no args to this.${f}() so treating as aggregate`);
@@ -397,12 +414,6 @@ class DataFrame {
         }
       };
     }
-
-    // don't assign / drop / push to this.colNames (use df.rename(newName))
-    // Object.freeze(this.colNames);
-
-    // don't assign / drop / push to this.cols (use df.drop, df.select or df.sliceCols)
-    Object.freeze(this.cols);
   }
 
   /**
@@ -413,36 +424,69 @@ class DataFrame {
    */
   static of(...cols) { return new DataFrame(cols, 'cols'); }
 
-  get rowsIter() {
-    return (function* () {
-      for (let r = 0; r &lt; this.length; r++) {
-        yield this.row(r);
+  * [Symbol.iterator]() {
+    const { rows } = this;
+    const n = this.length;
+    for (let rIdx = 0; rIdx &lt; n; rIdx++) {
+      yield rows[rIdx];
+    }
+  }
+
+  get rows() {
+    return new Proxy(this.cols, {
+      /**
+       * @param {!Column[]} cols
+       * @param {!Number} idx
+       * @returns {Array&lt;*>}
+       */
+      get(cols, idx) { return cols.map(col => col[idx]); },
+      /**
+       *
+       * @param {!Column[]} cols
+       * @param {Array&lt;*>} row
+       * @returns {!Boolean}
+       */
+      has(cols, row) {
+        const nCols = cols.length;
+        if (nCols === 0) {
+          return false;
+        }
+        const nRows = cols[0].length;
+        for (let rIdx = 0; rIdx &lt; nRows; rIdx++) {
+          let eq = true;
+          for (let cIdx = 0; cIdx &lt; nCols; cIdx++) {
+            if (row[cIdx] !== cols[cIdx][rIdx]) {
+              eq = false;
+              break;
+            }
+          }
+          if (eq) {
+            return true;
+          }
+        }
+        return false;
+      },
+      /**
+       * @param {!Column[]} cols
+       * @param {!Number} rIdx
+       * @param {Array&lt;*>} val
+       */
+      set(cols, rIdx, val) {
+        for (let cIdx = 0; cIdx &lt; cols.length; cIdx++) {
+          // eslint-disable-next-line no-param-reassign
+          cols[cIdx][rIdx] = val[cIdx];
+        }
       }
-    }).bind(this)();
-  }
-
-  *[Symbol.iterator]() {
-    for (let r = 0; r &lt; this.length; r++) {
-      yield this.row(r);
-    }
-  }
-
-  /**
-   * @param {!Number} rIdx row index
-   */
-  *irow(rIdx) {
-    for (let cIdx = 0; cIdx &lt; this.nCols; cIdx++) {
-      yield this.val(rIdx, cIdx);
-    }
+    });
   }
 
   /**
    * @returns {!Set&lt;!Number>} set of column indexes
    */
   get numColIdxs() {
-    const { dtypes } = this;
     const colIdxs = new Set();
-    for (let cIdx = 0; cIdx &lt; this.nCols; cIdx++) {
+    const { dtypes, nCols } = this;
+    for (let cIdx = 0; cIdx &lt; nCols; cIdx++) {
       if (dtypes[cIdx].search(dtypeRegex) >= 0) {
         colIdxs.add(cIdx);
       }
@@ -506,28 +550,7 @@ class DataFrame {
    * @param {!String|!Number} colId
    * @returns {Array&lt;String>|TypedArray} column
    */
-  col(colId) {
-    return this.cols[this.colIdx(colId)];
-  }
-
-  /**
-   * @param {!Number} idx
-   * @returns {!Array&lt;*>} row
-   */
-  row(idx) {
-    return Array(this.nCols)
-      .fill(0)
-      .map((_, cIdx) => this.val(idx, cIdx));
-  }
-
-  /**
-   * @param {!Number} rowIdx
-   * @param {!String|!Number} colId
-   * @returns {!Number|!String} selects a val
-   */
-  val(rowIdx, colId) {
-    return this.col(colId)[rowIdx];
-  }
+  col(colId) { return this.cols[this.colIdx(colId)]; }
 
   /**
    * @param {?Number} [n]
@@ -565,12 +588,10 @@ class DataFrame {
   /**
    * @returns {!Number} number of columns
    */
-  get nCols() {
-    return this.cols.length;
-  }
+  get nCols() { return this.cols.length; }
 
   /**
-   * @param {...!String|...!Number} colIds
+   * @param {...(!String|!Number)} colIds
    * @returns {!DataFrame} data frame
    */
   dtype(...colIds) {
@@ -584,13 +605,11 @@ class DataFrame {
   /**
    * @returns {!ColStr} data types for all columns
    */
-  get dtypes() {
-    return Column.from(this.cols.map(c => c.dtype), 's');
-  }
+  get dtypes() { return Column.from(this.cols.map(c => c.dtype), 's'); }
 
   /**
    * @param {...(!Number|!String|!RegExp|!function((!String|!Number)):!Boolean)} params
-   * @return {!DataFrame} data frame
+   * @returns {!DataFrame} data frame
    */
   select(...params) {
     if (params.length === 0) {
@@ -617,7 +636,37 @@ class DataFrame {
   }
 
   /**
-   * @param {...!String|...!Number|Array&lt;!Number|!String>} params pairs of colId, newName
+   * @param {...(!Number|!String|!RegExp|!function((!String|!Number)):!Boolean)} params
+   * @returns {!DataFrame} data frame
+   */
+  selectRows(...params) {
+    if (params.length === 0) {
+      throw new Error('the DF is empty because no row IDs provided, try: df.selectRows(0, -2, 3)');
+    } else if (params.length === 2 &amp;&amp; isRegExp(params[0])) {
+      return this.selectRows(val => val.search(params[0]) >= 0, params[1]);
+    } else if (params.length === 2 &amp;&amp; isFunction(params[0])) {
+      const colId = params[1];
+      const f = params[0];
+      // focus on one column
+      const col = this.col(colId);
+      const tests = Array(col.length).fill(false).map((_, rIdx) => f(col[rIdx], rIdx));
+      return new DataFrame(
+        this.cols.map(c => c.filter((_, rIdx) => tests[rIdx])),
+        'cols',
+        [...this.colNames],
+        [...this.dtypes],
+      );
+    } else if (params.length === 1 &amp;&amp; isFunction(params[0])) {
+      throw new Error(`${this.constructor.name}.selectRows() not implemented yet`);
+    } else if (params.reduce((ok, focus) => ok &amp;&amp; isNumber(focus) &amp;&amp; Number.isInteger(focus))) {
+      throw new Error(`${this.constructor.name}.selectRows() not implemented yet`);
+    } else {
+      throw new Error(`${this.constructor.name}.selectRows() didn't understand args ${params.map(x => x.toString()).join(', ')}`);
+    }
+  }
+
+  /**
+   * @param {...(!String|!Number)} params pairs of colId, newName
    * @returns {!DataFrame} data frame with renamed col
    */
   rename(...params) {
@@ -682,7 +731,8 @@ class DataFrame {
     }
     const colNames = [];
     const aggResults = [];
-    for (let cIdx = 0; cIdx &lt; this.nCols; cIdx++) {
+    const nCols = this.nCols;
+    for (let cIdx = 0; cIdx &lt; nCols; cIdx++) {
       const col = this.cols[cIdx];
       const colName = this.colNames[cIdx];
       colNames.push(colName);
@@ -695,6 +745,62 @@ class DataFrame {
       ['s', null],
     );
   }
+
+  /**
+   * @param {!Number|!String} colId
+   * @param {!Function|!String} [f]
+   * @param {...*} args
+   * @returns {!DataFrame} data frame
+   */
+  groupBy(colId, f = xs => xs.length, ...args) {
+    if (isString(f)) {
+      return this.groupBy(colId, xs => xs[f](...args)).rename(-1, f);
+    }
+    const cIdx = this.colIdx(colId);
+    const index = new Map();
+    for (const r of this) {
+      const v = r[cIdx];
+      const maybe = index.get(v);
+      if (maybe === undefined) {
+        index.set(v, [r]);
+      } else {
+        maybe.push(r);
+      }
+    }
+    for (const k of index.keys()) {
+      index.set(k, f(index.get(k)));
+    }
+    return new DataFrame(index, 'map', [this.colNames[cIdx], 'result'], [this.dtypes[cIdx], null]);
+  }
+
+  /**
+   * @param {!String|!function(Column, Column, Number): !Column} f
+   * @param {!DataFrame|null} [other]
+   * @returns {!DataFrame} data frame
+   */
+  connect(f, other = null) {
+    if (other === null) {
+      return this.connect(f, this);
+    }
+    if (isString(f)) {
+      return this.connect((xs, ys, idx) => xs[f](ys, idx), other);
+    }
+    const cols = Array(this.cols.length).fill(null);
+    const colNames = Array(this.cols.length).fill(null);
+    const nCols = this.nCols;
+    for (let cIdx = 0; cIdx &lt; nCols; cIdx++) {
+      cols[cIdx] = f(this.cols[cIdx], other.cols[cIdx], cIdx);
+      if (!isNumber(this.colNames[cIdx])) {
+        colNames[cIdx] = this.colNames[cIdx];
+      } else if (!isNumber(other.colNames[cIdx])) {
+        colNames[cIdx] = other.colNames[cIdx];
+      } else {
+        colNames[cIdx] = null;
+      }
+    }
+    return new DataFrame(cols, 'cols', colNames);
+  }
+
 
   /**
    * @param {!function(Col, Col): *|!String} f
@@ -716,13 +822,11 @@ class DataFrame {
     const debug = m => log.debug(msg(m));
 
     for (let yIdx = 0; yIdx &lt; nCols; yIdx++) {
-
       // else
       colIdxs.push(yIdx);
       rows.push([]);
 
       for (let xIdx = 0; xIdx &lt; nCols; xIdx++) {
-
         // some ops have a fixed return value when applied to self f(xs, xs) == id
         if (identity !== null &amp;&amp; xIdx === yIdx) {
           debug(`[skipping identity yIdx == xIdx, f(${this._colName(xIdx)}, ${this._colName(yIdx)}) = ${identity}`);
@@ -763,12 +867,8 @@ class DataFrame {
     const colNames = this.colNames.filter((_, cIdx) => colIdxs.indexOf(cIdx) >= 0);
 
     const df = new DataFrame(rows, 'rows', colNames);
-    if (withNames) {
-      return df.prependCol(Column.of(...this.colNames), 'column');
-    }
-    return df;
+    return withNames ? df.prependCol(this.colNames.clone(), 'column') : df;
   }
-
 
   /**
    * @param {!Array&lt;!String>|!Array&lt;!Number>|TypedArray} col
@@ -776,19 +876,18 @@ class DataFrame {
    * @returns {!DataFrame} data frame
    */
   appendCol(col, name = null, dtype = null) {
-    const colNames = [...this.colNames];
     const cols = [...this.cols];
+    const colNames = [...this.colNames];
+    const dtypes = [...this.dtypes];
     cols.push(col);
-    if (name === null) {
-      colNames.push(colNames.length);
-    } else {
-      colNames.push(name);
-    }
-    if (dtype !== null) {
-      return new DataFrame(cols, 'cols', colNames, dtype);
-    } else {
-      return new DataFrame(cols, 'cols', colNames);
-    }
+    colNames.push(name === null ? colNames.length : name);
+    dtypes.push(dtype === null ? null : dtype);
+    return new DataFrame(
+      cols,
+      'cols',
+      colNames,
+      dtypes,
+    );
   }
 
   /**
@@ -796,16 +895,19 @@ class DataFrame {
    * @param {?String} [name]
    * @returns {!DataFrame} data frame
    */
-  prependCol(col, name = null) {
-    const colNames = [...this.colNames];
+  prependCol(col, name = null, dtype = null) {
     const cols = [...this.cols];
+    const colNames = [...this.colNames];
+    const dtypes = [...this.dtypes];
     cols.unshift(col);
-    if (name === null) {
-      colNames.unshift(colNames.length);
-    } else {
-      colNames.unshift(name);
-    }
-    return new DataFrame(cols, 'cols', colNames);
+    colNames.unshift(name === null ? colNames.length : name);
+    dtypes.unshift(dtype === null ? null : dtype);
+    return new DataFrame(
+      cols,
+      'cols',
+      colNames,
+      dtypes,
+    );
   }
 
   /**
@@ -818,59 +920,49 @@ class DataFrame {
       if (axis &lt; 0) {
         return this.concat(other, axis + 2);
       } else if (axis === 0) {
-        const cols = [...this.cols];
-        const {nCols} = this;
-        for (let c = 0; c &lt; nCols; c++) {
-          const myCol = cols[c];
-          const otherCol = other.cols[c];
-          cols[c] = myCol.concat(otherCol);
+        return this.connect('concat', other);
+      } else if (axis === 1) {
+        // else if concat HORIZONTALLY
+        const isDigit = /^\d+$/; // check if has proper column names or just indexes
+        // if columns are indexes, shift them
+        let colNames;
+        if (other.colNames.filter(c => c.toString().search(isDigit)).length === other.colNames.length) {
+          colNames = this.colNames.concat(other.colNames.map(cIdx => this.colNames.length + cIdx));
+        } else {
+          colNames = this.colNames.concat(other.colNames);
         }
-        return new DataFrame(cols, 'cols', [...this.colNames]);
+
+        let renamed;
+
+        /*
+         * deal with duplicate col names (add a num to the -- e.g.: Age, Salary, Age2 ...)
+         * make sure that name clash didn't arise as a result of previous renaming
+         */
+        do {
+          renamed = false; // clear
+          for (let cIdx = 0; cIdx &lt; colNames.length; cIdx++) {
+            const name = colNames[cIdx];
+            let count = 2;
+            for (let ptr = cIdx + 1; ptr &lt; colNames.length; ptr++) {
+              const name2 = colNames[ptr];
+              if (name === name2) {
+                colNames[ptr] += count.toString();
+                renamed = true;
+                count++;
+              }
+            }
+          }
+        } while (renamed);
+        return new DataFrame(this.cols.concat(other.cols), 'cols', colNames);
       }
-      // is string
     } else if (isString(axis)) {
       if (axis.search(/^col/i) >= 0) {
-        return this.concat(other, 0);
-      } else {
         return this.concat(other, 1);
+      } else if (axis.search(/^row/i) >= 0) {
+        return this.concat(other, 0);
       }
     }
-
-    // else if concat HORIZONTALLY {
-    const isDigit = /^\d+$/; // check if has proper column names or just indexes
-    let colNames;
-
-    // if columns are indexes, shift them
-    if (other.colNames.filter(c => c.toString().search(isDigit)).length === other.colNames.length) {
-      colNames = this.colNames.concat(other.colNames.map(cIdx => this.colNames.length + cIdx));
-    } else {
-      colNames = this.colNames.concat(other.colNames);
-    }
-
-    let renamed;
-
-    /*
-     * deal with duplicate col names (add a num to the -- e.g.: Age, Salary, Age2 ...)
-     * make sure that name clash didn't arise as a result of previous renaming {
-     */
-    do {
-      renamed = false; // clear
-      for (let cIdx = 0; cIdx &lt; colNames.length; cIdx++) {
-        const name = colNames[cIdx];
-        let count = 2;
-        for (let ptr = cIdx + 1; ptr &lt; colNames.length; ptr++) {
-          const name2 = colNames[ptr];
-          if (name === name2) {
-            colNames[ptr] += count.toString();
-            renamed = true;
-            count++;
-          }
-        }
-      }
-    } while (renamed);
-
-    const cols = this.cols.concat(other.cols);
-    return new DataFrame(cols, 'cols', colNames);
+    throw new Error(`${this.constructor.name}.concat() invalid axis argument ${axis}, try 0, 1, 'rows' or 'cols'`);
   }
 
   /**
@@ -911,7 +1003,7 @@ class DataFrame {
    * E.g. sliceCols(0)         -> sliceCols(0, end).
    * E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
    *
-   * @param {...!Number|...!String} slices
+   * @param {...(!Number|!String)} slices
    * @returns {!DataFrame} data frame
    */
   sliceCols(...slices) {
@@ -925,7 +1017,7 @@ class DataFrame {
 
     // collect column idxs
     const colIds = new Set();
-    const {nCols} = this;
+    const { nCols } = this;
 
     for (let i = 1; i &lt; slices.length; i += 2) {
       const lBound = this.colIdx(slices[i - 1]);
@@ -1047,11 +1139,7 @@ class DataFrame {
    * @returns {!DataFrame} data frame with f applied to colId
    */
   replace(colId = null, pat, repl, ...args) {
-    if (isNumber(pat)) {
-      return this.numeric.call(colId, 'replace', repl, ...args);
-    } else {
-      return this.nominal.call(colId, 'replace', repl, ...args);
-    }
+    return this[isNumber(pat) ? 'numeric' : 'nominal'].call(colId, 'replace', pat, repl, ...args);
   }
 
   /**
@@ -1073,17 +1161,17 @@ class DataFrame {
 
     // store {Q1, Q3, idx} for every *NUMERIC* column
     const IQRs = this.colNames
-    // get column indexes
+      // get column indexes
       .map((_, idx) => idx)
-    // and now get all NUMERIC columns while leaving gaps to preserve indexing
+      // and now get all NUMERIC columns while leaving gaps to preserve indexing
       .map(idx => (numColIdxs.has(idx) ? this.cols[idx] : null))
-    // and now computer IQ1 and IQ3 for all NUMERIC columns while leaving gaps to preserve indexing
+      // and now computer IQ1 and IQ3 for all NUMERIC columns while leaving gaps to preserve indexing
       .map(maybeCol => (maybeCol === null ? null : ({ Q1: maybeCol.Q1(), Q3: maybeCol.Q3() })));
 
     // store results of testing for all rows
     const tests = Array(this.length).fill(true);
 
-    const {nCols} = this;
+    const { nCols } = this;
 
     // see if this row is an outlier by looking at each numeric column
     for (let rIdx = 0; rIdx &lt; this.length; rIdx++) {
@@ -1122,14 +1210,15 @@ class DataFrame {
         throw new Error('you need to select a column (e.g. df.sort(0))');
       }
     }
-    const cIdx = this.colIdx(colId);
     if (isFunction(ord)) {
-      return new DataFrame([...this.rowsIter].sort(ord), 'rows', [...this.colNames], [...this.dtypes]);
-    } else if (ord.search(/^asc/i) >= 0) {
-      return this.sort(cIdx, (r1, r2) => (r1[cIdx] > r2[cIdx] ? 1 : r1[cIdx] &lt; r2[cIdx] ? -1 : 0));
-    } else {
-      return this.sort(cIdx, (r1, r2) => (r1[cIdx] > r2[cIdx] ? -1 : r1[cIdx] &lt; r2[cIdx] ? 1 : 0));
+      return new DataFrame([...this].sort(ord), 'rows', [...this.colNames], [...this.dtypes]);
     }
+    const cIdx = this.colIdx(colId);
+    return this.sort(cIdx, ord.search(/^asc/i) >= 0
+      // eslint-disable-next-line no-nested-ternary
+      ? (r1, r2) => r1[cIdx] > r2[cIdx] ? 1 : r1[cIdx] &lt; r2[cIdx] ? -1 : 0
+      // eslint-disable-next-line no-nested-ternary
+      : (r1, r2) => r1[cIdx] > r2[cIdx] ? -1 : r1[cIdx] &lt; r2[cIdx] ? 1 : 0);
   }
 
   /**
@@ -1140,49 +1229,33 @@ class DataFrame {
   shuffle() {
     const rIdxs = Array(this.length).fill(0).map((_, idx) => idx);
     const rows = [];
+    const rs = this.rows;
     for (let i = 0; i &lt; this.length; i++) {
       const idx = Math.floor(Math.random() * rIdxs.length);
       const rIdx = rIdxs[idx];
-      rows.push(this.row(rIdx));
+      rows.push(rs[rIdx]);
       rIdxs.splice(idx, 1);
     }
     return new DataFrame(rows, 'rows', [...this.colNames], [...this.dtypes]);
   }
 
   /**
-   * @param {?Number} [n] number of cols to select
-   * @param {"var"|"stdev"|"mean"|"mad"|"IQR"|"median"|"Q1"|"Q3"|"skewness"|"min"|"range"|"max"|!Function} [agg]
+   * @param {!Number|null} [n] number of cols to select
+   * @param {!String|!function(Column): !Number} [agg]
+   * @param {...*} args
    * @returns {!DataFrame} data frame
    */
-  nBest(n = null, agg = 'var') {
+  nBest(n = null, agg = 'var', ...args) {
     if (n === null) {
       return this.nBest(opts.NBEST, agg);
-    } else if (n > this.nCols) {
+    }
+    if (n > this.nCols) {
       log.warn(`${this.constructor.name}.nBest(n = ${n}), but there is ${this.nCols} cols`);
       return this.nBest(this.nCols, agg);
     }
-
-    let bestCols;
-
-    if (isFunction(agg)) {
-      bestCols = this.cols.map((col, idx) => ({ idx, name: this.colNames[idx], score: agg(col) }));
-    } else {
-      bestCols = this.cols.map((col, idx) => ({ idx, name: this.colNames[idx], score: col[agg]() }));
-    }
-
-    bestCols = bestCols.sort((o1, o2) => (o1.score > o2.score ? -1 : o1.score &lt; o2.score ? 1 : 0)).slice(0, n);
-
-    if (bestCols.some(({ name }) => name.toString().search(/\d+/) &lt; 0)) {
-      const colNames = [];
-      const cols = [];
-      for (const o of bestCols) {
-        colNames.push(o.name);
-        cols.push(this.cols[o.idx]);
-      }
-      return new DataFrame(cols, 'cols', colNames);
-    } else {
-      return new DataFrame(bestCols.map(({ idx }) => this.cols[idx]), 'cols');
-    }
+    return this.agg(agg, ...args)
+      .sort(-1, 'des')
+      .slice(0, n);
   }
 
   /**
@@ -1201,10 +1274,11 @@ class DataFrame {
       return this.sample(this.length - 1, wr);
     }
     const rows = [];
+    const rs = this.rows;
     if (wr) {
       while (rows.length &lt; n) {
         const rIdx = randInt(0, this.length);
-        rows.push(this.row(rIdx));
+        rows.push(rs[rIdx]);
       }
     } else {
       const idxs = Array(this.length).fill(0).map((_, idx) => idx);
@@ -1212,9 +1286,9 @@ class DataFrame {
         // this is a bit confusing because you are indexing an index
         const i = randInt(0, idxs.length);
         const rowIdx = idxs[i];
-        const row = this.row(rowIdx);
+        const row = rs[rowIdx];
         rows.push(row);
-        idxs.pop(i); // remove i from possible idxs
+        idxs.splice(i, 1); // remove i from possible idxs
       }
     }
     return new DataFrame(rows, 'rows', [...this.colNames]);
@@ -1226,27 +1300,7 @@ class DataFrame {
    * @param {!String|!Number} colId
    * @returns {!DataFrame} data frame of counts
    */
-  counts(colId = null, doSort = true, sortOrd = 'des') {
-    if (colId === null) {
-      // only 1 column so unambiguous
-      if (this.nCols === 1) {
-        log.info(`${this.constructor.name}.counts() colId not specified for counts, executing on the only col`);
-        return this.count(0);
-      } else {
-        throw new Error('you need to select a column (e.g. `df.counts(0)`)');
-      }
-    }
-    const cIdx = this.colIdx(colId);
-    const col = this.cols[cIdx];
-    const colName = isString(this.colNames[cIdx]) ? this.colNames[cIdx] : 'value';
-    const df = new DataFrame(
-      col.counts(),
-      'map',
-      [colName, 'count'],
-      [this.dtypes[cIdx], 'u32'],
-    );
-    return doSort ? df.sort(-1, sortOrd) : df;
-  }
+  counts(colId) { return this.groupBy(colId, xs => xs.length); }
 
   /**
    * Produce a ps table for values of a column.
@@ -1254,12 +1308,7 @@ class DataFrame {
    * @param {!String|!Number} colId
    * @returns {!DataFrame} data frame of pss
    */
-  ps(colId = null, doSort = true, sortOrd = 'des') {
-    const counts = this.counts(colId, doSort, sortOrd);
-    return counts.cast(-1, `f${opts.FLOAT_PREC}`)
-                 .div(-1, counts.col(-1).add())
-                 .rename(-1, 'ps');
-  }
+  ps(colId) { return this.counts(colId).map(-1, x => x / this.length); }
 
   /**
    * One hot encode a column.
@@ -1293,8 +1342,8 @@ class DataFrame {
    * @param {?Boolean} [withNames]
    * @returns {!DataFrame} data frame
    */
-  dist(p = 2, withNames = true) {
-    return this.numeric.matrix('dist', withNames, true, 0, p);
+  distance(p = 2, withNames = true) {
+    return this.numeric.matrix('distance', withNames, true, 0, p);
   }
 
   /**
@@ -1388,7 +1437,7 @@ class DataFrame {
       return undefined;
     }
     const dict = {};
-    const {nCols} = this;
+    const { nCols } = this;
     for (let cIdx = 0; cIdx &lt; nCols; cIdx++) {
       const cName = this.colNames[cIdx];
       const col = this.cols[cIdx];
@@ -1421,7 +1470,7 @@ class DataFrame {
       return undefined;
     }
     const stringify = require('csv-stringify/lib/sync');
-    const a = [...this.rowsIter];
+    const a = [...this];
     a.unshift(this.colNames);
     return stringify(a);
   }
@@ -1452,7 +1501,8 @@ class DataFrame {
     for (let rIdx = 0; rIdx &lt; this.length; rIdx++) {
       chunks.push('&lt;tr>');
 
-      for (const val of this.irow(rIdx)) {
+      const { rows } = this;
+      for (const val of rows[rIdx]) {
         chunks.push(`&lt;td>${val.toString()}&lt;/td>`);
       }
 
@@ -1533,24 +1583,18 @@ class DataFrame {
     if (n === null) {
       const newN = Math.min(this.length, termHeight - 7);
       return this.toString(newN);
-
     } else if (m === null) {
       return this.toString(0, n);
-
     } else if (n &lt; 0) {
       return this.toString(n + this.length, m);
-
     } else if (m &lt; 0) {
       return this.toString(n, m + this.length);
-
     } else if (n > this.length) {
       log.warn(`${this.constructor.name}.toString(n = ${n}), but there is ${this.length} rows`);
       return this.toString(this.length - n, this.length);
-
     } else if (m > this.length) {
       log.warn(`${this.constructor.name}.toString(m = ${m}), but there is ${this.length} rows`);
       return this.toString(Math.max(0, this.length - (m - n)), this.length);
-
     } else if (this.nCols === 0) {
       return opts.EMPTY_STR;
     }
@@ -1586,7 +1630,7 @@ class DataFrame {
 
       if (opts.PRINT_TYPES) {
         // pad to reserve space for opts.PAD_STR and dtype (injected later after col len is computed)
-        h = opts.PAD_STR.repeat(dtypes[cIdx].length) + ' ' + h.toString();
+        h = `${opts.PAD_STR.repeat(dtypes[cIdx].length)} ${h.toString()}`;
       } else {
         // no padding needed
         h = h.toString();
@@ -1596,11 +1640,13 @@ class DataFrame {
 
     rows.push(headerRow);
 
-    // info about not displayed rows
-    // .. ... (2 more) .. .. &lt;- THIS
-    // 3
-    // 4
-    // 5
+    /*
+     * info about not displayed rows
+     * .. ... (2 more) .. .. &lt;- THIS
+     * 3
+     * 4
+     * 5
+     */
     if (opts.SHOW_MORE &amp;&amp; n > 0 &amp;&amp; this.nCols > 0) {
       const arr = Array(nCols).fill(opts.DOTS);
       arr[0] = `(${n} more)`;
@@ -1610,16 +1656,17 @@ class DataFrame {
     // memoize
     const numCols = this.numColIdxs;
 
-    // now the actual content of the table
-    // remember about optional index (inject AFTER)!
+    /*
+     * now the actual content of the table
+     * remember about optional index (inject AFTER)!
+     */
     for (let rIdx = n; rIdx &lt; m; rIdx++) {
-
       // initialise
       const row = Array(this.nCols).fill('');
 
+      const rs = this.rows;
       for (let cIdx = 0; cIdx &lt; this.nCols; cIdx++) {
-
-        const val = this.val(rIdx, cIdx);
+        const val = rs[rIdx][cIdx];
         const s = val.toString();
 
         const isNum = numCols.has(cIdx);
@@ -1652,7 +1699,6 @@ class DataFrame {
         emptyInfo.unshift('');
       }
       rows.push(emptyInfo);
-
     } else if (opts.SHOW_MORE &amp;&amp; m &lt; this.length &amp;&amp; this.nCols > 0) {
       const arr = Array(nCols).fill(opts.DOTS);
       arr[0] = `(${this.length - m} more)`;
@@ -1672,8 +1718,10 @@ class DataFrame {
         }
       }
 
-      /* different memory indiciator for index
-      (doesn't acutally take any memory since it's just printed) */
+      /*
+       * different memory indiciator for index
+       *(doesn't acutally take any memory since it's just printed)
+       */
       if (opts.SHOW_INDEX) {
         memInfo.unshift(opts.MEM_INFO_INDEX);
       }
@@ -1727,13 +1775,17 @@ class DataFrame {
     const tooLong = colWidths.reduce((l1, l2) => l1 + l2 + opts.SPACE_BETWEEN, -opts.SPACE_BETWEEN) > termWidth;
 
     if (tooLong) {
-       /* remove cols in the middle
-          this ensures that there is n - 1 SPACE_BETWEEN for every n cols */
+      /*
+       * remove cols in the middle
+       *this ensures that there is n - 1 SPACE_BETWEEN for every n cols
+       */
       const nColsToShow = Math.floor((termWidth + opts.SPACE_BETWEEN) / (colWidth + opts.SPACE_BETWEEN));
 
-      /* C C C LEFT C C C RIGHT C C C
-         should remove Cs on the left of LEFT and on the right of RIGHT
-         C C C ... C C C */
+      /*
+       * C C C LEFT C C C RIGHT C C C
+       * should remove Cs on the left of LEFT and on the right of RIGHT
+       *C C C ... C C C
+       */
       const offset = Math.floor(nColsToShow / 2);
       for (let rIdx = 0; rIdx &lt; rows.length; rIdx++) {
         let s = ''; // initialise
@@ -1749,9 +1801,8 @@ class DataFrame {
     } else {
       // display all (it fits on the screen)
       for (let rIdx = 0; rIdx &lt; rows.length; rIdx++) {
-        rows[rIdx] = rows[rIdx].map((val, cIdx) =>
-          val.padStart(colWidths[cIdx], opts.PAD_STR))
-             .join(opts.PAD_STR.repeat(opts.SPACE_BETWEEN));
+        rows[rIdx] = rows[rIdx].map((val, cIdx) => val.padStart(colWidths[cIdx], opts.PAD_STR))
+          .join(opts.PAD_STR.repeat(opts.SPACE_BETWEEN));
       }
     }
     return rows.join('\n');
@@ -1760,7 +1811,7 @@ class DataFrame {
   [util.inspect.custom](depth, options) { return this.toString(); }
 }
 
-module.exports = Object.freeze(DataFrame);
+module.exports = DataFrame;
 </code></pre>
         </article>
     </section>
@@ -1771,13 +1822,13 @@ module.exports = Object.freeze(DataFrame);
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Column.html">Column</a></li></ul><h3>Classes</h3><ul><li><a href="DataFrame.html">DataFrame</a></li></ul><h3>Global</h3><ul><li><a href="global.html#util">util</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Column.html">Column</a></li></ul><h3>Classes</h3><ul><li><a href="DataFrame.html">DataFrame</a></li></ul><h3>Global</h3><ul><li><a href="global.html#checkType">checkType</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#has">has</a></li><li><a href="global.html#isBoolean">isBoolean</a></li><li><a href="global.html#isFunction">isFunction</a></li><li><a href="global.html#isGenerator">isGenerator</a></li><li><a href="global.html#isMap">isMap</a></li><li><a href="global.html#isNumber">isNumber</a></li><li><a href="global.html#isObject">isObject</a></li><li><a href="global.html#isRegExp">isRegExp</a></li><li><a href="global.html#isSameType">isSameType</a></li><li><a href="global.html#isString">isString</a></li><li><a href="global.html#isURL">isURL</a></li><li><a href="global.html#log">log</a></li><li><a href="global.html#randInRange">randInRange</a></li><li><a href="global.html#randInt">randInt</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#util">util</a></li><li><a href="global.html#walkFiles">walkFiles</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Wed Nov 20 2019 15:25:23 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sat Nov 30 2019 09:59:42 GMT+0000 (Greenwich Mean Time)
 </footer>
 
 <script> prettyPrint(); </script>

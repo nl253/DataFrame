@@ -15,7 +15,7 @@ const log = createLogger(process.env.NODE_ENV === 'production' ? {
   format: fmt,
   level: 'info',
   transports: [
-    new transports.File({ filename: 'info.log', level: 'info' }),
+    new transports.File({ filename: 'info.console', level: 'info' }),
     new transports.Console({ level: 'warn' }),
   ],
 } : {

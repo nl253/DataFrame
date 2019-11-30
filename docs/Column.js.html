@@ -26,7 +26,9 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>/**
+            <pre class="prettyprint source linenums"><code>/* eslint-disable no-nested-ternary,max-lines,no-magic-numbers */
+
+/**
  * @module
  */
 /* eslint-disable sort-keys,no-param-reassign */
@@ -107,7 +109,7 @@ const opts = require('./opts');
  * @property {!Function} cov
  * @property {!Function} cube
  * @property {!Function} disDiff
- * @property {!Function} dist
+ * @property {!Function} distance
  * @property {!function((!DType|null)): ColNum} convert
  * @property {!Function} div
  * @property {!Function} dot
@@ -146,8 +148,6 @@ const opts = require('./opts');
  * @property {!Function} takeWhile
  * @property {!Function} trunc
  * @property {!Function} var
- * @property {!Function} zipWith
- * @property {!Function} zipWith3
  */
 
 /**
@@ -376,13 +376,11 @@ const COL_PROTO = {
    * @returns {ColNum|ColStr}
    */
   sort(order = 'asc', dtype = null) {
-    if (order === 'asc') {
-      return this.clone(dtype)._sort((a, b) => a > b ? 1 : a &lt; b ? -1 : 0);
-    } else if (order === 'des') {
-      return this.clone(dtype)._sort((a, b) => a > b ? -1 : a &lt; b ? 1 : 0);
-    } else {
-      return this.clone(dtype)._sort(order);
-    }
+    return this.clone(dtype)._sort(order === 'asc'
+      ? (a, b) => a > b ? 1 : a &lt; b ? -1 : 0
+      : order === 'des'
+        ? (a, b) => a > b ? -1 : a &lt; b ? 1 : 0
+        : order);
   },
 
   /**
@@ -421,6 +419,29 @@ const COL_PROTO = {
     return counts.reduce(([val1, count1], [val2, count2]) => count2 > count1
       ? [val2, count2]
       : [val1, count1])[0];
+  },
+
+  // functional programming
+
+  /**
+   * @param {Iterable} other
+   * @param {function(*, *): *} f
+   * @param {!DType|'s'|null} [dtype]
+   * @returns {!ColNum|!ColStr}
+   */
+  zipWith(other, f, dtype = null) {
+    return from(Array(this.length).fill(0).map((_, idx) => f(this[idx], other[idx])), dtype);
+  },
+
+  /**
+   * @param {Iterable} xs
+   * @param {Iterable} ys
+   * @param {function(*, *, *): *} f
+   * @param {!DType|'s'|null} [dtype]
+   * @returns {!ColNum|!ColStr}
+   */
+  zipWith3(xs, ys, f, dtype = null) {
+    return from(Array(this.length).fill(0).map((_, idx) => f(this[idx], xs[idx], ys[idx])), dtype);
   },
 
   /**
@@ -479,7 +500,7 @@ const COL_STR_PROTO = {
    * @returns {!ColStr}
    */
   clone() {
-    const xs = Array.from(this);
+    const xs = [...this];
     enh(xs);
     enhStrArr(xs);
     return xs;
@@ -595,25 +616,6 @@ const COL_STR_PROTO = {
 
   // functional programming
 
-  /**
-   * @param {Iterable} other
-   * @param {function(*, *): *} f
-   * @returns {!ColNum|!ColStr}
-   */
-  zipWith(other, f) {
-    return from(Array(this.length.fill(0).map((_, idx) => f(this[idx], other[idx]))));
-  },
-
-  /**
-   * @param {Iterable} xs
-   * @param {Iterable} ys
-   * @param {function(*, *, *): *} f
-   * @returns {!ColNum|!ColStr}
-   */
-  zipWith3(xs, ys, f) {
-    return from(Array(this.length.fill(0).map((_, idx) => f(this[idx], xs[idx], ys[idx]))));
-  },
-
 
   // hacks
 
@@ -626,6 +628,14 @@ const COL_STR_PROTO = {
     enh(xs);
     enhStrArr(xs);
     return xs;
+  },
+
+  /**
+   * @param {!DType|null} [dtype]
+   * @returns {ColNum}
+   */
+  convert(dtype = null) {
+    return from(this, dtype, false);
   },
 
   /**
@@ -689,15 +699,6 @@ const enhStrArr = (a) => {
 
 const COL_NUM_PROTO = {
 
-  /**
-   * @param {!DType|null} [dtype]
-   * @returns {ColNum}
-   */
-  convert(dtype = null) {
-    return dtype === this.dtype
-      ? this
-      : from(this, dtype, false);
-  },
 
   /**
    * @returns {!Number}
@@ -1245,7 +1246,7 @@ const COL_NUM_PROTO = {
    * @param {!Number} [p]
    * @returns {*}
    */
-  dist(other, p = 2) {
+  distance(other, p = 2) {
     if (p === 1) {
       return this.sub(other).abs().add();
     } else if (p === 2) {
@@ -1439,10 +1440,10 @@ const COL_NUM_PROTO = {
 
     for (let i = 0; i &lt; this.length; i++) {
       const val = this[i];
-      for (let boundIdx = 0; boundIdx &lt; k; boundIdx++) {
-        const boundVal = bounds[boundIdx];
+      for (let boundIndex = 0; boundIndex &lt; k; boundIndex++) {
+        const boundVal = bounds[boundIndex];
         if (val &lt; boundVal) {
-          s[i] = boundIdx;
+          s[i] = boundIndex;
           break;
         }
       }
@@ -1531,18 +1532,8 @@ const COL_NUM_PROTO = {
    * @param {!Number} [delta]
    * @returns {!ColNum}
    */
-  replace(v, y, delta = 0.001) {
-    return this.map((x, idx) => Math.abs(x - v) &lt;= delta ? y : x);
-  },
-
-  // functional programming
-
-  zipWith(other, f, dtype = null) {
-    return empty(this.length, dtype === null ? `f${opts.FLOAT_PREC}` : dtype).map((_, idx) => f(this[idx], other[idx]));
-  },
-
-  zipWith3(xs, ys, f, dtype = null) {
-    return empty(this.length, dtype === null ? `f${opts.FLOAT_PREC}` : dtype).map((_, idx) => f(this[idx], xs[idx], ys[idx]));
+  replace(v, y, delta = 0.00001) {
+    return this.map(x => Math.abs(x - v) &lt;= delta ? y : x);
   },
 
   // hacks
@@ -1757,10 +1748,22 @@ const bag = (xs, vocab = null) => {
 /**
  * @param {!Array&lt;!number>|!Array&lt;!String>|!TypedArray|!ColNum|!ColStr} xs
  * @param {!DType|null} [toDtype]
+ * @param {!Boolean} [doClone]
  * @returns {!ColNum|!ColStr} column
  */
 const from = (xs, toDtype = null, doClone = true) => {
-  if (toDtype === xs.dtype || (toDtype === null &amp;&amp; xs.dtype !== undefined &amp;&amp; xs.dtype !== 's')) {
+  if (toDtype === xs.dtype) {
+    // preserve semantics of Array.from, which clones
+    if (doClone) {
+      log.debug(`dtype matches hint, cloning ${xs.toString()}`);
+      return xs.clone();
+    } else {
+      log.debug('dtype matches hint, returning as is');
+      return xs;
+    }
+  }
+
+  if (toDtype === null &amp;&amp; xs.dtype !== undefined &amp;&amp; xs.dtype !== 's') {
     // preserve semantics of Array.from, which clones
     if (doClone) {
       log.debug(`dtype matches hint, cloning ${xs.toString()}`);
@@ -1809,8 +1812,10 @@ const from = (xs, toDtype = null, doClone = true) => {
    * if there is at least one num-like string
    */
   if (xs.some(x => x.search !== undefined &amp;&amp; x.search(isNumRegex) >= 0)) {
-    // THEN try parsing all
-    // const tryParse = empty(xs.length, toDtype);
+    /*
+     * THEN try parsing all
+     * const tryParse = empty(xs.length, toDtype);
+     */
     let okCount = 0;
     for (let idx = 0; idx &lt; xs.length; idx++) {
       if (xs[idx].search !== undefined &amp;&amp; xs[idx].search(isNumRegex) >= 0) {
@@ -1880,8 +1885,8 @@ const rand = (len, lBound = null, uBound = null, dtype = null) => {
       return rand(len, 0, uBound, dtype);
     } else if (uBound === null) {
       return rand(len, lBound, lBound + 1, dtype);
-    }
-    // else
+    } /* else */
+    // eslint-disable-next-line no-shadow
     const range = uBound - lBound;
     const LOWER_RANGE = 122 - 97;
     const UPPER_RANGE = 90 - 65;
@@ -1963,7 +1968,9 @@ const isCol = xs => isColNum(xs) || isColStr(xs);
 const fromFunct = (f, n) => empty(n, `f${opts.FLOAT_PREC}`).map((_, idx) => f(idx));
 
 const PRODUCERS = {};
-for (const p of ['Uint8', 'Uint16', 'Uint32', 'Int8', 'Int16', 'Int32', 'Float32', 'Float64']) {
+for (const p of [
+  'Uint8', 'Uint16', 'Uint32', 'Int8', 'Int16', 'Int32', 'Float32', 'Float64'
+]) {
   const dtype = p.toLowerCase()
     .replace('uint', 'U')
     .replace('float', 'F')
@@ -1971,6 +1978,7 @@ for (const p of ['Uint8', 'Uint16', 'Uint32', 'Int8', 'Int16', 'Int32', 'Float32
 
   /**
    * @param {!Number} [len]
+   * @return {!ColNum}
    */
   PRODUCERS[`Col${dtype}`] = (len = 0) => {
     const match = dtypeRegex.exec(dtype);
@@ -1983,6 +1991,7 @@ for (const p of ['Uint8', 'Uint16', 'Uint32', 'Int8', 'Int16', 'Int32', 'Float32
   };
 }
 
+// eslint-disable-next-line no-unused-vars
 const { ColF32, ColF64, ColU8, ColU16, ColU32, ColI8, ColI16, ColI32 } = PRODUCERS;
 
 Object.setPrototypeOf(COL_STR_PROTO, COL_PROTO);
@@ -2005,12 +2014,13 @@ module.exports = Object.freeze(
     zeros,
   }),
   ...PRODUCERS,
-  ...(process.env.TESTING === '1' ? {
+  ...({
     bag,
     constFromDtype,
     guessNumDtype,
     rangeIter,
-  } : {}) },
+  })
+  },
 );
 </code></pre>
         </article>
@@ -2022,13 +2032,13 @@ module.exports = Object.freeze(
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Column.html">Column</a></li></ul><h3>Classes</h3><ul><li><a href="DataFrame.html">DataFrame</a></li></ul><h3>Global</h3><ul><li><a href="global.html#util">util</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Column.html">Column</a></li></ul><h3>Classes</h3><ul><li><a href="DataFrame.html">DataFrame</a></li></ul><h3>Global</h3><ul><li><a href="global.html#checkType">checkType</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#has">has</a></li><li><a href="global.html#isBoolean">isBoolean</a></li><li><a href="global.html#isFunction">isFunction</a></li><li><a href="global.html#isGenerator">isGenerator</a></li><li><a href="global.html#isMap">isMap</a></li><li><a href="global.html#isNumber">isNumber</a></li><li><a href="global.html#isObject">isObject</a></li><li><a href="global.html#isRegExp">isRegExp</a></li><li><a href="global.html#isSameType">isSameType</a></li><li><a href="global.html#isString">isString</a></li><li><a href="global.html#isURL">isURL</a></li><li><a href="global.html#log">log</a></li><li><a href="global.html#randInRange">randInRange</a></li><li><a href="global.html#randInt">randInt</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#util">util</a></li><li><a href="global.html#walkFiles">walkFiles</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Wed Nov 20 2019 15:25:23 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sat Nov 30 2019 09:59:42 GMT+0000 (Greenwich Mean Time)
 </footer>
 
 <script> prettyPrint(); </script>
