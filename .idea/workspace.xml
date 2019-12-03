@@ -6,15 +6,9 @@
       <change afterPath="$PROJECT_DIR$/../GP/LICENSE" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/../GP/example.js" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/../GP/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/workflows/npmpublish.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/array_utils.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/array_utils.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/mx.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/mx.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.eslintrc.json" beforeDir="false" afterPath="$PROJECT_DIR$/.eslintrc.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../GeneticAlgo-JS/.github/workflows/npmpublish.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../WebScraper/.github/workflows/npmpublish.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Column.js" beforeDir="false" afterPath="$PROJECT_DIR$/Column.js" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -129,7 +123,7 @@
     </option>
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../WebScraper" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="JsBowerSettings">
     <node-interpreter value="project" />

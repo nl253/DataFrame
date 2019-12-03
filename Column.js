@@ -293,7 +293,7 @@ const COL_PROTO = {
    * @returns {!Boolean}
    */
   all(f) {
-    return !this.some(v => !f(v));
+    return !this.some((v) => !f(v));
   },
 
   /**
@@ -301,7 +301,7 @@ const COL_PROTO = {
    * @returns {!Boolean}
    */
   none(f) {
-    return !this.some(v => f(v));
+    return !this.some((v) => f(v));
   },
 
   /**
@@ -309,7 +309,7 @@ const COL_PROTO = {
    * @returns {!Boolean}
    */
   contains(v) {
-    return this.some(x => x === v);
+    return this.some((x) => x === v);
   },
 
   // manipulation
@@ -327,7 +327,7 @@ const COL_PROTO = {
    * @returns {!ColNum|!ColStr}
    */
   removeAll(v) {
-    return this.filter(a => !Object.is(a, v));
+    return this.filter((a) => !Object.is(a, v));
   },
 
   /**
@@ -486,7 +486,7 @@ const COL_STR_PROTO = {
    * @returns {!ColStr}
    */
   replace(pat, y) {
-    return this.map(x => x.replace(pat, y));
+    return this.map((x) => x.replace(pat, y));
   },
 
   /**
@@ -829,12 +829,12 @@ const COL_NUM_PROTO = {
     // is number
     if (other.constructor.name[0] === 'N') {
       if (dtype !== null) {
-        return empty(this.length, dtype).map(x => x + other);
+        return empty(this.length, dtype).map((x) => x + other);
       }
       const isInt = Number.isInteger(other);
       const isNeg = other < 0;
       if (amFloat || isInt && (!isNeg || amInt)) {
-        return this.map(x => x + other);
+        return this.map((x) => x + other);
       } else if (amUint && isInt && isNeg) {
         return empty(this.length, 'i32').map((_, idx) => this[idx] * other);
       } else {
@@ -906,7 +906,7 @@ const COL_NUM_PROTO = {
     // is number (so subtract other for all elements)
 
     if (this.dtype[0] === 'f') {
-      return this.map(x => x - other);
+      return this.map((x) => x - other);
     }
 
     // am int and is int (but could be signed)
@@ -944,12 +944,12 @@ const COL_NUM_PROTO = {
     if (other.constructor.name[0] === 'N') {
       if (dtype !== null) {
         return empty(this.length, dtype)
-          .map(x => x * other);
+          .map((x) => x * other);
       }
       const isInt = Number.isInteger(other);
       const isNeg = other < 0;
       if (amFloat || isInt && (!isNeg || amInt)) {
-        return this.map(x => x * other);
+        return this.map((x) => x * other);
       } else if (amUint && isInt && isNeg) {
         return empty(this.length, `i32`).map((_, idx) => this[idx] * other);
       } else {
@@ -1022,7 +1022,7 @@ const COL_NUM_PROTO = {
     if (other.constructor.name[0] === 'N') {
       if (dtype !== null) {
         return empty(this.length, dtype)
-          .map(x => x / other);
+          .map((x) => x / other);
       }
       return empty(this.length, `f${opts.FLOAT_PREC}`).map((_, idx) => this[idx] / other);
     }
@@ -1070,9 +1070,9 @@ const COL_NUM_PROTO = {
    */
   sqrt(dtype = null) {
     if (dtype === null || dtype === this.dtype) {
-      return this.map(x => Math.sqrt(x));
+      return this.map((x) => Math.sqrt(x));
     } else {
-      return empty(this.length, dtype).map(x => Math.sqrt(x));
+      return empty(this.length, dtype).map((x) => Math.sqrt(x));
     }
   },
 
@@ -1082,9 +1082,9 @@ const COL_NUM_PROTO = {
    */
   cbrt(dtype = null) {
     if (dtype === null || dtype === this.dtype) {
-      return this.map(x => Math.cbrt(x));
+      return this.map((x) => Math.cbrt(x));
     } else {
-      return empty(this.length, dtype).map(x => Math.cbrt(x));
+      return empty(this.length, dtype).map((x) => Math.cbrt(x));
     }
   },
 
@@ -1099,7 +1099,7 @@ const COL_NUM_PROTO = {
     } else if (n === 1) {
       return this.clone(dtype);
     } else if (dtype === null || this.dtype === dtype) {
-      return this.map(x => x ** n);
+      return this.map((x) => x ** n);
     } else {
       return empty(this.length, dtype).map((_, idx) => this[idx] ** n);
     }
@@ -1131,7 +1131,7 @@ const COL_NUM_PROTO = {
     if (dtype.startsWith('i')) {
       return this.cast(`u${Math.min(32, this.BYTES_PER_ELEMENT * 8 * 2)}`);
     } else {
-      return this.map(x => Math.abs(x));
+      return this.map((x) => Math.abs(x));
     }
   },
 
@@ -1140,7 +1140,7 @@ const COL_NUM_PROTO = {
    */
   trunc() {
     log.info('you might want to downcast now to save memory');
-    return this.map(x => Math.trunc(x));
+    return this.map((x) => Math.trunc(x));
   },
 
   /**
@@ -1148,7 +1148,7 @@ const COL_NUM_PROTO = {
    */
   ceil() {
     log.info('you might want to downcast now to save memory');
-    return this.map(x => Math.ceil(x));
+    return this.map((x) => Math.ceil(x));
   },
 
   /**
@@ -1156,7 +1156,7 @@ const COL_NUM_PROTO = {
    */
   round() {
     log.info('you might want to downcast now to save memory');
-    return this.map(x => Math.round(x));
+    return this.map((x) => Math.round(x));
   },
 
   /**
@@ -1164,7 +1164,7 @@ const COL_NUM_PROTO = {
    */
   floor() {
     log.info('you might want to downcast now to save memory');
-    return this.map(x => Math.floor(x));
+    return this.map((x) => Math.floor(x));
   },
 
   // basic stats
@@ -1480,7 +1480,7 @@ const COL_NUM_PROTO = {
   removeAllOutliers() {
     const Q1 = this.Q1();
     const Q3 = this.Q3();
-    return this.filter(x => x >= Q1 && x <= Q3);
+    return this.filter((x) => x >= Q1 && x <= Q3);
   },
 
   /**
@@ -1490,11 +1490,11 @@ const COL_NUM_PROTO = {
    */
   clip(lBound = null, uBound = null) {
     if (lBound !== null && uBound !== null) {
-      return this.map(v => v < lBound ? lBound : v > uBound ? uBound : v);
+      return this.map((v) => v < lBound ? lBound : v > uBound ? uBound : v);
     } else if (lBound !== null) {
-      return this.map(v => v < lBound ? lBound : v);
+      return this.map((v) => v < lBound ? lBound : v);
     } else {
-      return this.map(v => v > uBound ? uBound : v);
+      return this.map((v) => v > uBound ? uBound : v);
     }
   },
 
@@ -1505,7 +1505,7 @@ const COL_NUM_PROTO = {
    * @returns {!ColNum}
    */
   replace(v, y, delta = 0.00001) {
-    return this.map(x => Math.abs(x - v) <= delta ? y : x);
+    return this.map((x) => Math.abs(x - v) <= delta ? y : x);
   },
 
   // hacks
@@ -1590,10 +1590,10 @@ const guessNumDtype = (xs, floatSize = null) => {
     return guessNumDtype(xs, opts.FLOAT_PREC);
   }
 
-  const notNaN = xs.filter(x => !Object.is(NaN, x));
+  const notNaN = xs.filter((x) => !Object.is(NaN, x));
   const largest = notNaN.reduce((a, b) => Math.max(a, b));
   const smallest = notNaN.reduce((a, b) => Math.min(a, b));
-  const isFloat = notNaN.some(x => !Number.isInteger(x));
+  const isFloat = notNaN.some((x) => !Number.isInteger(x));
   log.debug(`max num is ${largest}, and min num is ${smallest}`);
 
   // reals
@@ -1763,7 +1763,7 @@ const from = (xs, toDtype = null, doClone = true) => {
     return ys;
   }
 
-  if (!xs.some(x => !isNumber(x) && !Object.is(NaN, x))) {
+  if (!xs.some((x) => !isNumber(x) && !Object.is(NaN, x))) {
     log.debug(`got array of numbers, creating ColNum`);
     const ys = empty(xs.length, toDtype);
     for (let i = 0; i < xs.length; i++) {
@@ -1783,7 +1783,7 @@ const from = (xs, toDtype = null, doClone = true) => {
    * save some computation time by checking
    * if there is at least one num-like string
    */
-  if (xs.some(x => x.search !== undefined && x.search(isNumRegex) >= 0)) {
+  if (xs.some((x) => x.search !== undefined && x.search(isNumRegex) >= 0)) {
     /*
      * THEN try parsing all
      * const tryParse = empty(xs.length, toDtype);
@@ -1918,19 +1918,19 @@ const of = (...xs) => from(xs, null, false);
  * @param {*} xs
  * @returns {!Boolean}
  */
-const isColNum = xs => xs.dtype !== undefined && !!xs.dtype.match(dtypeRegex);
+const isColNum = (xs) => xs.dtype !== undefined && !!xs.dtype.match(dtypeRegex);
 
 /**
  * @param {*} xs
  * @returns {!Boolean}
  */
-const isColStr = xs => xs.dtype === 's';
+const isColStr = (xs) => xs.dtype === 's';
 
 /**
  * @param {*} xs
  * @returns {!Boolean}
  */
-const isCol = xs => isColNum(xs) || isColStr(xs);
+const isCol = (xs) => isColNum(xs) || isColStr(xs);
 
 /**
  * @param {!function(number): *} f
@@ -1950,7 +1950,7 @@ for (const p of [
 
   /**
    * @param {!Number} [len]
-   * @return {!ColNum}
+   * @returns {!ColNum}
    */
   PRODUCERS[`Col${dtype}`] = (len = 0) => {
     const match = dtypeRegex.exec(dtype);

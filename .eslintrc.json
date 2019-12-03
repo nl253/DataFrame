@@ -53,6 +53,7 @@
   ],
   "root": true,
   "rules": {
+    "function-call-argument-newline": 0,
     "security/detect-object-injection": "off",
     "node/shebang": "off",
     "accessor-pairs": 0,
