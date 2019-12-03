@@ -10,5 +10,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="GA" />
     <orderEntry type="module" module-name="WebScraper" />
+    <orderEntry type="module" module-name="GP" />
   </component>
 </module>

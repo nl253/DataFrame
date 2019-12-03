@@ -2,6 +2,7 @@
   <dictionary name="mx">
     <words>
       <w>arange</w>
+      <w>ctxt</w>
       <w>datasets</w>
       <w>dtype</w>
       <w>dtypes</w>
@@ -22,6 +23,7 @@
       <w>squre</w>
       <w>stdev</w>
       <w>stringified</w>
+      <w>uops</w>
     </words>
   </dictionary>
 </component>
