@@ -6,9 +6,11 @@
       <change afterPath="$PROJECT_DIR$/../GP/LICENSE" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/../GP/example.js" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/../GP/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.eslintrc.json" beforeDir="false" afterPath="$PROJECT_DIR$/.eslintrc.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/array_utils.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/array_utils.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Column.js" beforeDir="false" afterPath="$PROJECT_DIR$/Column.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../GeneticAlgo-JS/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/../GeneticAlgo-JS/tsconfig.json" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -145,7 +147,7 @@
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="javascript.nodejs.core.library.configured.version" value="12.2.0" />
     <property name="js.last.introduce.type" value="CONST" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../WebScraper/exporting" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../WebScraper" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.jscs" value="true" />
     <property name="node.js.detected.package.standard" value="true" />
@@ -188,7 +190,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="npm.example">
+  <component name="RunManager" selected="Node.js.gh-rust-repos.js">
     <configuration name="Unnamed" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <node-options value="" />
@@ -231,6 +233,9 @@
     <configuration name="REPL DF" type="NodeJSConfigurationType" node-parameters="-i" working-dir="$PROJECT_DIR$">
       <method v="2" />
     </configuration>
+    <configuration name="gh-rust-repos.js" type="NodeJSConfigurationType" nameIsGenerated="true" path-to-js-file="gh-rust-repos.js" working-dir="$PROJECT_DIR$/../WebScraper/examples">
+      <method v="2" />
+    </configuration>
     <configuration name="doc" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
       <package-json value="$PROJECT_DIR$/package.json" />
       <command value="run" />
@@ -252,12 +257,13 @@
       <method v="2" />
     </configuration>
     <list>
+      <item itemvalue="Jest.Unnamed" />
       <item itemvalue="Jest.concat typed arrays [-1,2,3], [3,4.5] and []  gives [-1,2,3,3,4.5]" />
       <item itemvalue="Jest.manhattan distance between [0,-8,33] and [99] is 99" />
-      <item itemvalue="Jest.Unnamed" />
+      <item itemvalue="Node.js.gh-rust-repos.js" />
       <item itemvalue="Node.js.REPL DF" />
-      <item itemvalue="npm.example" />
       <item itemvalue="npm.doc" />
+      <item itemvalue="npm.example" />
     </list>
     <recent_temporary>
       <list>
@@ -287,31 +293,6 @@
           <select />
         </treeState>
       </serviceView>
-    </option>
-    <option name="viewStates">
-      <list>
-        <serviceView>
-          <treeState>
-            <expand />
-            <select />
-          </treeState>
-          <option name="viewType" value="service" />
-          <option name="roots">
-            <list>
-              <ServiceState>
-                <option name="path">
-                  <list>
-                    <option value="Database" />
-                    <option value="mx@localhost" />
-                    <option value="default" />
-                  </list>
-                </option>
-                <option name="contributor" value="com.intellij.database.console.DatabaseServiceViewContributor" />
-              </ServiceState>
-            </list>
-          </option>
-        </serviceView>
-      </list>
     </option>
   </component>
   <component name="TaskManager">
@@ -427,6 +408,15 @@
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
+    <option name="exactExcludedFiles">
+      <list>
+        <option value="$PROJECT_DIR$/../GeneticAlgo-JS/index.js" />
+        <option value="$PROJECT_DIR$/../GeneticAlgo-JS/examples/multiobjective.js" />
+        <option value="$PROJECT_DIR$/../GeneticAlgo-JS/examples/simple.js" />
+        <option value="$PROJECT_DIR$/../GeneticAlgo-JS/examples/math.js" />
+        <option value="$PROJECT_DIR$/../GeneticAlgo-JS/examples/parallel.js" />
+      </list>
+    </option>
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
@@ -462,26 +452,48 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/../WebScraper/spider.js</url>
-          <line>330</line>
+          <line>331</line>
           <option name="timeStamp" value="3" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/../WebScraper/exporting/db.js</url>
           <line>36</line>
-          <properties lambdaOrdinal="-1" />
           <option name="timeStamp" value="8" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/../WebScraper/spider.js</url>
-          <line>308</line>
-          <properties lambdaOrdinal="-1" />
+          <line>309</line>
           <option name="timeStamp" value="16" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/../WebScraper/exporting/file.js</url>
-          <line>19</line>
+          <url>file://$PROJECT_DIR$/../WebScraper/spider.js</url>
+          <line>265</line>
           <properties lambdaOrdinal="-1" />
-          <option name="timeStamp" value="20" />
+          <option name="timeStamp" value="21" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/../WebScraper/spider.js</url>
+          <line>302</line>
+          <properties lambdaOrdinal="-1" />
+          <option name="timeStamp" value="22" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/../WebScraper/spider.js</url>
+          <line>282</line>
+          <properties lambdaOrdinal="-1" />
+          <option name="timeStamp" value="23" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/../WebScraper/spider.js</url>
+          <line>319</line>
+          <properties lambdaOrdinal="-1" />
+          <option name="timeStamp" value="24" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/../WebScraper/spider.js</url>
+          <line>317</line>
+          <properties lambdaOrdinal="-1" />
+          <option name="timeStamp" value="25" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>

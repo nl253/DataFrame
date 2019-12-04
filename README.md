@@ -1,4 +1,4 @@
-# DataFrame 
+# DataFrame
 
 - [pandas](https://pandas.pydata.org/pandas-docs/stable/reference/frame.html)-like data-frame library
 - Column built on typed arrays
@@ -15,7 +15,7 @@ For more human-friendly docs keep reading.
 ## Installation
 
 ```sh
-$ npm install --save dataf
+npm install --save dataf
 ```
 
 ## Human-Friendly API
@@ -25,7 +25,7 @@ $ npm install --save dataf
 Run the node REPL.
 
 ```sh
-$ node
+node
 ```
 
 Import the library (make sure it's installed).
@@ -43,15 +43,15 @@ DF.dataSets
 ```javascript
 [ 'alcohol.csv',   // alcohol consumption math students
   'countries.csv', // geographical and economical data for all countries
-  'diabetes.csv',  
+  'diabetes.csv',
   'food.csv',      // food choices
   'got.csv',       // game of thrones deaths
   'happiness.csv', // world happiness 2017
-  'iris.csv',     
+  'iris.csv',
   'mushrooms.csv',
   'pokemon.csv',   // stats for all from all generations
-  'superheros.csv' 
-  ...  ] 
+  'superheros.csv'
+  ...  ]
 ```
 
 All have been placed in the public domain.
@@ -67,12 +67,12 @@ let iris = new DF('iris') // use `let`, you will be re-assigning a lot
 #### Head / Tail
 
 ```javascript
-iris.head().print() 
+iris.head().print()
 //  .head(20) for the first 20 rows
 //  .tail()   for last rows
 ```
 
-```
+```text
 # u8 Id f32 SepalLe... f32 SepalWi... f32 PetalLe... f32 PetalWi... s     Species
 - ----- -------------- -------------- -------------- -------------- -------------
 0     1           5.09           3.50           1.39           0.20 Iris-setos...
@@ -92,7 +92,7 @@ iris.head().print()
 iris.slice(10, 20).print() // can be .slice(5) for .slice(5, end)
 ```
 
-```
+```text
 # u8 Id f32 SepalLe... f32 SepalWi... f32 PetalLe... f32 PetalWi... s     Species
 - ----- -------------- -------------- -------------- -------------- -------------
 0    11           5.40           3.70           1.50           0.20 Iris-setos...
@@ -108,7 +108,7 @@ iris.slice(10, 20).print() // can be .slice(5) for .slice(5, end)
 We know that there are 6 columns (try running `iris.nCols`).  To get all column names run:
 
 ```javascript
-iris.colNames.print(100) // make sure it prints all 
+iris.colNames.print(100) // make sure it prints all
 ```
 
 ```javascript
@@ -121,7 +121,7 @@ If you want to extract a column (Column, see the Column API below) *from* a data
 iris.Species.print(5) // last column
 ```
 
-```
+```text
 Column s[Iris-setosa, Iris-setosa, Iris-setosa, Iris-setosa, Iris-setosa, ... 145 more]
 ```
 
@@ -140,7 +140,7 @@ iris.select(0, 1, -2).print(5) // the 1st, 2nd and the 2nd to last
 
 This show the first 5 rows of the *new* data frame with only: `Id`, `SepalLength` and `PetalWidth`.
 
-```
+```text
   # u8 Id f32 SepalLe... f32 PetalWi...
 --- ----- -------------- --------------
   0     1           5.09           0.20
@@ -159,7 +159,7 @@ If you want to select a *range* of column: e.g. from the 1st to the 3rd try:
 iris.sliceCols(0, 2).print(3)
 ```
 
-```
+```text
   # u8 Id f32 SepalLe... f32 SepalWi...
 --- ----- -------------- --------------
   0     1           5.09           3.50
@@ -196,7 +196,7 @@ If you want to remove the 2nd and the second to last columns:
 iris.drop(1, -2).print(3)
 ```
 
-```
+```text
   # f32 SepalLe... f32 SepalWi... f32 PetalLe... s     Species
 --- -------------- -------------- -------------- -------------
   0           5.09           3.50           1.39 Iris-setos...
@@ -327,7 +327,7 @@ iris.SepalLengthCm = iris.SepalLengthCm.map(s => s >= 5 ? 0 : 1)
 
 **NOTE** this might have to be `dataset[' Col With Spaces'] = newCol`.
 
-#### Mapping Columns 
+#### Mapping Columns
 
 Apply function to each element is selected column:
 
@@ -425,7 +425,7 @@ iris.sort('SepalWidthCm') // default is iris.sort(colId, 'asc')
 ```
 
 ```javascript
-iris.sort('SepalWidthCm', 'des') // descending sort 
+iris.sort('SepalWidthCm', 'des') // descending sort
 ```
 
 ### Transpose (inefficient)
@@ -435,10 +435,10 @@ Suppose you want to do summation row-wise (not column wise):
 
 ```javascript
 // numeric will drop the 'Species' column
-iris.numeric.transpose().sum() 
+iris.numeric.transpose().sum()
 ```
 
-```
+```text
   # u8  column f32 add
 --- ---------- -------
   0          0   11.19
@@ -455,7 +455,7 @@ iris.numeric.transpose().sum()
 
 ### Statistics & Math
 
-#### Aggregate operations, each is `DataFrame -> DataFrame`:
+#### Aggregate operations, each is `DataFrame -> DataFrame`
 
 **MATH**
 
@@ -486,7 +486,7 @@ E.g.:
 iris.IQR()
 ```
 
-```
+```text
 # s      column f32 IQR
 - ------------- -------
 0            Id   75.00
@@ -531,7 +531,7 @@ Signatures:
 iris.summary() // this will produce a summary data frame with info for every column
 ```
 
-```
+```text
 # s      column s dtype f32 min f32 max f32 range f32 mean f32 stdev
 - ------------- ------- ------- ------- --------- -------- ---------
 0            Id      u8    1.00  150.00    149.00    75.50     43.30
@@ -556,7 +556,7 @@ iris.counts(-1) // for the last column
 // iris.ps(-1) // for normalized values
 ```
 
-```
+```text
 # s     Species u8 count
 - ------------- --------
 0 Iris-setos...       50
@@ -579,7 +579,7 @@ distance
 distance
 ```
 
-```
+```text
 # s      column f64 Id f64 SepalLe... f64 SepalWi... f64 PetalLe... f64 PetalWi...
 - ------------- ------ -------------- -------------- -------------- --------------
 0            Id   1.00           0.71          -0.39           0.88           0.89
@@ -599,10 +599,10 @@ To remove all rows that have some value:
 
 ```javascript
 // from all cols i.e. remove all rows where any of the value is NaN
-iris.removeAll(NaN) 
+iris.removeAll(NaN)
 
 // from 1th and 3rd cols and from col 'PetalLengthCm'
-iris.removeAll(NaN, 0, 2, 'PetalLengthCm') 
+iris.removeAll(NaN, 0, 2, 'PetalLengthCm')
 ```
 
 #### Discretize (Bin)
@@ -614,10 +614,10 @@ iris.kBins(null, 3);            // 3 bins for all columns
 
 iris.kBins(2, 3) // 3rd (2 idx) col, 3 bins
     .col(2)      // select ONLY 3rd column (index is 2), which is of type Column
-    .print(10)  
+    .print(10)
 ```
 
-```
+```text
 Column u8[2, 1, 2, 1, 2, 2, 2, 2, 1, 1, ... 40 more]
 ```
 
@@ -653,7 +653,7 @@ iris.drop('Id') // `Id` column is not very useful
 // try: iris.drop('Id').numeric.nBest(2, 'mad').print(3)
 ```
 
-```
+```text
   # f32 PetalLe... f32 SepalLe...
 --- -------------- --------------
   0           1.39           5.09
@@ -673,12 +673,12 @@ iris.drop('Id')  // `Id` column is not very useful
     .numeric     // select all numeric cols
     .normalize() // bring them to range [0, 1]
     .nBest(2)    // best 2 features using variance as score
-    .print(3) 
+    .print(3)
 ```
 
 As you can see you might get different results:
 
-```
+```text
   # f32 PetalWi... f32 PetalLe...
 --- -------------- --------------
   0           0.04           0.06
@@ -701,7 +701,7 @@ From:
 iris.select(-2, -1).print(48, 52)
 ```
 
-```
+```text
   # f32 PetalWi... s     Species
 --- -------------- -------------
 ...      (48 more)           ...
@@ -720,7 +720,7 @@ To:
 iris.select(-2, -1).labelEncode().print(48, 52)
 ```
 
-```
+```text
   # f32 PetalWi... u8 Species
 --- -------------- ----------
 ...      (48 more)        ...
@@ -746,7 +746,7 @@ iris.labelEncode('Species')
     .print(48, 52)
 ```
 
-```
+```text
   # u8 0 u8      1 u8 2
 --- ---- --------- ----
 ...  ... (48 more)  ...
@@ -767,7 +767,7 @@ For demonstration let's make a 1-col data frame:
 iris.select(1).print(3)
 ```
 
-```
+```text
 # f32 SepalLe...
 - --------------
 0           5.09
@@ -785,7 +785,7 @@ iris.select(1)
     .print(3)
 ```
 
-```
+```text
   # f32 SepalLe...
 --- --------------
   0           5.00
@@ -857,7 +857,7 @@ iris.dropOutliers(0, -2) // consider just 1st and second to last cols
 If you want to get the data type for all columns try:
 
 ```javascript
-iris.dtypes 
+iris.dtypes
 
 [ 'u8', 'f32', 'f32', 'f32', 'f32', 's' ] // read-only
 ```
@@ -871,7 +871,7 @@ iris.dtype() // note difference between `iris.dtype()` (method) and `iris.dtypes
 
 **SIDENOTE** `.dtype()` is an aggregate! This means it produces a data frame from applying a `Column -> *` operation to all columns.
 
-```
+```text
 # s      column s dtype
 - ------------- -------
 0            Id      u8
@@ -897,8 +897,7 @@ This is especially useful after truncating (floats are converted to integers).
 
 Default:
 
-
-```
+```text
 # u8 Id f32 SepalLe... f32 SepalWi... f32 PetalLe... f32 PetalWi... s     Species
 - ----- -------------- -------------- -------------- -------------- -------------
 0     1           5.09           3.50           1.39           0.20 Iris-setos...
@@ -914,7 +913,7 @@ Now see how much memory can be saved:
 iris.trunc().downcast().head(3)
 ```
 
-```
+```text
 # u8 Id u8 SepalLe... u8 SepalWi... u8 PetalLe... u8 PetalWi... s     Species
 - ----- ------------- ------------- ------------- ------------- -------------
 0     1             5             3             1             0 Iris-setos...
@@ -932,7 +931,7 @@ Although this information is by default printed, you may produce a data frame wi
 iris.memory()
 ```
 
-```
+```text
 # s      column u16 memory
 - ------------- ----------
 0            Id        150
@@ -992,7 +991,7 @@ iris.sliceCols(-3, -2, 0, 2)
 
 ```
 
-```
+```text
 # f32 PetalLe... f32 PetalWi... u8 Id f32 SepalLe... f32 SepalWi...
 - -------------- -------------- ----- -------------- --------------
 0           1.39           0.20     1           5.09           3.50
@@ -1002,7 +1001,7 @@ iris.sliceCols(-3, -2, 0, 2)
              12B            12B    3B            12B            12B
 ```
 
-### Exporting 
+### Exporting
 
 #### HTML
 
@@ -1059,7 +1058,7 @@ iris.head(2).toJSON()
 #### CSV
 
 ```javascript
-iris.head(2).toCSV() 
+iris.head(2).toCSV()
 ```
 
 ```csv
@@ -1116,9 +1115,9 @@ DF.opts.OPTION = VALUE;
 ```javascript
 const args = df.colNames
                // replace spaces with '_'
-               .map(c => [c, c.replace(/\s+/, '_')]) 
+               .map(c => [c, c.replace(/\s+/, '_')])
                // flatten
-               .reduce((pair1, pair2) => pair1.concat(pair2), []); 
+               .reduce((pair1, pair2) => pair1.concat(pair2), []);
 
 df = df.rename(...args) // spread
 ```
@@ -1130,7 +1129,7 @@ This would normally take a lot of code:
 ```javascript
 iris.normalize()
     .matrix(
-        (col1, col2) => Math.abs(col1.mean() - col2.mean()), 
+        (col1, col2) => Math.abs(col1.mean() - col2.mean()),
         true, // show cols
         true, // halves the computation time when f(c2, c1) == f(c1, c2)
         0)    // saves computation on the diagonal, when f(c, c) == id
@@ -1161,7 +1160,7 @@ MB = B / 1e6
 
 TODO
 
-### Disclaimer 
+### Disclaimer
 
 1. I am not a statistician
 2. Unit tests for `DataFrame` are not done yet
@@ -1186,7 +1185,7 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-<!-- 
+<!--
 TODO document `df.call()`
 TODO document `df.agg()`
 -->
