@@ -66,6 +66,7 @@
     "eslint-plugin-security": "^1.4.0",
     "jest": "^24.9.0",
     "jsdoc": "3.6.3",
+    "jsonlint": "^1.6.3",
     "license-checker": "^25.0.1",
     "markdownlint": "^0.17.2",
     "markdownlint-cli": "^0.19.0",
@@ -80,7 +81,8 @@
   },
   "main": "DataFrame.js",
   "directories": {
-    "doc": "docs",
+    "example": "./examples",
+    "doc": "./docs",
     "lib": "./"
   },
   "files": [
@@ -103,6 +105,6 @@
     "doc:open": "npm run doc; $BROWSER ./docs/index.html",
     "loc": "tokei -- $(git ls-files | grep -E '\\.js$' | grep -v docs | grep -v bin)",
     "lint": "npx eslint *.js",
-    "prepublishOnly": "npm run doc"
+    "prepublishOnly": "npm run doc:publish"
   }
 }
