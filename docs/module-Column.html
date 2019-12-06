@@ -64,7 +64,7 @@
     
 
     
-    <h4 class="name" id="~empty"><span class="type-signature">(inner) </span>empty<span class="signature">(len<span class="signature-attributes">opt, non-null</span>, dtype)</span><span class="type-signature"> &rarr; {ColNum|ColStr}</span></h4>
+    <h4 class="name" id="~empty"><span class="type-signature">(inner) </span>empty<span class="signature">(len<span class="signature-attributes">opt</span>, dtype)</span><span class="type-signature"> &rarr; {ColNum|ColStr}</span></h4>
     
 
     
@@ -114,7 +114,7 @@
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -157,9 +157,6 @@
 |
 
 <span class="param-type">'s'</span>
-|
-
-<span class="param-type">null</span>
 
 
             
@@ -224,7 +221,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1825">line 1825</a>
+        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1824">line 1824</a>
     </li></ul></dd>
     
 
@@ -285,7 +282,7 @@
     
 
     
-    <h4 class="name" id="~from"><span class="type-signature">(inner) </span>from<span class="signature">(xs, toDtype<span class="signature-attributes">opt</span>, doClone<span class="signature-attributes">opt, non-null</span>)</span><span class="type-signature"> &rarr; {ColNum|ColStr}</span></h4>
+    <h4 class="name" id="~from"><span class="type-signature">(inner) </span>from<span class="signature">(xs, toDtype<span class="signature-attributes">opt, nullable</span>, doClone<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {ColNum|ColStr}</span></h4>
     
 
     
@@ -335,10 +332,10 @@
             <td class="type">
             
                 
-<span class="param-type">!Array.&lt;!number></span>
+<span class="param-type">Array.&lt;number></span>
 |
 
-<span class="param-type">!Array.&lt;!String></span>
+<span class="param-type">Array.&lt;string></span>
 |
 
 <span class="param-type">TypedArray</span>
@@ -383,9 +380,6 @@
             
                 
 <span class="param-type">DType</span>
-|
-
-<span class="param-type">null</span>
 
 
             
@@ -397,6 +391,8 @@
                     &lt;optional><br>
                 
 
+                
+                    &lt;nullable><br>
                 
 
                 
@@ -424,7 +420,7 @@
             <td class="type">
             
                 
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
 
 
             
@@ -491,7 +487,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1726">line 1726</a>
+        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1725">line 1725</a>
     </li></ul></dd>
     
 
@@ -552,7 +548,7 @@
     
 
     
-    <h4 class="name" id="~fromFunct"><span class="type-signature">(inner) </span>fromFunct<span class="signature">(f<span class="signature-attributes">non-null</span>, n<span class="signature-attributes">non-null</span>)</span><span class="type-signature"> &rarr; (non-null) {ColNum}</span></h4>
+    <h4 class="name" id="~fromFunct"><span class="type-signature">(inner) </span>fromFunct<span class="signature">(f, n)</span><span class="type-signature"> &rarr; {ColNum}</span></h4>
     
 
     
@@ -621,7 +617,7 @@
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -672,7 +668,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1940">line 1940</a>
+        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1939">line 1939</a>
     </li></ul></dd>
     
 
@@ -726,7 +722,7 @@
     
 
     
-    <h4 class="name" id="~isCol"><span class="type-signature">(inner) </span>isCol<span class="signature">(xs)</span><span class="type-signature"> &rarr; (non-null) {Boolean}</span></h4>
+    <h4 class="name" id="~isCol"><span class="type-signature">(inner) </span>isCol<span class="signature">(xs)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
     
 
     
@@ -823,7 +819,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1933">line 1933</a>
+        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1932">line 1932</a>
     </li></ul></dd>
     
 
@@ -859,7 +855,7 @@
     </dt>
     <dd>
         
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
 
 
     </dd>
@@ -877,7 +873,7 @@
     
 
     
-    <h4 class="name" id="~isColNum"><span class="type-signature">(inner) </span>isColNum<span class="signature">(xs)</span><span class="type-signature"> &rarr; (non-null) {Boolean}</span></h4>
+    <h4 class="name" id="~isColNum"><span class="type-signature">(inner) </span>isColNum<span class="signature">(xs)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
     
 
     
@@ -974,7 +970,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1921">line 1921</a>
+        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1920">line 1920</a>
     </li></ul></dd>
     
 
@@ -1010,7 +1006,7 @@
     </dt>
     <dd>
         
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
 
 
     </dd>
@@ -1028,7 +1024,7 @@
     
 
     
-    <h4 class="name" id="~isColStr"><span class="type-signature">(inner) </span>isColStr<span class="signature">(xs)</span><span class="type-signature"> &rarr; (non-null) {Boolean}</span></h4>
+    <h4 class="name" id="~isColStr"><span class="type-signature">(inner) </span>isColStr<span class="signature">(xs)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
     
 
     
@@ -1125,7 +1121,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1927">line 1927</a>
+        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1926">line 1926</a>
     </li></ul></dd>
     
 
@@ -1161,7 +1157,7 @@
     </dt>
     <dd>
         
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
 
 
     </dd>
@@ -1288,7 +1284,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1915">line 1915</a>
+        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1914">line 1914</a>
     </li></ul></dd>
     
 
@@ -1349,7 +1345,7 @@
     
 
     
-    <h4 class="name" id="~ones"><span class="type-signature">(inner) </span>ones<span class="signature">(len<span class="signature-attributes">non-null</span>, dtype<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; (non-null) {ColNum}</span></h4>
+    <h4 class="name" id="~ones"><span class="type-signature">(inner) </span>ones<span class="signature">(len, dtype<span class="signature-attributes">opt, nullable</span>)</span><span class="type-signature"> &rarr; {ColNum}</span></h4>
     
 
     
@@ -1399,7 +1395,7 @@
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -1435,9 +1431,6 @@
             
                 
 <span class="param-type">DType</span>
-|
-
-<span class="param-type">null</span>
 
 
             
@@ -1449,6 +1442,8 @@
                     &lt;optional><br>
                 
 
+                
+                    &lt;nullable><br>
                 
 
                 
@@ -1504,7 +1499,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1900">line 1900</a>
+        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1899">line 1899</a>
     </li></ul></dd>
     
 
@@ -1562,7 +1557,7 @@
     
 
     
-    <h4 class="name" id="~rand"><span class="type-signature">(inner) </span>rand<span class="signature">(len<span class="signature-attributes">non-null</span>, lBound<span class="signature-attributes">opt</span>, uBound<span class="signature-attributes">opt</span>, dtype<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; (non-null) {ColNum}</span></h4>
+    <h4 class="name" id="~rand"><span class="type-signature">(inner) </span>rand<span class="signature">(len, lBound<span class="signature-attributes">opt, nullable</span>, uBound<span class="signature-attributes">opt, nullable</span>, dtype<span class="signature-attributes">opt, nullable</span>)</span><span class="type-signature"> &rarr; {ColNum}</span></h4>
     
 
     
@@ -1612,7 +1607,7 @@
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -1647,10 +1642,7 @@
             <td class="type">
             
                 
-<span class="param-type">Number</span>
-|
-
-<span class="param-type">null</span>
+<span class="param-type">number</span>
 
 
             
@@ -1662,6 +1654,8 @@
                     &lt;optional><br>
                 
 
+                
+                    &lt;nullable><br>
                 
 
                 
@@ -1689,10 +1683,7 @@
             <td class="type">
             
                 
-<span class="param-type">Number</span>
-|
-
-<span class="param-type">null</span>
+<span class="param-type">number</span>
 
 
             
@@ -1704,6 +1695,8 @@
                     &lt;optional><br>
                 
 
+                
+                    &lt;nullable><br>
                 
 
                 
@@ -1732,9 +1725,6 @@
             
                 
 <span class="param-type">DType</span>
-|
-
-<span class="param-type">null</span>
 
 
             
@@ -1746,6 +1736,8 @@
                     &lt;optional><br>
                 
 
+                
+                    &lt;nullable><br>
                 
 
                 
@@ -1801,7 +1793,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1854">line 1854</a>
+        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1853">line 1853</a>
     </li></ul></dd>
     
 
@@ -1859,7 +1851,7 @@
     
 
     
-    <h4 class="name" id="~range"><span class="type-signature">(inner) </span>range<span class="signature">(a<span class="signature-attributes">opt, non-null</span>, b<span class="signature-attributes">opt</span>, step<span class="signature-attributes">opt, non-null</span>)</span><span class="type-signature"> &rarr; (non-null) {ColNum}</span></h4>
+    <h4 class="name" id="~range"><span class="type-signature">(inner) </span>range<span class="signature">(a<span class="signature-attributes">opt</span>, b<span class="signature-attributes">opt, nullable</span>, step<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {ColNum}</span></h4>
     
 
     
@@ -1909,7 +1901,7 @@
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -1948,10 +1940,7 @@
             <td class="type">
             
                 
-<span class="param-type">Number</span>
-|
-
-<span class="param-type">null</span>
+<span class="param-type">number</span>
 
 
             
@@ -1963,6 +1952,8 @@
                     &lt;optional><br>
                 
 
+                
+                    &lt;nullable><br>
                 
 
                 
@@ -1990,7 +1981,7 @@
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -2057,7 +2048,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1692">line 1692</a>
+        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1691">line 1691</a>
     </li></ul></dd>
     
 
@@ -2115,7 +2106,7 @@
     
 
     
-    <h4 class="name" id="~repeat"><span class="type-signature">(inner) </span>repeat<span class="signature">(len<span class="signature-attributes">non-null</span>, val<span class="signature-attributes">non-null</span>, dtype<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {ColNum|ColStr}</span></h4>
+    <h4 class="name" id="~repeat"><span class="type-signature">(inner) </span>repeat<span class="signature">(len, val, dtype<span class="signature-attributes">opt, nullable</span>)</span><span class="type-signature"> &rarr; {ColNum|ColStr}</span></h4>
     
 
     
@@ -2165,7 +2156,7 @@
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -2200,7 +2191,7 @@
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -2236,9 +2227,6 @@
             
                 
 <span class="param-type">DType</span>
-|
-
-<span class="param-type">null</span>
 
 
             
@@ -2250,6 +2238,8 @@
                     &lt;optional><br>
                 
 
+                
+                    &lt;nullable><br>
                 
 
                 
@@ -2305,7 +2295,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1893">line 1893</a>
+        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1892">line 1892</a>
     </li></ul></dd>
     
 
@@ -2366,7 +2356,7 @@
     
 
     
-    <h4 class="name" id="~zeros"><span class="type-signature">(inner) </span>zeros<span class="signature">(len<span class="signature-attributes">non-null</span>, dtype<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; (non-null) {ColNum}</span></h4>
+    <h4 class="name" id="~zeros"><span class="type-signature">(inner) </span>zeros<span class="signature">(len, dtype<span class="signature-attributes">opt, nullable</span>)</span><span class="type-signature"> &rarr; {ColNum}</span></h4>
     
 
     
@@ -2420,7 +2410,7 @@
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -2456,9 +2446,6 @@
             
                 
 <span class="param-type">DType</span>
-|
-
-<span class="param-type">null</span>
 
 
             
@@ -2470,6 +2457,8 @@
                     &lt;optional><br>
                 
 
+                
+                    &lt;nullable><br>
                 
 
                 
@@ -2525,7 +2514,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1909">line 1909</a>
+        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1908">line 1908</a>
     </li></ul></dd>
     
 
@@ -2638,7 +2627,7 @@
             <td class="type">
             
                 
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
 
 
             
@@ -2661,7 +2650,7 @@
             <td class="type">
             
                 
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
 
 
             
@@ -3328,7 +3317,7 @@
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 
 
             
@@ -3351,7 +3340,7 @@
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -3494,7 +3483,7 @@
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -5139,13 +5128,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Column.html">Column</a></li></ul><h3>Classes</h3><ul><li><a href="DataFrame.html">DataFrame</a></li></ul><h3>Global</h3><ul><li><a href="global.html#checkType">checkType</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#has">has</a></li><li><a href="global.html#isBoolean">isBoolean</a></li><li><a href="global.html#isFunction">isFunction</a></li><li><a href="global.html#isGenerator">isGenerator</a></li><li><a href="global.html#isMap">isMap</a></li><li><a href="global.html#isNumber">isNumber</a></li><li><a href="global.html#isObject">isObject</a></li><li><a href="global.html#isRegExp">isRegExp</a></li><li><a href="global.html#isSameType">isSameType</a></li><li><a href="global.html#isString">isString</a></li><li><a href="global.html#isURL">isURL</a></li><li><a href="global.html#log">log</a></li><li><a href="global.html#randInRange">randInRange</a></li><li><a href="global.html#randInt">randInt</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#util">util</a></li><li><a href="global.html#walkFiles">walkFiles</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Column.html">Column</a></li></ul><h3>Classes</h3><ul><li><a href="DataFrame.html">DataFrame</a></li></ul><h3>Global</h3><ul><li><a href="global.html#checkType">checkType</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#has">has</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#util">util</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sat Nov 30 2019 09:59:42 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Fri Dec 06 2019 19:24:01 GMT+0000 (Greenwich Mean Time)
 </footer>
 
 <script> prettyPrint(); </script>

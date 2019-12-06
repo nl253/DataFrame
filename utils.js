@@ -1,4 +1,4 @@
-/* eslint-disable no-magic-numbers */
+/* eslint-disable no-magic-numbers,max-lines,complexity */
 const util = require('util');
 const { statSync, readdirSync } = require('fs');
 const { join, resolve } = require('path');
@@ -80,10 +80,9 @@ const getTypeMarker = (val) => {
   return `${type}${bits}`;
 };
 
-
 /**
- * @param {*[][]} xs
- * @returns {*[][]} xs^T
+ * @param {Array<Array<*>>} xs
+ * @returns {Array<Array<*>>} xs^T
  * @private
  */
 const transpose = (xs) => {
@@ -188,7 +187,6 @@ const isURL = (o) => {
   }
   return false;
 };
-
 
 /**
  * @param {*} o

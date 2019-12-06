@@ -4,10 +4,9 @@
  * @returns {number} random number
  * @private
  */
-const randInRange = (a, b = null) =>
-  b === null
-    ? randInRange(0, a)
-    : a + (b - a) * Math.random();
+const randInRange = (a, b = null) => b === null
+  ? randInRange(0, a)
+  : a + (b - a) * Math.random();
 
 /**
  * @param {number} a min val

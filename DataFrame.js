@@ -406,12 +406,14 @@ class DataFrame {
 
   get rows() {
     return new Proxy(this.cols, {
+
       /**
        * @param {Column[]} cols
        * @param {number} idx
        * @returns {Array<*>}
        */
       get(cols, idx) { return cols.map((col) => col[idx]); },
+
       /**
        *
        * @param {Column[]} cols
@@ -438,6 +440,7 @@ class DataFrame {
         }
         return false;
       },
+
       /**
        * @param {Column[]} cols
        * @param {number} rIdx
@@ -693,7 +696,7 @@ class DataFrame {
   }
 
   /**
-   * @param {function(ColNum|ColStr): (number|string)} [f]
+   * @param {function(ColNum): number} [f]
    * @param {...*} args
    * @returns {DataFrame} data frame
    */
@@ -703,7 +706,7 @@ class DataFrame {
     }
     const colNames = [];
     const aggResults = [];
-    const nCols = this.nCols;
+    const { nCols } = this;
     for (let cIdx = 0; cIdx < nCols; cIdx++) {
       const col = this.cols[cIdx];
       const colName = this.colNames[cIdx];
@@ -720,7 +723,7 @@ class DataFrame {
 
   /**
    * @param {number|string} colId
-   * @param {function(ColNum|ColStr): (number|string)} [f]
+   * @param {function(ColNum): number} [f]
    * @param {...*} args
    * @returns {DataFrame} data frame
    */
@@ -759,7 +762,7 @@ class DataFrame {
     }
     const cols = Array(this.cols.length).fill(null);
     const colNames = Array(this.cols.length).fill(null);
-    const nCols = this.nCols;
+    const { nCols } = this;
     for (let cIdx = 0; cIdx < nCols; cIdx++) {
       cols[cIdx] = f(this.cols[cIdx], other.cols[cIdx], cIdx);
       if (!isNumber(this.colNames[cIdx])) {
@@ -845,6 +848,7 @@ class DataFrame {
   /**
    * @param {string[]|number[]|TypedArray} col
    * @param {?String} [name]
+   * @param {?DType|'s'} [dtype]
    * @returns {DataFrame} data frame
    */
   appendCol(col, name = null, dtype = null) {
@@ -865,6 +869,7 @@ class DataFrame {
   /**
    * @param {string[]|number[]|TypedArray} col
    * @param {?String} [name]
+   * @param {?DType|'s'} [dtype]
    * @returns {DataFrame} data frame
    */
   prependCol(col, name = null, dtype = null) {
@@ -1023,7 +1028,7 @@ class DataFrame {
   }
 
   /**
-   * @param {function(string|number, number): boolean} f
+   * @param {function((string|number), number): boolean} f
    * @param {?string|number} [colId]
    * @returns {DataFrame} data frame
    */

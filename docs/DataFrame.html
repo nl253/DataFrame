@@ -28,7 +28,7 @@
 
 <header>
     
-        <h2><span class="attribs"><span class="type-signature"></span></span>DataFrame<span class="signature">(data, what<span class="signature-attributes">opt, non-null</span>, colNames<span class="signature-attributes">opt</span>, dtypes<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h2>
+        <h2><span class="attribs"><span class="type-signature"></span></span>DataFrame<span class="signature">(data, what<span class="signature-attributes">opt</span>, colNames<span class="signature-attributes">opt</span>, dtypes<span class="signature-attributes">opt, nullable</span>)</span><span class="type-signature"></span></h2>
         
     
 </header>
@@ -41,7 +41,7 @@
     
 
     
-    <h4 class="name" id="DataFrame"><span class="type-signature"></span>new DataFrame<span class="signature">(data, what<span class="signature-attributes">opt, non-null</span>, colNames<span class="signature-attributes">opt</span>, dtypes<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="DataFrame"><span class="type-signature"></span>new DataFrame<span class="signature">(data, what<span class="signature-attributes">opt</span>, colNames<span class="signature-attributes">opt</span>, dtypes<span class="signature-attributes">opt, nullable</span>)</span><span class="type-signature"></span></h4>
     
 
     
@@ -97,16 +97,16 @@
 <span class="param-type">GeneratorFunction</span>
 |
 
-<span class="param-type">!Object.&lt;(!String|!Number), (!Number|!String|!Array.&lt;!String>|!Array.&lt;!Number>|!ColStr|!ColNum|!TypedArray)></span>
+<span class="param-type">!Object.&lt;(string|number), (number|string|Array.&lt;string>|Array.&lt;number>|ColStr|ColNum|TypedArray)></span>
 |
 
-<span class="param-type">!Array.&lt;!Array.&lt;(!Number|!String)>></span>
+<span class="param-type">Array.&lt;Array.&lt;(number|string)>></span>
 |
 
-<span class="param-type">!Array.&lt;(!TypedArray|!Array.&lt;!Number>|!Array.&lt;!String>|!ColStr|!ColNum)></span>
+<span class="param-type">Array.&lt;(TypedArray|Array.&lt;number>|Array.&lt;string>|ColStr|ColNum)></span>
 |
 
-<span class="param-type">!Map.&lt;String, (!Number|!String|!Array.&lt;!Number>|!Array.&lt;!String>)></span>
+<span class="param-type">!Map.&lt;String, (number|string|Array.&lt;number>|Array.&lt;string>)></span>
 
 
             
@@ -141,7 +141,7 @@
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 
 
             
@@ -178,7 +178,7 @@
             <td class="type">
             
                 
-<span class="param-type">?Array.&lt;!String></span>
+<span class="param-type">Array.&lt;string></span>
 |
 
 <span class="param-type">ColStr</span>
@@ -220,10 +220,7 @@
             <td class="type">
             
                 
-<span class="param-type">!ArrayLike.&lt;(!DType|'s'|null)></span>
-|
-
-<span class="param-type">null</span>
+<span class="param-type">ArrayLike.&lt;(?DType|'s')></span>
 
 
             
@@ -235,6 +232,8 @@
                     &lt;optional><br>
                 
 
+                
+                    &lt;nullable><br>
                 
 
                 
@@ -380,7 +379,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1491">line 1491</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1496">line 1496</a>
     </li></ul></dd>
     
 
@@ -438,7 +437,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1520">line 1520</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1525">line 1525</a>
     </li></ul></dd>
     
 
@@ -496,7 +495,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line580">line 580</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line583">line 583</a>
     </li></ul></dd>
     
 
@@ -554,7 +553,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line552">line 552</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line555">line 555</a>
     </li></ul></dd>
     
 
@@ -612,7 +611,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line563">line 563</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line566">line 566</a>
     </li></ul></dd>
     
 
@@ -670,7 +669,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line516">line 516</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line519">line 519</a>
     </li></ul></dd>
     
 
@@ -728,7 +727,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line458">line 458</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line461">line 461</a>
     </li></ul></dd>
     
 
@@ -786,7 +785,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line508">line 508</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line511">line 511</a>
     </li></ul></dd>
     
 
@@ -844,7 +843,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line472">line 472</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line475">line 475</a>
     </li></ul></dd>
     
 
@@ -872,7 +871,7 @@
     
 
     
-    <h4 class="name" id=".of"><span class="type-signature">(static) </span>of<span class="signature">(&hellip;cols)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id=".of"><span class="type-signature">(static) </span>of<span class="signature">(&hellip;cols)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -1039,7 +1038,7 @@
     
 
     
-    <h4 class="name" id=".setPrinting"><span class="type-signature">(static) </span>setPrinting<span class="signature">(opt<span class="signature-attributes">non-null</span>)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".setPrinting"><span class="type-signature">(static) </span>setPrinting<span class="signature">(opt)</span><span class="type-signature"></span></h4>
     
 
     
@@ -1087,7 +1086,7 @@
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 
 
             
@@ -1144,7 +1143,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1532">line 1532</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1537">line 1537</a>
     </li></ul></dd>
     
 
@@ -1180,7 +1179,7 @@
     
 
     
-    <h4 class="name" id="agg"><span class="type-signature"></span>agg<span class="signature">(f<span class="signature-attributes">opt</span>, &hellip;args)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="agg"><span class="type-signature"></span>agg<span class="signature">(f<span class="signature-attributes">opt</span>, &hellip;args)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -1229,9 +1228,6 @@
             
                 
 <span class="param-type">function</span>
-|
-
-<span class="param-type">String</span>
 
 
             
@@ -1325,7 +1321,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line700">line 700</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line703">line 703</a>
     </li></ul></dd>
     
 
@@ -1383,7 +1379,7 @@
     
 
     
-    <h4 class="name" id="appendCol"><span class="type-signature"></span>appendCol<span class="signature">(col, name<span class="signature-attributes">opt, nullable</span>)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="appendCol"><span class="type-signature"></span>appendCol<span class="signature">(col, name<span class="signature-attributes">opt, nullable</span>, dtype<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -1433,10 +1429,10 @@
             <td class="type">
             
                 
-<span class="param-type">!Array.&lt;!String></span>
+<span class="param-type">Array.&lt;string></span>
 |
 
-<span class="param-type">!Array.&lt;!Number></span>
+<span class="param-type">Array.&lt;number></span>
 |
 
 <span class="param-type">TypedArray</span>
@@ -1506,6 +1502,48 @@
         </tr>
 
     
+
+        <tr>
+            
+                <td class="name"><code>dtype</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">DType</span>
+|
+
+<span class="param-type">'s'</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    null
+                
+                </td>
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
     </tbody>
 </table>
 
@@ -1543,7 +1581,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line850">line 850</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line854">line 854</a>
     </li></ul></dd>
     
 
@@ -1601,7 +1639,7 @@
     
 
     
-    <h4 class="name" id="call"><span class="type-signature"></span>call<span class="signature">(colId<span class="signature-attributes">opt</span>, f, &hellip;args)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="call"><span class="type-signature"></span>call<span class="signature">(colId<span class="signature-attributes">opt</span>, f, &hellip;args)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -1651,13 +1689,10 @@
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 |
 
-<span class="param-type">String</span>
-|
-
-<span class="param-type">null</span>
+<span class="param-type">string</span>
 
 
             
@@ -1696,7 +1731,7 @@
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 |
 
 <span class="param-type">function</span>
@@ -1799,7 +1834,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line672">line 672</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line675">line 675</a>
     </li></ul></dd>
     
 
@@ -1857,7 +1892,7 @@
     
 
     
-    <h4 class="name" id="clone"><span class="type-signature"></span>clone<span class="signature">()</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="clone"><span class="type-signature"></span>clone<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -1905,7 +1940,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1391">line 1391</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1396">line 1396</a>
     </li></ul></dd>
     
 
@@ -1963,7 +1998,7 @@
     
 
     
-    <h4 class="name" id="col"><span class="type-signature"></span>col<span class="signature">(colId)</span><span class="type-signature"> &rarr; {Array.&lt;String>|TypedArray}</span></h4>
+    <h4 class="name" id="col"><span class="type-signature"></span>col<span class="signature">(colId)</span><span class="type-signature"> &rarr; {Array.&lt;string>|TypedArray}</span></h4>
     
 
     
@@ -2009,10 +2044,10 @@
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 |
 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -2063,7 +2098,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line525">line 525</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line528">line 528</a>
     </li></ul></dd>
     
 
@@ -2103,7 +2138,7 @@
     </dt>
     <dd>
         
-<span class="param-type">Array.&lt;String></span>
+<span class="param-type">Array.&lt;string></span>
 |
 
 <span class="param-type">TypedArray</span>
@@ -2124,7 +2159,7 @@
     
 
     
-    <h4 class="name" id="colIdx"><span class="type-signature"></span>colIdx<span class="signature">(colId)</span><span class="type-signature"> &rarr; (non-null) {Number}</span></h4>
+    <h4 class="name" id="colIdx"><span class="type-signature"></span>colIdx<span class="signature">(colId)</span><span class="type-signature"> &rarr; {number}</span></h4>
     
 
     
@@ -2170,10 +2205,10 @@
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 |
 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -2224,7 +2259,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line481">line 481</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line484">line 484</a>
     </li></ul></dd>
     
 
@@ -2264,7 +2299,7 @@
     </dt>
     <dd>
         
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
     </dd>
@@ -2282,7 +2317,7 @@
     
 
     
-    <h4 class="name" id="concat"><span class="type-signature"></span>concat<span class="signature">(other<span class="signature-attributes">non-null</span>, axis<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="concat"><span class="type-signature"></span>concat<span class="signature">(other, axis<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -2449,7 +2484,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line890">line 890</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line895">line 895</a>
     </li></ul></dd>
     
 
@@ -2507,7 +2542,7 @@
     
 
     
-    <h4 class="name" id="connect"><span class="type-signature"></span>connect<span class="signature">(f, other<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="connect"><span class="type-signature"></span>connect<span class="signature">(f, other<span class="signature-attributes">opt, nullable</span>)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -2557,7 +2592,7 @@
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 |
 
 <span class="param-type">function</span>
@@ -2596,9 +2631,6 @@
             
                 
 <span class="param-type"><a href="DataFrame.html">DataFrame</a></span>
-|
-
-<span class="param-type">null</span>
 
 
             
@@ -2610,6 +2642,8 @@
                     &lt;optional><br>
                 
 
+                
+                    &lt;nullable><br>
                 
 
                 
@@ -2665,7 +2699,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line753">line 753</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line756">line 756</a>
     </li></ul></dd>
     
 
@@ -2723,7 +2757,7 @@
     
 
     
-    <h4 class="name" id="copy"><span class="type-signature"></span>copy<span class="signature">()</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="copy"><span class="type-signature"></span>copy<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -2771,7 +2805,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1384">line 1384</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1389">line 1389</a>
     </li></ul></dd>
     
 
@@ -2829,7 +2863,7 @@
     
 
     
-    <h4 class="name" id="corr"><span class="type-signature"></span>corr<span class="signature">(withNames<span class="signature-attributes">opt, nullable</span>)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="corr"><span class="type-signature"></span>corr<span class="signature">(withNames<span class="signature-attributes">opt, nullable</span>)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -2879,7 +2913,7 @@
             <td class="type">
             
                 
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
 
 
             
@@ -2948,7 +2982,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1341">line 1341</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1346">line 1346</a>
     </li></ul></dd>
     
 
@@ -3006,7 +3040,7 @@
     
 
     
-    <h4 class="name" id="counts"><span class="type-signature"></span>counts<span class="signature">(colId)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="counts"><span class="type-signature"></span>counts<span class="signature">(colId)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -3056,10 +3090,10 @@
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 |
 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -3110,7 +3144,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1275">line 1275</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1280">line 1280</a>
     </li></ul></dd>
     
 
@@ -3168,7 +3202,7 @@
     
 
     
-    <h4 class="name" id="cov"><span class="type-signature"></span>cov<span class="signature">(withNames<span class="signature-attributes">opt, nullable</span>)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="cov"><span class="type-signature"></span>cov<span class="signature">(withNames<span class="signature-attributes">opt, nullable</span>)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -3218,7 +3252,7 @@
             <td class="type">
             
                 
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
 
 
             
@@ -3287,7 +3321,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1333">line 1333</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1338">line 1338</a>
     </li></ul></dd>
     
 
@@ -3345,7 +3379,7 @@
     
 
     
-    <h4 class="name" id="distance"><span class="type-signature"></span>distance<span class="signature">(p<span class="signature-attributes">opt, non-null</span>, withNames<span class="signature-attributes">opt, nullable</span>)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="distance"><span class="type-signature"></span>distance<span class="signature">(p<span class="signature-attributes">opt</span>, withNames<span class="signature-attributes">opt, nullable</span>)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -3395,7 +3429,7 @@
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -3434,7 +3468,7 @@
             <td class="type">
             
                 
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
 
 
             
@@ -3503,7 +3537,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1317">line 1317</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1322">line 1322</a>
     </li></ul></dd>
     
 
@@ -3561,7 +3595,7 @@
     
 
     
-    <h4 class="name" id="dot"><span class="type-signature"></span>dot<span class="signature">(withNames<span class="signature-attributes">opt, nullable</span>)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="dot"><span class="type-signature"></span>dot<span class="signature">(withNames<span class="signature-attributes">opt, nullable</span>)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -3611,7 +3645,7 @@
             <td class="type">
             
                 
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
 
 
             
@@ -3680,7 +3714,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1325">line 1325</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1330">line 1330</a>
     </li></ul></dd>
     
 
@@ -3738,7 +3772,7 @@
     
 
     
-    <h4 class="name" id="drop"><span class="type-signature"></span>drop<span class="signature">(&hellip;params)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="drop"><span class="type-signature"></span>drop<span class="signature">(&hellip;params)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -3786,10 +3820,10 @@
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 |
 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 |
 
 <span class="param-type">RegExp</span>
@@ -3856,7 +3890,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1017">line 1017</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1022">line 1022</a>
     </li></ul></dd>
     
 
@@ -3914,7 +3948,7 @@
     
 
     
-    <h4 class="name" id="dtype"><span class="type-signature"></span>dtype<span class="signature">(&hellip;colIds)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="dtype"><span class="type-signature"></span>dtype<span class="signature">(&hellip;colIds)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -3962,10 +3996,10 @@
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 |
 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -4026,7 +4060,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line569">line 569</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line572">line 572</a>
     </li></ul></dd>
     
 
@@ -4084,7 +4118,7 @@
     
 
     
-    <h4 class="name" id="filter"><span class="type-signature"></span>filter<span class="signature">(f<span class="signature-attributes">non-null</span>, colId<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="filter"><span class="type-signature"></span>filter<span class="signature">(f, colId<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -4169,13 +4203,10 @@
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 |
 
-<span class="param-type">Number</span>
-|
-
-<span class="param-type">null</span>
+<span class="param-type">number</span>
 
 
             
@@ -4242,7 +4273,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1030">line 1030</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1035">line 1035</a>
     </li></ul></dd>
     
 
@@ -4300,7 +4331,7 @@
     
 
     
-    <h4 class="name" id="groupBy"><span class="type-signature"></span>groupBy<span class="signature">(colId, f<span class="signature-attributes">opt</span>, &hellip;args)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="groupBy"><span class="type-signature"></span>groupBy<span class="signature">(colId, f<span class="signature-attributes">opt</span>, &hellip;args)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -4348,10 +4379,10 @@
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 |
 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 
 
             
@@ -4383,9 +4414,6 @@
             
                 
 <span class="param-type">function</span>
-|
-
-<span class="param-type">String</span>
 
 
             
@@ -4479,7 +4507,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line727">line 727</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line730">line 730</a>
     </li></ul></dd>
     
 
@@ -4537,7 +4565,7 @@
     
 
     
-    <h4 class="name" id="head"><span class="type-signature"></span>head<span class="signature">(n<span class="signature-attributes">opt, nullable</span>)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="head"><span class="type-signature"></span>head<span class="signature">(n<span class="signature-attributes">opt, nullable</span>)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -4587,7 +4615,7 @@
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -4656,7 +4684,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line531">line 531</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line534">line 534</a>
     </li></ul></dd>
     
 
@@ -4714,7 +4742,7 @@
     
 
     
-    <h4 class="name" id="matrix"><span class="type-signature"></span>matrix<span class="signature">(f<span class="signature-attributes">non-null</span>, withNames<span class="signature-attributes">opt, nullable</span>, isCommutative<span class="signature-attributes">opt, nullable</span>, identity<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="matrix"><span class="type-signature"></span>matrix<span class="signature">(f, withNames<span class="signature-attributes">opt, nullable</span>, isCommutative<span class="signature-attributes">opt, nullable</span>, identity<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -4799,7 +4827,7 @@
             <td class="type">
             
                 
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
 
 
             
@@ -4840,7 +4868,7 @@
             <td class="type">
             
                 
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
 
 
             
@@ -4882,9 +4910,6 @@
             
                 
 <span class="param-type">*</span>
-|
-
-<span class="param-type">null</span>
 
 
             
@@ -4951,7 +4976,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line784">line 784</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line787">line 787</a>
     </li></ul></dd>
     
 
@@ -5009,7 +5034,7 @@
     
 
     
-    <h4 class="name" id="nBest"><span class="type-signature"></span>nBest<span class="signature">(n<span class="signature-attributes">opt</span>, agg<span class="signature-attributes">opt</span>, &hellip;args)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="nBest"><span class="type-signature"></span>nBest<span class="signature">(n<span class="signature-attributes">opt, nullable</span>, agg<span class="signature-attributes">opt</span>, &hellip;args)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -5059,10 +5084,7 @@
             <td class="type">
             
                 
-<span class="param-type">Number</span>
-|
-
-<span class="param-type">null</span>
+<span class="param-type">number</span>
 
 
             
@@ -5074,6 +5096,8 @@
                     &lt;optional><br>
                 
 
+                
+                    &lt;nullable><br>
                 
 
                 
@@ -5101,7 +5125,7 @@
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 |
 
 <span class="param-type">function</span>
@@ -5208,7 +5232,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1220">line 1220</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1225">line 1225</a>
     </li></ul></dd>
     
 
@@ -5266,7 +5290,7 @@
     
 
     
-    <h4 class="name" id="oneHot"><span class="type-signature"></span>oneHot<span class="signature">(colId)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="oneHot"><span class="type-signature"></span>oneHot<span class="signature">(colId)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -5318,10 +5342,10 @@
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 |
 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -5378,7 +5402,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1291">line 1291</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1296">line 1296</a>
     </li></ul></dd>
     
 
@@ -5436,7 +5460,7 @@
     
 
     
-    <h4 class="name" id="prependCol"><span class="type-signature"></span>prependCol<span class="signature">(col, name<span class="signature-attributes">opt, nullable</span>)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="prependCol"><span class="type-signature"></span>prependCol<span class="signature">(col, name<span class="signature-attributes">opt, nullable</span>, dtype<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -5486,10 +5510,10 @@
             <td class="type">
             
                 
-<span class="param-type">!Array.&lt;!String></span>
+<span class="param-type">Array.&lt;string></span>
 |
 
-<span class="param-type">!Array.&lt;!Number></span>
+<span class="param-type">Array.&lt;number></span>
 |
 
 <span class="param-type">TypedArray</span>
@@ -5559,6 +5583,48 @@
         </tr>
 
     
+
+        <tr>
+            
+                <td class="name"><code>dtype</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">DType</span>
+|
+
+<span class="param-type">'s'</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    null
+                
+                </td>
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
     </tbody>
 </table>
 
@@ -5596,7 +5662,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line870">line 870</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line875">line 875</a>
     </li></ul></dd>
     
 
@@ -5704,7 +5770,7 @@
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -5745,7 +5811,7 @@
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -5849,7 +5915,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1527">line 1527</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1532">line 1532</a>
     </li></ul></dd>
     
 
@@ -5885,7 +5951,7 @@
     
 
     
-    <h4 class="name" id="ps"><span class="type-signature"></span>ps<span class="signature">(colId)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="ps"><span class="type-signature"></span>ps<span class="signature">(colId)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -5935,10 +6001,10 @@
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 |
 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -5989,7 +6055,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1283">line 1283</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1288">line 1288</a>
     </li></ul></dd>
     
 
@@ -6047,7 +6113,7 @@
     
 
     
-    <h4 class="name" id="removeAll"><span class="type-signature"></span>removeAll<span class="signature">(val, &hellip;colIds)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="removeAll"><span class="type-signature"></span>removeAll<span class="signature">(val, &hellip;colIds)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -6187,7 +6253,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1096">line 1096</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1101">line 1101</a>
     </li></ul></dd>
     
 
@@ -6245,7 +6311,7 @@
     
 
     
-    <h4 class="name" id="removeAllOutliers"><span class="type-signature"></span>removeAllOutliers<span class="signature">(&hellip;colIds)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="removeAllOutliers"><span class="type-signature"></span>removeAllOutliers<span class="signature">(&hellip;colIds)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -6293,10 +6359,10 @@
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 |
 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 
 
             
@@ -6357,7 +6423,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1121">line 1121</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1126">line 1126</a>
     </li></ul></dd>
     
 
@@ -6415,7 +6481,7 @@
     
 
     
-    <h4 class="name" id="rename"><span class="type-signature"></span>rename<span class="signature">(&hellip;params)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="rename"><span class="type-signature"></span>rename<span class="signature">(&hellip;params)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -6463,10 +6529,10 @@
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 |
 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -6527,7 +6593,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line644">line 644</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line647">line 647</a>
     </li></ul></dd>
     
 
@@ -6585,7 +6651,7 @@
     
 
     
-    <h4 class="name" id="replace"><span class="type-signature"></span>replace<span class="signature">(colId<span class="signature-attributes">opt</span>, pat, repl, &hellip;args)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="replace"><span class="type-signature"></span>replace<span class="signature">(colId<span class="signature-attributes">opt</span>, pat, repl, &hellip;args)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -6635,7 +6701,7 @@
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 |
 
 <span class="param-type">String</span>
@@ -6680,10 +6746,10 @@
 <span class="param-type">RegExp</span>
 |
 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 |
 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -6718,10 +6784,10 @@
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 |
 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -6821,7 +6887,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1113">line 1113</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1118">line 1118</a>
     </li></ul></dd>
     
 
@@ -6879,7 +6945,7 @@
     
 
     
-    <h4 class="name" id="sample"><span class="type-signature"></span>sample<span class="signature">(n<span class="signature-attributes">nullable</span>, wr<span class="signature-attributes">nullable</span>)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="sample"><span class="type-signature"></span>sample<span class="signature">(n<span class="signature-attributes">nullable</span>, wr<span class="signature-attributes">nullable</span>)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -6929,7 +6995,7 @@
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -6968,7 +7034,7 @@
             <td class="type">
             
                 
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
 
 
             
@@ -7035,7 +7101,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1238">line 1238</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1243">line 1243</a>
     </li></ul></dd>
     
 
@@ -7093,7 +7159,7 @@
     
 
     
-    <h4 class="name" id="select"><span class="type-signature"></span>select<span class="signature">(&hellip;params)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="select"><span class="type-signature"></span>select<span class="signature">(&hellip;params)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -7141,10 +7207,10 @@
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 |
 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 |
 
 <span class="param-type">RegExp</span>
@@ -7211,7 +7277,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line586">line 586</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line589">line 589</a>
     </li></ul></dd>
     
 
@@ -7269,7 +7335,7 @@
     
 
     
-    <h4 class="name" id="selectRows"><span class="type-signature"></span>selectRows<span class="signature">(&hellip;params)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="selectRows"><span class="type-signature"></span>selectRows<span class="signature">(&hellip;params)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -7317,10 +7383,10 @@
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 |
 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 |
 
 <span class="param-type">RegExp</span>
@@ -7387,7 +7453,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line614">line 614</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line617">line 617</a>
     </li></ul></dd>
     
 
@@ -7445,7 +7511,7 @@
     
 
     
-    <h4 class="name" id="shuffle"><span class="type-signature"></span>shuffle<span class="signature">()</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="shuffle"><span class="type-signature"></span>shuffle<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -7497,7 +7563,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1201">line 1201</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1206">line 1206</a>
     </li></ul></dd>
     
 
@@ -7555,7 +7621,7 @@
     
 
     
-    <h4 class="name" id="slice"><span class="type-signature"></span>slice<span class="signature">(&hellip;idxs<span class="signature-attributes">non-null</span>)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="slice"><span class="type-signature"></span>slice<span class="signature">(&hellip;idxs)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -7603,7 +7669,7 @@
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -7664,7 +7730,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line944">line 944</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line949">line 949</a>
     </li></ul></dd>
     
 
@@ -7722,7 +7788,7 @@
     
 
     
-    <h4 class="name" id="sliceCols"><span class="type-signature"></span>sliceCols<span class="signature">(&hellip;slices)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="sliceCols"><span class="type-signature"></span>sliceCols<span class="signature">(&hellip;slices)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -7775,10 +7841,10 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 |
 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 
 
             
@@ -7839,7 +7905,7 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line981">line 981</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line986">line 986</a>
     </li></ul></dd>
     
 
@@ -7947,13 +8013,10 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 |
 
-<span class="param-type">String</span>
-|
-
-<span class="param-type">null</span>
+<span class="param-type">string</span>
 
 
             
@@ -8065,7 +8128,7 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1176">line 1176</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1181">line 1181</a>
     </li></ul></dd>
     
 
@@ -8171,7 +8234,7 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1350">line 1350</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1355">line 1355</a>
     </li></ul></dd>
     
 
@@ -8229,7 +8292,7 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
     
 
     
-    <h4 class="name" id="tail"><span class="type-signature"></span>tail<span class="signature">(n<span class="signature-attributes">opt, nullable</span>)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="tail"><span class="type-signature"></span>tail<span class="signature">(n<span class="signature-attributes">opt, nullable</span>)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -8279,7 +8342,7 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -8348,7 +8411,7 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line542">line 542</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line545">line 545</a>
     </li></ul></dd>
     
 
@@ -8406,7 +8469,7 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
     
 
     
-    <h4 class="name" id="toCSV"><span class="type-signature"></span>toCSV<span class="signature">(fileName<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {String|undefined}</span></h4>
+    <h4 class="name" id="toCSV"><span class="type-signature"></span>toCSV<span class="signature">(fileName<span class="signature-attributes">opt, nullable</span>)</span><span class="type-signature"> &rarr; {string|undefined}</span></h4>
     
 
     
@@ -8456,10 +8519,7 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
             <td class="type">
             
                 
-<span class="param-type">String</span>
-|
-
-<span class="param-type">null</span>
+<span class="param-type">string</span>
 
 
             
@@ -8471,6 +8531,8 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
                     &lt;optional><br>
                 
 
+                
+                    &lt;nullable><br>
                 
 
                 
@@ -8526,7 +8588,7 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1438">line 1438</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1443">line 1443</a>
     </li></ul></dd>
     
 
@@ -8562,7 +8624,7 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
     </dt>
     <dd>
         
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 |
 
 <span class="param-type">undefined</span>
@@ -8583,7 +8645,7 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
     
 
     
-    <h4 class="name" id="toHTML"><span class="type-signature"></span>toHTML<span class="signature">(fileName<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {String|undefined}</span></h4>
+    <h4 class="name" id="toHTML"><span class="type-signature"></span>toHTML<span class="signature">(fileName<span class="signature-attributes">opt, nullable</span>)</span><span class="type-signature"> &rarr; {string|undefined}</span></h4>
     
 
     
@@ -8633,10 +8695,7 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
             <td class="type">
             
                 
-<span class="param-type">String</span>
-|
-
-<span class="param-type">null</span>
+<span class="param-type">string</span>
 
 
             
@@ -8648,6 +8707,8 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
                     &lt;optional><br>
                 
 
+                
+                    &lt;nullable><br>
                 
 
                 
@@ -8703,7 +8764,7 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1454">line 1454</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1459">line 1459</a>
     </li></ul></dd>
     
 
@@ -8743,7 +8804,7 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
     </dt>
     <dd>
         
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 |
 
 <span class="param-type">undefined</span>
@@ -8764,172 +8825,7 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
     
 
     
-    <h4 class="name" id="toJSON"><span class="type-signature"></span>toJSON<span class="signature">(fileName)</span><span class="type-signature"> &rarr; {String|undefined}</span></h4>
-    
-
-    
-
-
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-        <th>Default</th>
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>fileName</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">String</span>
-|
-
-<span class="param-type">null</span>
-
-
-            
-            </td>
-
-            
-
-            
-                <td class="default">
-                
-                    null
-                
-                </td>
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1425">line 1425</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">String</span>
-|
-
-<span class="param-type">undefined</span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id="toObj"><span class="type-signature"></span>toObj<span class="signature">(fileName<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {!Object.&lt;(Array.&lt;!Number>|!Array.&lt;!String>)>|undefined}</span></h4>
+    <h4 class="name" id="toJSON"><span class="type-signature"></span>toJSON<span class="signature">(fileName<span class="signature-attributes">nullable</span>)</span><span class="type-signature"> &rarr; {string|undefined}</span></h4>
     
 
     
@@ -8979,10 +8875,7 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
             <td class="type">
             
                 
-<span class="param-type">String</span>
-|
-
-<span class="param-type">null</span>
+<span class="param-type">string</span>
 
 
             
@@ -8991,9 +8884,9 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
             
                 <td class="attributes">
                 
-                    &lt;optional><br>
-                
 
+                
+                    &lt;nullable><br>
                 
 
                 
@@ -9049,7 +8942,183 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1405">line 1405</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1430">line 1430</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">string</span>
+|
+
+<span class="param-type">undefined</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="toObj"><span class="type-signature"></span>toObj<span class="signature">(fileName<span class="signature-attributes">opt, nullable</span>)</span><span class="type-signature"> &rarr; {Object.&lt;(Array.&lt;number>|Array.&lt;string>)>|undefined}</span></h4>
+    
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>fileName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                    &lt;nullable><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    null
+                
+                </td>
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1410">line 1410</a>
     </li></ul></dd>
     
 
@@ -9089,7 +9158,7 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
     </dt>
     <dd>
         
-<span class="param-type">!Object.&lt;(Array.&lt;!Number>|!Array.&lt;!String>)></span>
+<span class="param-type">Object.&lt;(Array.&lt;number>|Array.&lt;string>)></span>
 |
 
 <span class="param-type">undefined</span>
@@ -9110,7 +9179,7 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
     
 
     
-    <h4 class="name" id="toString"><span class="type-signature"></span>toString<span class="signature">(n<span class="signature-attributes">opt, non-null</span>, m<span class="signature-attributes">opt, non-null</span>)</span><span class="type-signature"> &rarr; (non-null) {String}</span></h4>
+    <h4 class="name" id="toString"><span class="type-signature"></span>toString<span class="signature">(n<span class="signature-attributes">opt</span>, m<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {string}</span></h4>
     
 
     
@@ -9160,7 +9229,7 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -9199,7 +9268,7 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -9266,7 +9335,7 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1550">line 1550</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1555">line 1555</a>
     </li></ul></dd>
     
 
@@ -9306,7 +9375,7 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
     </dt>
     <dd>
         
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 
 
     </dd>
@@ -9324,7 +9393,7 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
     
 
     
-    <h4 class="name" id="where"><span class="type-signature"></span>where<span class="signature">(val, colId, op)</span><span class="type-signature"> &rarr; (non-null) {<a href="DataFrame.html">DataFrame</a>}</span></h4>
+    <h4 class="name" id="where"><span class="type-signature"></span>where<span class="signature">(val, colId, op)</span><span class="type-signature"> &rarr; {<a href="DataFrame.html">DataFrame</a>}</span></h4>
     
 
     
@@ -9372,10 +9441,10 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 |
 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -9402,13 +9471,10 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 |
 
-<span class="param-type">Number</span>
-|
-
-<span class="param-type">null</span>
+<span class="param-type">number</span>
 
 
             
@@ -9557,7 +9623,7 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1052">line 1052</a>
+        <a href="DataFrame.js.html">DataFrame.js</a>, <a href="DataFrame.js.html#line1057">line 1057</a>
     </li></ul></dd>
     
 
@@ -9625,13 +9691,13 @@ E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Column.html">Column</a></li></ul><h3>Classes</h3><ul><li><a href="DataFrame.html">DataFrame</a></li></ul><h3>Global</h3><ul><li><a href="global.html#checkType">checkType</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#has">has</a></li><li><a href="global.html#isBoolean">isBoolean</a></li><li><a href="global.html#isFunction">isFunction</a></li><li><a href="global.html#isGenerator">isGenerator</a></li><li><a href="global.html#isMap">isMap</a></li><li><a href="global.html#isNumber">isNumber</a></li><li><a href="global.html#isObject">isObject</a></li><li><a href="global.html#isRegExp">isRegExp</a></li><li><a href="global.html#isSameType">isSameType</a></li><li><a href="global.html#isString">isString</a></li><li><a href="global.html#isURL">isURL</a></li><li><a href="global.html#log">log</a></li><li><a href="global.html#randInRange">randInRange</a></li><li><a href="global.html#randInt">randInt</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#util">util</a></li><li><a href="global.html#walkFiles">walkFiles</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Column.html">Column</a></li></ul><h3>Classes</h3><ul><li><a href="DataFrame.html">DataFrame</a></li></ul><h3>Global</h3><ul><li><a href="global.html#checkType">checkType</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#has">has</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#util">util</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sat Nov 30 2019 09:59:42 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Fri Dec 06 2019 19:24:01 GMT+0000 (Greenwich Mean Time)
 </footer>
 
 <script> prettyPrint(); </script>
