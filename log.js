@@ -10,6 +10,7 @@ const fmt = format.combine(
 
 /**
  * @type {winston.Logger}
+ * @private
  */
 const log = createLogger(process.env.NODE_ENV === 'production' ? {
   format: fmt,

@@ -1,4 +1,4 @@
-/* eslint-disable no-nested-ternary,max-lines,no-magic-numbers */
+/* eslint-disable no-nested-ternary,max-lines,no-magic-numbers,complexity */
 
 /**
  * @module
@@ -18,115 +18,115 @@ const opts = require('./opts');
 
 /**
  * @typedef  {ArrayLike} Col
- * @property {!Boolean}  isEmpty
- * @property {!Boolean}  randEl
- * @property {!function(*): Boolean} all
- * @property {!function(*): Number} argMax
- * @property {!function(*): Number} argMin
- * @property {!function(*): Boolean} contains
- * @property {!Function} counts
- * @property {!Function} cum
- * @property {!Function} filter
- * @property {!Function} map
- * @property {!Function} mode
- * @property {!Function} none
- * @property {!function(!function(any): !Boolean): !Boolean} some
- * @property {!function(!function(any): Boolean): Col} filter
- * @property {!Function} print
- * @property {!Function} ps
- * @property {!function((!DType|null)): Col} clone
- * @property {!Function} reduce
- * @property {!Function} subarray
- * @property {!Function} removeAll
- * @property {!Function} unique
- * @property {!Function} reverse
- * @property {!Function} shuffle
- * @property {!Function} slice
- * @property {!Function} sort
- * @property {!Function} swap
- * @property {!Function} takeWhile
- * @property {!Function} zipWith
- * @property {!Function} zipWith3
- * @property {!Function} toString
- * @property {!String}   dtype
- * @property {!Number}   length
+ * @property {boolean}  isEmpty
+ * @property {boolean}  randEl
+ * @property {function(*): boolean} all
+ * @property {function(*): number} argMax
+ * @property {function(*): number} argMin
+ * @property {function(*): boolean} contains
+ * @property {function(): *} counts
+ * @property {function(): *} cum
+ * @property {function(): *} filter
+ * @property {function(): *} map
+ * @property {function(): *} mode
+ * @property {function(): *} none
+ * @property {function(function(any): boolean): boolean} some
+ * @property {function(function(any): Boolean): Col} filter
+ * @property {function(): *} print
+ * @property {function(): *} ps
+ * @property {function(?DType): Col} clone
+ * @property {function(): *} reduce
+ * @property {function(): *} subarray
+ * @property {function(): *} removeAll
+ * @property {function(): *} unique
+ * @property {function(): *} reverse
+ * @property {function(): *} shuffle
+ * @property {function(): *} slice
+ * @property {function(): *} sort
+ * @property {function(): *} swap
+ * @property {function(): *} takeWhile
+ * @property {function(): *} zipWith
+ * @property {function(): *} zipWith3
+ * @property {function(): *} toString
+ * @property {string}   dtype
+ * @property {number}   length
  */
 
 /**
  * @typedef  {Col} ColStr
  * @property {'s'}       dtype
- * @property {!Function} concat
- * @property {!Function} head
- * @property {!Function} labelEncode
- * @property {!Function} pop
- * @property {!Function} replace
- * @property {!Function} sample
- * @property {!Function} tail
+ * @property {function(): *} concat
+ * @property {function(): *} head
+ * @property {function(): *} labelEncode
+ * @property {function(): *} pop
+ * @property {function(): *} replace
+ * @property {function(): *} sample
+ * @property {function(): *} tail
  */
 
 /**
  * @typedef  {Col} ColNum
- * @property {!DType}  dtype
- * @property {!Number} BYTES_PER_ELEMENT
- * @property {!Function} IQR
- * @property {!Function} Q1
- * @property {!Function} Q3
- * @property {!Function} abs
- * @property {!Function} add
- * @property {!Function} cbrt
- * @property {!Function} ceil
- * @property {!Function} clip
- * @property {!Function} concat
- * @property {!Function} corr
- * @property {!Function} cov
- * @property {!Function} cube
- * @property {!Function} disDiff
- * @property {!Function} distance
- * @property {!function((!DType|null)): ColNum} convert
- * @property {!Function} div
- * @property {!Function} dot
- * @property {!Function} downcast
- * @property {!Function} floor
- * @property {!Function} head
- * @property {!Function} kBins
- * @property {!Function} kurtosis
- * @property {!Function} mad
- * @property {!Function} map
- * @property {!Function} max
- * @property {!Function} mean
- * @property {!Function} median
- * @property {!Function} memory
- * @property {!Function} min
- * @property {!Function} mul
- * @property {!Function} nLargest
- * @property {!Function} nQuart
- * @property {!Function} nSmallest
- * @property {!Function} normalize
- * @property {!Function} pop
- * @property {!Function} pow
- * @property {!Function} removeAllOutliers
- * @property {!Function} replace
- * @property {!Function} root
- * @property {!Function} round
- * @property {!Function} sample
- * @property {!Function} skewness
- * @property {!Function} smooth
- * @property {!Function} sqrt
- * @property {!Function} square
- * @property {!Function} stdev
- * @property {!Function} sub
- * @property {!Function} subarray
- * @property {!Function} tail
- * @property {!Function} takeWhile
- * @property {!Function} trunc
- * @property {!Function} var
+ * @property {DType}  dtype
+ * @property {number} BYTES_PER_ELEMENT
+ * @property {function(): number} IQR
+ * @property {function(): number} Q1
+ * @property {function(): number} Q3
+ * @property {function(): number} abs
+ * @property {function(): number} add
+ * @property {function(): number} cbrt
+ * @property {function(): number} ceil
+ * @property {function(): number} clip
+ * @property {function(): number} concat
+ * @property {function(): number} corr
+ * @property {function(): number} cov
+ * @property {function(): number} cube
+ * @property {function(): number} disDiff
+ * @property {function(): number} distance
+ * @property {function(?DType): ColNum} convert
+ * @property {function(): number} div
+ * @property {function(): number} dot
+ * @property {function(): number} downcast
+ * @property {function(): number} floor
+ * @property {function(): number} head
+ * @property {function(): number} kBins
+ * @property {function(): number} kurtosis
+ * @property {function(): number} mad
+ * @property {function(): number} map
+ * @property {function(): number} max
+ * @property {function(): number} mean
+ * @property {function(): number} median
+ * @property {function(): number} memory
+ * @property {function(): number} min
+ * @property {function(): number} mul
+ * @property {function(): number} nLargest
+ * @property {function(): number} nQuart
+ * @property {function(): number} nSmallest
+ * @property {function(): number} normalize
+ * @property {function(): number} pop
+ * @property {function(): number} pow
+ * @property {function(): number} removeAllOutliers
+ * @property {function(): number} replace
+ * @property {function(): number} root
+ * @property {function(): number} round
+ * @property {function(): number} sample
+ * @property {function(): number} skewness
+ * @property {function(): number} smooth
+ * @property {function(): number} sqrt
+ * @property {function(): number} square
+ * @property {function(): number} stdev
+ * @property {function(): number} sub
+ * @property {function(): number} subarray
+ * @property {function(): number} tail
+ * @property {function(): number} takeWhile
+ * @property {function(): number} trunc
+ * @property {function(): number} var
  */
 
 /**
  *
- * @param {!Object} o
- * @param {!String} name
- * @param {!function(): *} f
+ * @param {Object} o
+ * @param {string} name
+ * @param {function(): *} f
  * @private
  */
 const defineGetter = (o, name, f) => {
@@ -138,8 +138,8 @@ const COL_PROTO = {
   // printing
 
   /**
-   * @param {!Number|null} [len]
-   * @returns {!String}
+   * @param {?number} [len]
+   * @returns {string}
    */
   toString(len = null) {
     if (len === null) {
@@ -164,7 +164,7 @@ const COL_PROTO = {
   },
 
   /**
-   * @param {!Number|null} [n]
+   * @param {?number} [n]
    */
   print(n = null) {
     if (n === null) {
@@ -178,8 +178,8 @@ const COL_PROTO = {
   // cumulative operations
 
   /**
-   * @param {!function(...*): *} f
-   * @param {!DType|null} [dtype]
+   * @param {function(...*): *} f
+   * @param {?DType} [dtype]
    * @returns {ColNum|ColStr}
    */
   cum(f, dtype = null) {
@@ -218,8 +218,8 @@ const COL_PROTO = {
   // other
 
   /**
-   * @param {!function(*): boolean} f
-   * @returns {!ColNum|!ColStr}
+   * @param {function(*): boolean} f
+   * @returns {ColNum|ColStr}
    */
   takeWhile(f) {
     let i = 0;
@@ -228,12 +228,12 @@ const COL_PROTO = {
   },
 
   /**
-   * @returns {!Map<*,Number>}
+   * @returns {Map<*, number>}
    */
   counts() { return bag(this); },
 
   /**
-   * @returns {!Map<*,Number>}
+   * @returns {Map<*, number>}
    */
   ps() {
     const b = this.counts();
@@ -249,7 +249,7 @@ const COL_PROTO = {
   },
 
   /**
-   * @param {!function(*): number} f
+   * @param {function(*): number} f
    * @returns {*}
    */
   argMax(f) {
@@ -289,16 +289,16 @@ const COL_PROTO = {
   // boolean
 
   /**
-   * @param {!function(*): boolean} f
-   * @returns {!Boolean}
+   * @param {function(*): boolean} f
+   * @returns {boolean}
    */
   all(f) {
     return !this.some((v) => !f(v));
   },
 
   /**
-   * @param {!function(*): boolean} f
-   * @returns {!Boolean}
+   * @param {function(*): boolean} f
+   * @returns {boolean}
    */
   none(f) {
     return !this.some((v) => f(v));
@@ -306,7 +306,7 @@ const COL_PROTO = {
 
   /**
    * @param {*} v
-   * @returns {!Boolean}
+   * @returns {boolean}
    */
   contains(v) {
     return this.some((x) => x === v);
@@ -315,7 +315,7 @@ const COL_PROTO = {
   // manipulation
 
   /**
-   * @param {!DType|null} [dtype]
+   * @param {?DType} [dtype]
    * @returns {ColStr|ColNum}
    */
   reverse(dtype = null) {
@@ -324,15 +324,15 @@ const COL_PROTO = {
 
   /**
    * @param {*} v
-   * @returns {!ColNum|!ColStr}
+   * @returns {ColNum|ColStr}
    */
   removeAll(v) {
     return this.filter((a) => !Object.is(a, v));
   },
 
   /**
-   * @param {!Number} i
-   * @param {!Number} j
+   * @param {number} i
+   * @param {number} j
    * @returns {ColStr|ColNum}
    */
   swap(i, j) {
@@ -343,8 +343,8 @@ const COL_PROTO = {
   },
 
   /**
-   * @param {'asc'|'des'|!function(*, *): number} [order]
-   * @param {!DType|null} [dtype]
+   * @param {'asc'|'des'|function(*, *): number} [order]
+   * @param {?DType} [dtype]
    * @returns {ColNum|ColStr}
    */
   sort(order = 'asc', dtype = null) {
@@ -368,7 +368,7 @@ const COL_PROTO = {
   },
 
   /**
-   * @param {!DType|null} [dtype]
+   * @param {?DType} [dtype]
    * @returns {ColStr|ColNum}
    */
   shuffle(dtype = null) {
@@ -376,7 +376,7 @@ const COL_PROTO = {
   },
 
   /**
-   * @returns {!Number|!String|undefined}
+   * @returns {number|string|undefined}
    */
   mode() {
     if (this.length === 1) return this[0];
@@ -398,8 +398,8 @@ const COL_PROTO = {
   /**
    * @param {Iterable} other
    * @param {function(*, *): *} f
-   * @param {!DType|'s'|null} [dtype]
-   * @returns {!ColNum|!ColStr}
+   * @param {?DType|'s'} [dtype]
+   * @returns {ColNum|ColStr}
    */
   zipWith(other, f, dtype = null) {
     return from(Array(this.length).fill(0).map((_, idx) => f(this[idx], other[idx])), dtype);
@@ -409,17 +409,17 @@ const COL_PROTO = {
    * @param {Iterable} xs
    * @param {Iterable} ys
    * @param {function(*, *, *): *} f
-   * @param {!DType|'s'|null} [dtype]
-   * @returns {!ColNum|!ColStr}
+   * @param {?DType|'s'} [dtype]
+   * @returns {ColNum|ColStr}
    */
   zipWith3(xs, ys, f, dtype = null) {
     return from(Array(this.length).fill(0).map((_, idx) => f(this[idx], xs[idx], ys[idx])), dtype);
   },
 
   /**
-   * @param {Number} depth
+   * @param {number} depth
    * @param {Object} options
-   * @returns {!String}
+   * @returns {string}
    */
   [util.inspect.custom](depth, options) {
     return this.toString(opts.HEAD_LEN);
@@ -427,7 +427,7 @@ const COL_PROTO = {
 };
 
 /**
- * @param {!Array<!String>|!TypedArray|!ColStr|!ColNum} a
+ * @param {Array<string>|TypedArray|ColStr|ColNum} a
  * @private
  */
 const enh = function (a) {
@@ -458,7 +458,7 @@ const COL_STR_PROTO = {
   dtype: 's',
 
   /**
-   * @returns {!Number}
+   * @returns {number}
    */
   memory() {
     let total = 0;
@@ -469,7 +469,7 @@ const COL_STR_PROTO = {
   },
 
   /**
-   * @returns {!ColStr}
+   * @returns {ColStr}
    */
   clone() {
     const xs = [...this];
@@ -481,17 +481,17 @@ const COL_STR_PROTO = {
   // pre-processing
 
   /**
-   * @param {!RegExp|!String} pat
-   * @param {!String} y
-   * @returns {!ColStr}
+   * @param {RegExp|string} pat
+   * @param {string} y
+   * @returns {ColStr}
    */
   replace(pat, y) {
     return this.map((x) => x.replace(pat, y));
   },
 
   /**
-   * @param {!DType|null} [dtype]
-   * @returns {!ColNum}
+   * @param {?DType} [dtype]
+   * @returns {ColNum}
    */
   labelEncode(dtype = null) {
     if (dtype === null) {
@@ -516,7 +516,7 @@ const COL_STR_PROTO = {
   },
 
   /**
-   * @returns {!ColStr}
+   * @returns {ColStr}
    */
   unique() {
     return from(Array.from(new Set(this)));
@@ -525,9 +525,9 @@ const COL_STR_PROTO = {
   // basic stats
 
   /**
-   * @param {!Number} n
-   * @param {!Boolean} [wr]
-   * @returns {!ColStr}
+   * @param {number} n
+   * @param {boolean} [wr]
+   * @returns {ColStr}
    */
   sample(n, wr = true) {
     if (n === null) {
@@ -555,8 +555,8 @@ const COL_STR_PROTO = {
   // manipulation, views and slices
 
   /**
-   * @param {!Number} idx
-   * @returns {!ColStr}
+   * @param {number} idx
+   * @returns {ColStr}
    */
   pop(idx) {
     const clone = this.clone();
@@ -565,8 +565,8 @@ const COL_STR_PROTO = {
   },
 
   /**
-   * @param {!Number|null} [n]
-   * @returns {!ColStr}
+   * @param {?number} [n]
+   * @returns {ColStr}
    */
   head(n = null) {
     if (n === null) {
@@ -576,8 +576,8 @@ const COL_STR_PROTO = {
   },
 
   /**
-   * @param {!Number|null} [n]
-   * @returns {!ColStr}
+   * @param {?number} [n]
+   * @returns {ColStr}
    */
   tail(n = null) {
     if (n === null) {
@@ -592,8 +592,8 @@ const COL_STR_PROTO = {
   // hacks
 
   /**
-   * @param {!ColStr} other
-   * @returns {!ColStr}
+   * @param {ColStr} other
+   * @returns {ColStr}
    */
   concat(other) {
     const xs = this._concat(other);
@@ -603,7 +603,7 @@ const COL_STR_PROTO = {
   },
 
   /**
-   * @param {!DType|null} [dtype]
+   * @param {?DType} [dtype]
    * @returns {ColNum}
    */
   convert(dtype = null) {
@@ -611,9 +611,9 @@ const COL_STR_PROTO = {
   },
 
   /**
-   * @param {!Number} n
-   * @param {!Number} m
-   * @returns {!ColStr}
+   * @param {number} n
+   * @param {number} m
+   * @returns {ColStr}
    */
   slice(n, m) {
     const xs = this._slice(n, m);
@@ -624,8 +624,8 @@ const COL_STR_PROTO = {
 
   /**
    * @param {function(*, number, ColStr): *} f
-   * @param {!DType|null} [dtype]
-   * @returns {!ColStr}
+   * @param {?DType} [dtype]
+   * @returns {ColStr}
    */
   map(f, dtype = null) {
     const xs = this._map(f);
@@ -636,7 +636,7 @@ const COL_STR_PROTO = {
 
   /**
    * @param {function(*, number, ColStr): boolean} f
-   * @returns {!ColStr}
+   * @returns {ColStr}
    */
   filter(f) {
     const xs = this._filter(f);
@@ -647,7 +647,7 @@ const COL_STR_PROTO = {
 };
 
 /**
- * @param {!Array<!String>|!ColStr} a
+ * @param {Array<string>|ColStr} a
  * @private
  */
 const enhStrArr = (a) => {
@@ -673,15 +673,15 @@ const COL_NUM_PROTO = {
 
 
   /**
-   * @returns {!Number}
+   * @returns {number}
    */
   memory() {
     return this.BYTES_PER_ELEMENT * this.length;
   },
 
   /**
-   * @param {!DType} toDtype
-   * @returns {!ColNum}
+   * @param {DType} toDtype
+   * @returns {ColNum}
    */
   cast(toDtype) {
     if (toDtype === this.dtype) {
@@ -693,7 +693,7 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @returns {!ColNum}
+   * @returns {ColNum}
    */
   downcast() {
     const guess = guessNumDtype(this);
@@ -706,8 +706,8 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @param {!DType|null} [dtype]
-   * @returns {!ColNum|!ColStr}
+   * @param {?DType} [dtype]
+   * @returns {ColNum|ColStr}
    */
   clone(dtype = null) {
     const newArr = empty(this.length, dtype === null ? this.dtype : dtype);
@@ -718,8 +718,8 @@ const COL_NUM_PROTO = {
   // manipulation, views and slices
 
   /**
-   * @param {!Number|null} [n]
-   * @returns {!ColNum}
+   * @param {?number} [n]
+   * @returns {ColNum}
    */
   head(n = null) {
     if (n === null) {
@@ -729,8 +729,8 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @param {!Number|null} [n]
-   * @returns {!ColNum}
+   * @param {?number} [n]
+   * @returns {ColNum}
    */
   tail(n = null) {
     if (n === null) {
@@ -740,7 +740,7 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @returns {!ColNum}
+   * @returns {ColNum}
    */
   unique() {
     const s = new Set(this);
@@ -756,7 +756,7 @@ const COL_NUM_PROTO = {
 
   /**
    * @param {ColNum} other
-   * @returns {!ColNum}
+   * @returns {ColNum}
    */
   concat(other) {
     let dtype = `f${opts.FLOAT_PREC}`;
@@ -777,8 +777,8 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @param {!Number|null} [n]
-   * @returns {!ColNum}
+   * @param {?number} [n]
+   * @returns {ColNum}
    */
   nLargest(n = null) {
     if (n === null) {
@@ -788,8 +788,8 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @param {!Number|null} [n]
-   * @returns {!ColNum}
+   * @param {?number} [n]
+   * @returns {ColNum}
    */
   nSmallest(n = null) {
     if (n === null) {
@@ -799,8 +799,8 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @param {!Number} idx
-   * @returns {!Number}
+   *  @param {number} idx
+   * @returns {number}
    */
   pop(idx) {
     const newArr = empty(this.length - 1, this.dtype);
@@ -812,9 +812,9 @@ const COL_NUM_PROTO = {
   // arithmetic
 
   /**
-   * @param {!Number|!ColNum|null} [other]
-   * @param {!DType|null} [dtype]
-   * @returns {!ColNum|!Number}
+   * @param {?number|ColNum} [other]
+   * @param {?DType} [dtype]
+   * @returns {ColNum|number}
    */
   add(other = null, dtype = null) {
     if (other === null) {
@@ -888,9 +888,9 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @param {!Number|!ColNum|null} [other]
-   * @param {!DType|null} [dtype]
-   * @returns {!ColNum|!Number}
+   * @param {?number|ColNum} [other]
+   * @param {?DType} [dtype]
+   * @returns {ColNum|number}
    */
   sub(other = null, dtype = null) {
     if (other === null) {
@@ -926,9 +926,9 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @param {!Number|!ColNum|null} [other]
-   * @param {!DType|null} [dtype]
-   * @returns {!ColNum|!Number}
+   * @param {?number|ColNum} [other]
+   * @param {?DType} [dtype]
+   * @returns {ColNum|number}
    */
   mul(other = null, dtype = null) {
     if (other === null) {
@@ -1007,9 +1007,9 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @param {!Number|!ColNum|null} [other]
-   * @param {!DType|null} [dtype]
-   * @returns {!ColNum|!Number}
+   * @param {?number|ColNum} [other]
+   * @param {?DType} [dtype]
+   * @returns {ColNum|number}
    */
   div(other = null, dtype = null) {
     if (other === null) {
@@ -1021,8 +1021,7 @@ const COL_NUM_PROTO = {
     // is num
     if (other.constructor.name[0] === 'N') {
       if (dtype !== null) {
-        return empty(this.length, dtype)
-          .map((x) => x / other);
+        return empty(this.length, dtype).map((x) => x / other);
       }
       return empty(this.length, `f${opts.FLOAT_PREC}`).map((_, idx) => this[idx] / other);
     }
@@ -1056,17 +1055,17 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @param {!Number} n
-   * @param {!DType|null} [dtype]
-   * @returns {!ColNum}
+   * @param {number} n
+   * @param {?DType} [dtype]
+   * @returns {ColNum}
    */
   root(n, dtype = null) {
     return this.pow(1 / n, dtype);
   },
 
   /**
-   * @param {!DType|null} [dtype]
-   * @returns {!ColNum}
+   * @param {?DType} [dtype]
+   * @returns {ColNum}
    */
   sqrt(dtype = null) {
     if (dtype === null || dtype === this.dtype) {
@@ -1077,8 +1076,8 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @param {!DType|null} [dtype]
-   * @returns {!ColNum}
+   * @param {?DType} [dtype]
+   * @returns {ColNum}
    */
   cbrt(dtype = null) {
     if (dtype === null || dtype === this.dtype) {
@@ -1089,9 +1088,9 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @param {!Number} n
-   * @param {!DType|null} [dtype]
-   * @returns {!ColNum}
+   * @param {number} n
+   * @param {?DType} [dtype]
+   * @returns {ColNum}
    */
   pow(n, dtype = null) {
     if (n === 0) {
@@ -1106,16 +1105,16 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @param {!DType|null} [dtype]
-   * @returns {!ColNum}
+   * @param {?DType} [dtype]
+   * @returns {ColNum}
    */
   cube(dtype = null) {
     return this.pow(3, dtype);
   },
 
   /**
-   * @param {!DType|null} [dtype]
-   * @returns {!ColNum}
+   * @param {?DType} [dtype]
+   * @returns {ColNum}
    */
   square(dtype = null) {
     return this.pow(2, dtype);
@@ -1124,7 +1123,7 @@ const COL_NUM_PROTO = {
   // basic math ops
 
   /**
-   * @returns {!ColNum}
+   * @returns {ColNum}
    */
   abs() {
     const { dtype } = this;
@@ -1136,7 +1135,7 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @returns {!ColNum}
+   * @returns {ColNum}
    */
   trunc() {
     log.info('you might want to downcast now to save memory');
@@ -1144,7 +1143,7 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @returns {!ColNum}
+   * @returns {ColNum}
    */
   ceil() {
     log.info('you might want to downcast now to save memory');
@@ -1152,7 +1151,7 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @returns {!ColNum}
+   * @returns {ColNum}
    */
   round() {
     log.info('you might want to downcast now to save memory');
@@ -1160,7 +1159,7 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @returns {!ColNum}
+   * @returns {ColNum}
    */
   floor() {
     log.info('you might want to downcast now to save memory');
@@ -1170,7 +1169,7 @@ const COL_NUM_PROTO = {
   // basic stats
 
   /**
-   * @returns {!Number|undefined}
+   * @returns {number|undefined}
    */
   max() {
     if (this.length === 1) return this[0];
@@ -1178,7 +1177,7 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @returns {!Number|undefined}
+   * @returns {number|undefined}
    */
   min() {
     if (this.length === 1) return this[0];
@@ -1186,7 +1185,7 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @returns {!Number|undefined}
+   * @returns {number|undefined}
    */
   skewness() {
     const xs = this.cast(`f${opts.FLOAT_PREC}`);
@@ -1196,8 +1195,8 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @param {!ColNum} other
-   * @returns {!Number}
+   * @param {ColNum} other
+   * @returns {number}
    */
   corr(other) {
     const muDiffX = this.cast(`f${opts.FLOAT_PREC}`).sub(this.mean());
@@ -1206,16 +1205,16 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @param {!ColNum} other
-   * @returns {!Number}
+   * @param {ColNum} other
+   * @returns {number}
    */
   cov(other) {
     return other.sub(other.mean()).mul(this.sub(this.mean())).mean();
   },
 
   /**
-   * @param {!ColNum} other
-   * @param {!Number} [p]
+   * @param {ColNum} other
+   * @param {number} [p]
    * @returns {*}
    */
   distance(other, p = 2) {
@@ -1229,7 +1228,7 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @returns {!Number|undefined}
+   * @returns {number|undefined}
    */
   kurtosis() {
     const mu = this.mean();
@@ -1241,9 +1240,9 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @param {!Number} n
-   * @param {!Boolean} [wr]
-   * @returns {!ColNum}
+   * @param {number} n
+   * @param {boolean} [wr]
+   * @returns {ColNum}
    */
   sample(n, wr = true) {
     if (n === null) {
@@ -1271,16 +1270,16 @@ const COL_NUM_PROTO = {
   // central tendency
 
   /**
-   * @returns {!Number|undefined}
+   * @returns {number|undefined}
    */
   mean() {
     return this.add() / this.length;
   },
 
   /**
-   * @param {!Number} [n]
-   * @param {!Number} [m]
-   * @returns {!Number}
+   * @param {number} [n]
+   * @param {number} [m]
+   * @returns {number}
    */
   nQuart(n = 2, m = 4) {
     const ys = this.sort();
@@ -1292,21 +1291,21 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @returns {!Number|undefined}
+   * @returns {number|undefined}
    */
   Q1() {
     return this.nQuart(1, 4);
   },
 
   /**
-   * @returns {!Number|undefined}
+   * @returns {number|undefined}
    */
   median() {
     return this.nQuart(2, 4);
   },
 
   /**
-   * @returns {!Number|undefined}
+   * @returns {number|undefined}
    */
   Q3() {
     return this.nQuart(3, 4);
@@ -1315,38 +1314,38 @@ const COL_NUM_PROTO = {
   // spread
 
   /**
-   * @param {DType|null} [dtype]
-   * @returns {!Number|undefined}
+   * @param {?DType} [dtype]
+   * @returns {number|undefined}
    */
   var(dtype = null) {
     return this.sub(this.mean(), dtype).square(dtype).mean();
   },
 
   /**
-   * @param {DType|null} [dtype]
-   * @returns {!Number|undefined}
+   * @param {?DType} [dtype]
+   * @returns {number|undefined}
    */
   mad(dtype = null) {
     return this.sub(this.mean(), dtype).abs().mean();
   },
 
   /**
-   * @param {DType|null} [dtype]
-   * @returns {!Number|undefined}
+   * @param {?DType} [dtype]
+   * @returns {number|undefined}
    */
   stdev(dtype = null) {
     return Math.sqrt(this.var(dtype));
   },
 
   /**
-   * @returns {!Number|undefined}
+   * @returns {number|undefined}
    */
   range() {
     return this.max() - this.min();
   },
 
   /**
-   * @returns {!Number}
+   * @returns {number}
    */
   IQR() {
     return this.Q3() - this.Q1();
@@ -1355,8 +1354,8 @@ const COL_NUM_PROTO = {
   // linear algebra
 
   /**
-   * @param {!ColNum} other
-   * @returns {!Number}
+   * @param {ColNum} other
+   * @returns {number}
    */
   dot(other) {
     return this.mul(other).add();
@@ -1388,9 +1387,9 @@ const COL_NUM_PROTO = {
    *
    * 5. Try to advance to next bin: 3 + binSize = 6. Out of bounds!
    *
-   * @param {!Number} [k]
-   * @param {!DType|null} [dtype]
-   * @returns {!ColNum}
+   * @param {number} [k]
+   * @param {?DType} [dtype]
+   * @returns {ColNum}
    */
   kBins(k = 5, dtype = null) {
     if (dtype === null) {
@@ -1427,8 +1426,8 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @param {!Number} [ord]
-   * @returns {!ColNum}
+   * @param {number} [ord]
+   * @returns {ColNum}
    */
   disDiff(ord = 1) {
     if (ord === 0) return this;
@@ -1441,9 +1440,9 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @param {!Number} [n]
-   * @param {!Boolean} [doClone]
-   * @returns {!ColNum|!ColStr|*}
+   * @param {number} [n]
+   * @param {boolean} [doClone]
+   * @returns {ColNum|ColStr}
    */
   smooth(n = 2, doClone = false) {
     if (n === 0) {
@@ -1466,7 +1465,7 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @returns {!ColNum}
+   * @returns {ColNum}
    */
   normalize() {
     const smallest = this.min();
@@ -1475,7 +1474,7 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @returns {!ColNum}
+   * @returns {ColNum}
    */
   removeAllOutliers() {
     const Q1 = this.Q1();
@@ -1484,9 +1483,9 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @param {!Number|null} [lBound]
-   * @param {!Number|null} [uBound]
-   * @returns {!ColNum}
+   * @param {?number} [lBound]
+   * @param {?number} [uBound]
+   * @returns {ColNum}
    */
   clip(lBound = null, uBound = null) {
     if (lBound !== null && uBound !== null) {
@@ -1499,10 +1498,10 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @param {!Number} v
-   * @param {!Number} y
-   * @param {!Number} [delta]
-   * @returns {!ColNum}
+   * @param {number} v
+   * @param {number} y
+   * @param {number} [delta]
+   * @returns {ColNum}
    */
   replace(v, y, delta = 0.00001) {
     return this.map((x) => Math.abs(x - v) <= delta ? y : x);
@@ -1511,9 +1510,9 @@ const COL_NUM_PROTO = {
   // hacks
 
   /**
-   * @param {!Number} a
-   * @param {!Number} b
-   * @returns {!ColNum}
+   * @param {number} a
+   * @param {number} b
+   * @returns {ColNum}
    */
   slice(a, b) {
     const xs = this._slice(a, b);
@@ -1523,9 +1522,9 @@ const COL_NUM_PROTO = {
   },
 
   /**
-   * @param {!Number} a
-   * @param {!Number} b
-   * @returns {!ColNum}
+   * @param {number} a
+   * @param {number} b
+   * @returns {ColNum}
    */
   subarray(a, b) {
     const xs = this._subarray(a, b);
@@ -1536,7 +1535,7 @@ const COL_NUM_PROTO = {
 
   /**
    * @param {function(*, number, ColNum): *} f
-   * @returns {!ColNum}
+   * @returns {ColNum}
    */
   map(f) {
     const xs = this._map(f);
@@ -1547,7 +1546,7 @@ const COL_NUM_PROTO = {
 
   /**
    * @param {function(*, number, ColNum): boolean} f
-   * @returns {!ColNum}
+   * @returns {ColNum}
    */
   filter(f) {
     const xs = this._filter(f);
@@ -1558,7 +1557,7 @@ const COL_NUM_PROTO = {
 };
 
 /**
- * @param {!TypedArray|!ColNum} a
+ * @param {TypedArray|ColNum} a
  * @private
  */
 const enhTypedArr = (a) => {
@@ -1580,8 +1579,8 @@ const enhTypedArr = (a) => {
 };
 
 /**
- * @param {!Array<!Number>|!TypedArray} xs
- * @param {!Number|null} [floatSize]
+ * @param {Array<number>|TypedArray} xs
+ * @param {?number} [floatSize]
  * @returns {'i8'|'i16'|'i32'|'u8'|'u16'|'u32'|'f32'|'f64'} dtype
  * @private
  */
@@ -1646,7 +1645,7 @@ const guessNumDtype = (xs, floatSize = null) => {
 };
 
 /**
- * @param {!DType} dtype
+ * @param {DType} dtype
  * @returns {Uint8ArrayConstructor|Uint16ArrayConstructor|Uint32ArrayConstructor|Int8ArrayConstructor|Int16ArrayConstructor|Int32ArrayConstructor|Float32ArrayConstructor|Float64ArrayConstructor} constructor
  * @private
  */
@@ -1667,9 +1666,9 @@ const constFromDtype = (dtype) => {
 
 /**
  *
- * @param {!Number} [a]
- * @param {?Number} [b]
- * @param {!Number} [step]
+ * @param {number} [a]
+ * @param {?number} [b]
+ * @param {number} [step]
  * @private
  */
 const rangeIter = function* (a = 0, b = null, step = 1) {
@@ -1684,10 +1683,10 @@ const rangeIter = function* (a = 0, b = null, step = 1) {
 
 /**
  *
- * @param {!Number} [a]
- * @param {!Number|null} [b]
- * @param {!Number} [step]
- * @returns {!ColNum} range
+ * @param {number} [a]
+ * @param {?number} [b]
+ * @param {number} [step]
+ * @returns {ColNum} range
  */
 const range = (a = 0, b = null, step = 1) => {
   if (b === null) return range(0, a);
@@ -1701,9 +1700,9 @@ const range = (a = 0, b = null, step = 1) => {
 };
 
 /**
- * @param {!Iterable<*>} xs
- * @param {!Iterable<*>|null} [vocab]
- * @returns {!Map<Number>} multiset
+ * @param {Iterable<*>} xs
+ * @param {?Iterable<*>} [vocab]
+ * @returns {Map<number>} multiset
  * @private
  */
 const bag = (xs, vocab = null) => {
@@ -1718,10 +1717,10 @@ const bag = (xs, vocab = null) => {
 };
 
 /**
- * @param {!Array<!number>|!Array<!String>|!TypedArray|!ColNum|!ColStr} xs
- * @param {!DType|null} [toDtype]
- * @param {!Boolean} [doClone]
- * @returns {!ColNum|!ColStr} column
+ * @param {Array<number>|Array<string>|TypedArray|ColNum|ColStr} xs
+ * @param {?DType} [toDtype]
+ * @param {boolean} [doClone]
+ * @returns {ColNum|ColStr} column
  */
 const from = (xs, toDtype = null, doClone = true) => {
   if (toDtype === xs.dtype) {
@@ -1818,9 +1817,9 @@ const from = (xs, toDtype = null, doClone = true) => {
 };
 
 /**
- * @param {!Number} [len]
- * @param {!DType|'s'|null} dtype
- * @returns {!ColNum|!ColStr} empty column
+ * @param {number} [len]
+ * @param {?DType|'s'} dtype
+ * @returns {ColNum|ColStr} empty column
  */
 const empty = (len = 0, dtype = null) => {
   if (dtype === 's') {
@@ -1832,24 +1831,24 @@ const empty = (len = 0, dtype = null) => {
     return empty(len, `f${opts.FLOAT_PREC}`);
   }
   switch (dtype.toLowerCase()) {
-    case 'f32': return ColF32(len);
-    case 'f64': return ColF32(len);
-    case 'u32': return ColU32(len);
-    case 'u16': return ColU16(len);
-    case 'u8': return ColU8(len);
-    case 'i32': return ColI32(len);
-    case 'i16': return ColI16(len);
-    case 'i8': return ColI8(len);
-    default: throw new Error(`unrecognised dtype "${dtype}"`);
+  case 'f32': return ColF32(len);
+  case 'f64': return ColF32(len);
+  case 'u32': return ColU32(len);
+  case 'u16': return ColU16(len);
+  case 'u8': return ColU8(len);
+  case 'i32': return ColI32(len);
+  case 'i16': return ColI16(len);
+  case 'i8': return ColI8(len);
+  default: throw new Error(`unrecognised dtype "${dtype}"`);
   }
 };
 
 /**
- * @param {!Number} len
- * @param {!Number|null} [lBound]
- * @param {!Number|null} [uBound]
- * @param {!DType|null} [dtype]
- * @returns {!ColNum} rand array
+ * @param {number} len
+ * @param {?number} [lBound]
+ * @param {?number} [uBound]
+ * @param {?DType} [dtype]
+ * @returns {ColNum} rand array
  */
 const rand = (len, lBound = null, uBound = null, dtype = null) => {
   if (dtype === 's') {
@@ -1885,57 +1884,57 @@ const rand = (len, lBound = null, uBound = null, dtype = null) => {
 };
 
 /**
- * @param {!Number} len
- * @param {!Number} val
- * @param {DType|null} [dtype]
- * @returns {!ColNum|!ColStr} array filled with value
+ * @param {number} len
+ * @param {number} val
+ * @param {?DType} [dtype]
+ * @returns {ColNum|ColStr} array filled with value
  */
 const repeat = (len, val, dtype = null) => empty(len, dtype === null ? guessNumDtype([val]) : dtype).fill(val);
 
 /**
- * @param {!Number} len
- * @param {DType|null} [dtype]
- * @returns {!ColNum} array of zeros
+ * @param {number} len
+ * @param {?DType} [dtype]
+ * @returns {ColNum} array of zeros
  */
 const ones = (len, dtype = null) => repeat(len, 1, dtype);
 
 /**
  * By default typed arrays are filled with 0 so no need to .repeat()
  *
- * @param {!Number} len
- * @param {DType|null} [dtype]
- * @returns {!ColNum} array of zeros
+ * @param {number} len
+ * @param {?DType} [dtype]
+ * @returns {ColNum} array of zeros
  */
 const zeros = (len, dtype = null) => empty(len, dtype === null ? 'u8' : dtype);
 
 /**
  * @param {...*}  xs
- * @returns {!ColStr|!ColNum} array
+ * @returns {ColStr|ColNum} array
  */
 const of = (...xs) => from(xs, null, false);
 
 /**
  * @param {*} xs
- * @returns {!Boolean}
+ * @returns {boolean}
  */
 const isColNum = (xs) => xs.dtype !== undefined && !!xs.dtype.match(dtypeRegex);
 
 /**
  * @param {*} xs
- * @returns {!Boolean}
+ * @returns {boolean}
  */
 const isColStr = (xs) => xs.dtype === 's';
 
 /**
  * @param {*} xs
- * @returns {!Boolean}
+ * @returns {boolean}
  */
 const isCol = (xs) => isColNum(xs) || isColStr(xs);
 
 /**
- * @param {!function(number): *} f
- * @param {!Number} n
- * @returns {!ColNum}
+ * @param {function(number): *} f
+ * @param {number} n
+ * @returns {ColNum}
  */
 const fromFunct = (f, n) => empty(n, `f${opts.FLOAT_PREC}`).map((_, idx) => f(idx));
 
@@ -1949,8 +1948,8 @@ for (const p of [
     .replace('int', 'I');
 
   /**
-   * @param {!Number} [len]
-   * @returns {!ColNum}
+   * @param {number} [len]
+   * @returns {ColNum}
    */
   PRODUCERS[`Col${dtype}`] = (len = 0) => {
     const match = dtypeRegex.exec(dtype);

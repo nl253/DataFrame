@@ -450,6 +450,7 @@
     ],
     "sort-imports": 1,
     "sort-keys": 0,
+    "key-spacing": 0,
     "sort-vars": 0,
     "space-unary-ops": [
       2,

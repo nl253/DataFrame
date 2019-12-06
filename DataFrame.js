@@ -1,4 +1,4 @@
-/* eslint-disable no-nested-ternary,max-lines */
+/* eslint-disable no-nested-ternary,max-lines,complexity */
 /**
  * TODO document cum ops
  * TODO replace is broken
@@ -52,17 +52,17 @@ const {
 
 class DataFrame {
   /**
-   * @param {!DataFrame|!GeneratorFunction|!Object<!String|!Number,!Number|!String|!Array<!String>|!Array<!Number>|!ColStr|!ColNum|!TypedArray>|!Array<!Array<!Number|!String>>|!Array<!TypedArray|!Array<!Number>|!Array<!String>|!ColStr|!ColNum>|!Map<String,!Number|!String|!Array<!Number>|!Array<!String>>} data
-   * @param {!String} [what]
-   * @param {?Array<!String>|?ColStr} [colNames] labels for every column (#cols === #labels)
-   * @param {!ArrayLike<!DType|'s'|null>|null} [dtypes]
+   * @param {DataFrame|GeneratorFunction|!Object<string|number,number|string|string[]|number[]|ColStr|ColNum|TypedArray>|Array<Array<number|string>>|Array<TypedArray|number[]|string[]|ColStr|ColNum>|!Map<String,number|string|number[]|string[]>} data
+   * @param {string} [what]
+   * @param {string[]|?ColStr} [colNames] labels for every column (#cols === #labels)
+   * @param {?ArrayLike<?DType|'s'>} [dtypes]
    */
   constructor(data = [], what = '', colNames = null, dtypes = null) {
     const prefix = `${this.constructor.name}.constructor()`;
     const logIt  = (lvl, msg) => log[lvl](`${prefix} ${msg}`);
-    const warn   = msg => logIt('warn', msg);
-    const info   = msg => logIt('info', msg);
-    const debug  = msg => logIt('debug', msg);
+    const warn   = (msg) => logIt('warn', msg);
+    const info   = (msg) => logIt('info', msg);
+    const debug  = (msg) => logIt('debug', msg);
     if (what.toLowerCase() !== what) {
       debug(`lowercasing "${what}"`);
       return new DataFrame(data, what.toLowerCase(), colNames, dtypes);
@@ -150,7 +150,7 @@ class DataFrame {
         }
       }
 
-      const lookedIn = opts.DATASETS.concat([dirname(data)]).map(p => resolve(p)).join(', ');
+      const lookedIn = opts.DATASETS.concat([dirname(data)]).map((p) => resolve(p)).join(', ');
       throw new Error(`failed to find file, looked for a dataset in ${lookedIn} (you might want to push your dir to opts.DATASETS OR set 'what', see API)`);
     } else if (what.startsWith('gen')) {
       info(`input is generator`);
@@ -260,7 +260,7 @@ class DataFrame {
       if (colNames === null) {
         this.colNames = Column.from(Array(nCols).fill('').map((_, idx) => `col${idx}`));
       } else {
-        this.colNames = Column.from(colNames.map(cName => cName.toString()), 's');
+        this.colNames = Column.from(colNames.map((cName) => cName.toString()), 's');
         for (let i = 0; i < nCols; i++) {
           const colName = this.colNames[i];
           const attributes = {
@@ -308,23 +308,23 @@ class DataFrame {
       }
     }
 
-    const isUndef = f => this[f] === undefined;
+    const isUndef = (f) => this[f] === undefined;
 
     // functs and aggs are forwarded to the underlying column
     for (const section of Object.keys(opts.AGG)) {
       for (const f of opts.AGG[section].filter(isUndef)) {
         switch (section) {
-          case 'num':
-            this[f] = function (...args) { return this.numeric.agg(f, ...args); };
-            break;
-          case 'str':
-            this[f] = function (...args) { return this.nominal.agg(f, ...args); };
-            break;
-          case 'all':
-            this[f] = function (...args) { return this.agg(f, ...args); };
-            break;
-          default:
-            throw new Error(`unrecognised section "${section}" in opts.AGG`);
+        case 'num':
+          this[f] = function (...args) { return this.numeric.agg(f, ...args); };
+          break;
+        case 'str':
+          this[f] = function (...args) { return this.nominal.agg(f, ...args); };
+          break;
+        case 'all':
+          this[f] = function (...args) { return this.agg(f, ...args); };
+          break;
+        default:
+          throw new Error(`unrecognised section "${section}" in opts.AGG`);
         }
       }
     }
@@ -333,41 +333,41 @@ class DataFrame {
     for (const section of Object.keys(opts.FUNCTS)) {
       for (const f of opts.FUNCTS[section].filter(isUndef)) {
         switch (section) {
-          case 'num':
-            this[f] = function (colId = null, ...args) {
-              const resultDF = this.clone();
-              const numDF = this.numeric.call(colId, f, ...args);
-              const { numColIdxs } = this;
-              let numCIdx = 0;
-              for (let cIdx = 0; cIdx < nCols; cIdx++) {
-                if (numColIdxs.has(cIdx)) {
-                  resultDF.cols[cIdx] = numDF.cols[numCIdx];
-                  numCIdx++;
-                }
+        case 'num':
+          this[f] = function (colId = null, ...args) {
+            const resultDF = this.clone();
+            const numDF = this.numeric.call(colId, f, ...args);
+            const { numColIdxs } = this;
+            let numCIdx = 0;
+            for (let cIdx = 0; cIdx < nCols; cIdx++) {
+              if (numColIdxs.has(cIdx)) {
+                resultDF.cols[cIdx] = numDF.cols[numCIdx];
+                numCIdx++;
               }
-              return resultDF;
-            };
-            break;
-          case 'str':
-            this[f] = function (colId = null, ...args) {
-              const resultDF = this.clone();
-              const strDF = this.nominal.call(colId, f, ...args);
-              const { numColIdxs } = this;
-              let strCIdx = 0;
-              for (let cIdx = 0; cIdx < nCols; cIdx++) {
-                if (!numColIdxs.has(cIdx)) {
-                  resultDF.cols[cIdx] = strDF.cols[strCIdx];
-                  strCIdx++;
-                }
+            }
+            return resultDF;
+          };
+          break;
+        case 'str':
+          this[f] = function (colId = null, ...args) {
+            const resultDF = this.clone();
+            const strDF = this.nominal.call(colId, f, ...args);
+            const { numColIdxs } = this;
+            let strCIdx = 0;
+            for (let cIdx = 0; cIdx < nCols; cIdx++) {
+              if (!numColIdxs.has(cIdx)) {
+                resultDF.cols[cIdx] = strDF.cols[strCIdx];
+                strCIdx++;
               }
-              return resultDF;
-            };
-            break;
-          case 'all':
-            this[f] = function (colId = null, ...args) { return this.call(colId, f, ...args); };
-            break;
-          default:
-            throw new Error(`unrecognised section "${section}" in opts.AGG`);
+            }
+            return resultDF;
+          };
+          break;
+        case 'all':
+          this[f] = function (colId = null, ...args) { return this.call(colId, f, ...args); };
+          break;
+        default:
+          throw new Error(`unrecognised section "${section}" in opts.AGG`);
         }
       }
     }
@@ -392,7 +392,7 @@ class DataFrame {
    * Construct a DataFrame from columns.
    *
    * @param {...ArrayLike<*>} cols
-   * @returns {!DataFrame}
+   * @returns {DataFrame}
    */
   static of(...cols) { return new DataFrame(cols, 'cols'); }
 
@@ -407,16 +407,16 @@ class DataFrame {
   get rows() {
     return new Proxy(this.cols, {
       /**
-       * @param {!Column[]} cols
-       * @param {!Number} idx
+       * @param {Column[]} cols
+       * @param {number} idx
        * @returns {Array<*>}
        */
-      get(cols, idx) { return cols.map(col => col[idx]); },
+      get(cols, idx) { return cols.map((col) => col[idx]); },
       /**
        *
-       * @param {!Column[]} cols
+       * @param {Column[]} cols
        * @param {Array<*>} row
-       * @returns {!Boolean}
+       * @returns {boolean}
        */
       has(cols, row) {
         const nCols = cols.length;
@@ -439,8 +439,8 @@ class DataFrame {
         return false;
       },
       /**
-       * @param {!Column[]} cols
-       * @param {!Number} rIdx
+       * @param {Column[]} cols
+       * @param {number} rIdx
        * @param {Array<*>} val
        */
       set(cols, rIdx, val) {
@@ -453,7 +453,7 @@ class DataFrame {
   }
 
   /**
-   * @returns {!Set<!Number>} set of column indexes
+   * @returns {Set<number>} set of column indexes
    */
   get numColIdxs() {
     const colIdxs = new Set();
@@ -467,7 +467,7 @@ class DataFrame {
   }
 
   /**
-   * @returns {!Set<!Number>} set of column indexes
+   * @returns {Set<number>} set of column indexes
    */
   get strColIdxs() {
     const numCols = this.numColIdxs;
@@ -475,11 +475,11 @@ class DataFrame {
   }
 
   /**
-   * @param {!String|!Number} colId
-   * @returns {!Number} column index
+   * @param {string|number} colId
+   * @returns {number} column index
    */
   colIdx(colId) {
-    const msg = m => `${this.constructor.name}.colIdx() ${m}`;
+    const msg = (m) => `${this.constructor.name}.colIdx() ${m}`;
     // resolve named column
     if (Number.isInteger(colId)) {
       // resolve negative idx
@@ -493,7 +493,7 @@ class DataFrame {
         return colId;
       }
     } else if (isString(colId)) {
-      const idx = this.colNames.findIndex(colName => colName === colId);
+      const idx = this.colNames.findIndex((colName) => colName === colId);
       if (idx < 0) {
         throw new Error(msg(`failed to find matching column for "${colId}"`));
       }
@@ -503,30 +503,30 @@ class DataFrame {
   }
 
   /**
-   * @returns {!DataFrame} a data frame with numeric cols
+   * @returns {DataFrame} a data frame with numeric cols
    */
   get numeric() {
     const { numColIdxs } = this;
-    return this.select(cId => numColIdxs.has(this.colIdx(cId)));
+    return this.select((cId) => numColIdxs.has(this.colIdx(cId)));
   }
 
   /**
-   * @returns {!DataFrame} a data frame with numeric cols
+   * @returns {DataFrame} a data frame with numeric cols
    */
   get nominal() {
     const { numColIdxs } = this;
-    return this.select(cId => !numColIdxs.has(this.colIdx(cId)));
+    return this.select((cId) => !numColIdxs.has(this.colIdx(cId)));
   }
 
   /**
-   * @param {!String|!Number} colId
-   * @returns {Array<String>|TypedArray} column
+   * @param {string|number} colId
+   * @returns {string[]|TypedArray} column
    */
   col(colId) { return this.cols[this.colIdx(colId)]; }
 
   /**
-   * @param {?Number} [n]
-   * @returns {!DataFrame} data frame
+   * @param {?number} [n]
+   * @returns {DataFrame} data frame
    */
   head(n = null) {
     if (n === null) {
@@ -536,8 +536,8 @@ class DataFrame {
   }
 
   /**
-   * @param {?Number} [n]
-   * @returns {!DataFrame} data frame
+   * @param {?number} [n]
+   * @returns {DataFrame} data frame
    */
   tail(n = null) {
     if (n === null) {
@@ -547,7 +547,7 @@ class DataFrame {
   }
 
   /**
-   * @returns {!Number} number of rows
+   * @returns {number} number of rows
    */
   get length() {
     if (this.cols[0] === undefined) {
@@ -558,46 +558,46 @@ class DataFrame {
   }
 
   /**
-   * @returns {!Number} number of columns
+   * @returns {number} number of columns
    */
   get nCols() { return this.cols.length; }
 
   /**
-   * @param {...(!String|!Number)} colIds
-   * @returns {!DataFrame} data frame
+   * @param {...(string|number)} colIds
+   * @returns {DataFrame} data frame
    */
   dtype(...colIds) {
     if (colIds.length === 0) {
       return this.dtype(...this.colNames);
     }
-    const colIdxs = colIds.map(id => this.colIdx(id));
-    return this.select(cIdx => colIdxs.indexOf(cIdx) >= 0).agg(col => col.dtype).rename(1, 'dtype');
+    const colIdxs = colIds.map((id) => this.colIdx(id));
+    return this.select((cIdx) => colIdxs.indexOf(cIdx) >= 0).agg((col) => col.dtype).rename(1, 'dtype');
   }
 
   /**
-   * @returns {!ColStr} data types for all columns
+   * @returns {ColStr} data types for all columns
    */
-  get dtypes() { return Column.from(this.cols.map(c => c.dtype), 's'); }
+  get dtypes() { return Column.from(this.cols.map((c) => c.dtype), 's'); }
 
   /**
-   * @param {...(!Number|!String|!RegExp|!function((!String|!Number)):!Boolean)} params
-   * @returns {!DataFrame} data frame
+   * @param {...(number|string|RegExp|function((string|number)): boolean)} params
+   * @returns {DataFrame} data frame
    */
   select(...params) {
     if (params.length === 0) {
       throw new Error('the DF is empty because no column IDs provided, try: df.select(0, -2, 3)');
     } else if (params.length === 1 && isRegExp(params[0])) {
       const regex = params[0];
-      return this.select(cName => isString(cName) && cName.search(regex) >= 0);
+      return this.select((cName) => isString(cName) && cName.search(regex) >= 0);
     } else if (params.length === 1 && isFunction(params[0])) {
       const f = params[0];
-      return this.select(...(this.colNames.filter(name => f(name) || f(this.colIdx(name)))));
+      return this.select(...(this.colNames.filter((name) => f(name) || f(this.colIdx(name)))));
     } else {
       const cols = [];
       const colNames = [];
       const dtypes = [];
 
-      for (const i of new Set(params.map(id => this.colIdx(id)))) {
+      for (const i of new Set(params.map((id) => this.colIdx(id)))) {
         cols.push(this.cols[i]);
         colNames.push(this.colNames[i]);
         dtypes.push(this.dtypes[i]);
@@ -608,14 +608,14 @@ class DataFrame {
   }
 
   /**
-   * @param {...(!Number|!String|!RegExp|!function((!String|!Number)):!Boolean)} params
-   * @returns {!DataFrame} data frame
+   * @param {...(number|string|RegExp|function((string|number)): boolean)} params
+   * @returns {DataFrame} data frame
    */
   selectRows(...params) {
     if (params.length === 0) {
       throw new Error('the DF is empty because no row IDs provided, try: df.selectRows(0, -2, 3)');
     } else if (params.length === 2 && isRegExp(params[0])) {
-      return this.selectRows(val => val.search(params[0]) >= 0, params[1]);
+      return this.selectRows((val) => val.search(params[0]) >= 0, params[1]);
     } else if (params.length === 2 && isFunction(params[0])) {
       const colId = params[1];
       const f = params[0];
@@ -623,7 +623,7 @@ class DataFrame {
       const col = this.col(colId);
       const tests = Array(col.length).fill(false).map((_, rIdx) => f(col[rIdx], rIdx));
       return new DataFrame(
-        this.cols.map(c => c.filter((_, rIdx) => tests[rIdx])),
+        this.cols.map((c) => c.filter((_, rIdx) => tests[rIdx])),
         'cols',
         [...this.colNames],
         [...this.dtypes],
@@ -633,16 +633,16 @@ class DataFrame {
     } else if (params.reduce((ok, focus) => ok && isNumber(focus) && Number.isInteger(focus))) {
       throw new Error(`${this.constructor.name}.selectRows() not implemented yet`);
     } else {
-      throw new Error(`${this.constructor.name}.selectRows() didn't understand args ${params.map(x => x.toString()).join(', ')}`);
+      throw new Error(`${this.constructor.name}.selectRows() didn't understand args ${params.map((x) => x.toString()).join(', ')}`);
     }
   }
 
   /**
-   * @param {...(!String|!Number)} params pairs of colId, newName
-   * @returns {!DataFrame} data frame with renamed col
+   * @param {...(string|number)} params pairs of colId, newName
+   * @returns {DataFrame} data frame with renamed col
    */
   rename(...params) {
-    const msg = m => `${this.constructor.name}.rename() ${m}`;
+    const msg = (m) => `${this.constructor.name}.rename() ${m}`;
     if (params.length === 1 && Array.isArray(params[0])) {
       const pairs = params[0].map((newName, cIdx) => [cIdx, newName]);
       const args = pairs.reduce((pair1, pair2) => pair1.concat(pair2), []);
@@ -664,14 +664,14 @@ class DataFrame {
   }
 
   /**
-   * @param {!Number|!String|null} [colId]
-   * @param {!String|!function(Col): Col} f
+   * @param {?number|string} [colId]
+   * @param {string|function(Col): Col} f
    * @param {...*} args
-   * @returns {!DataFrame} data frame with f applied to colId
+   * @returns {DataFrame} data frame with f applied to colId
    */
   call(colId = null, f, ...args) {
     if (isString(f)) {
-      return this.call(colId, col => col[f](...args));
+      return this.call(colId, (col) => col[f](...args));
     }
     if (colId === null) {
       log.info(`${this.constructor.name}.call() colId not specified, running for all cols`);
@@ -684,8 +684,8 @@ class DataFrame {
   }
 
   /**
-   * @param {!Number} idx
-   * @returns {!String}
+   * @param {number} idx
+   * @returns {string}
    * @private
    */
   _colName(idx) {
@@ -693,13 +693,13 @@ class DataFrame {
   }
 
   /**
-   * @param {!Function|!String} [f]
+   * @param {function(ColNum|ColStr): (number|string)} [f]
    * @param {...*} args
-   * @returns {!DataFrame} data frame
+   * @returns {DataFrame} data frame
    */
-  agg(f = xs => xs.length, ...args) {
+  agg(f = (xs) => xs.length, ...args) {
     if (isString(f)) {
-      return this.agg(col => col[f](...args)).rename(-1, f);
+      return this.agg((col) => col[f](...args)).rename(-1, f);
     }
     const colNames = [];
     const aggResults = [];
@@ -711,7 +711,7 @@ class DataFrame {
       aggResults.push(f(col, ...args));
     }
     return new DataFrame(
-      [colNames, aggResults.map(x => x.toString())],
+      [colNames, aggResults.map((x) => x.toString())],
       'cols',
       ['column', 'agg'],
       ['s', null],
@@ -719,14 +719,14 @@ class DataFrame {
   }
 
   /**
-   * @param {!Number|!String} colId
-   * @param {!Function|!String} [f]
+   * @param {number|string} colId
+   * @param {function(ColNum|ColStr): (number|string)} [f]
    * @param {...*} args
-   * @returns {!DataFrame} data frame
+   * @returns {DataFrame} data frame
    */
-  groupBy(colId, f = xs => xs.length, ...args) {
+  groupBy(colId, f = (xs) => xs.length, ...args) {
     if (isString(f)) {
-      return this.groupBy(colId, xs => xs[f](...args)).rename(-1, f);
+      return this.groupBy(colId, (xs) => xs[f](...args)).rename(-1, f);
     }
     const cIdx = this.colIdx(colId);
     const index = new Map();
@@ -746,9 +746,9 @@ class DataFrame {
   }
 
   /**
-   * @param {!String|!function(Column, Column, Number): !Column} f
-   * @param {!DataFrame|null} [other]
-   * @returns {!DataFrame} data frame
+   * @param {string|function(Column, Column, Number): Column} f
+   * @param {?DataFrame} [other]
+   * @returns {DataFrame} data frame
    */
   connect(f, other = null) {
     if (other === null) {
@@ -775,11 +775,11 @@ class DataFrame {
 
 
   /**
-   * @param {!function(Col, Col): *|!String} f
-   * @param {?Boolean} [withNames]
-   * @param {?Boolean} [isCommutative]
-   * @param {*|null} [identity]
-   * @returns {!DataFrame} data frame
+   * @param {function(Col, Col): (number|string)} f
+   * @param {?boolean} [withNames]
+   * @param {?boolean} [isCommutative]
+   * @param {*} [identity]
+   * @returns {DataFrame} data frame
    */
   matrix(f, withNames = true, isCommutative = false, identity = null, ...args) {
     if (isString(f)) {
@@ -790,8 +790,8 @@ class DataFrame {
     const rows = [];
     const cache = {};
     const { nCols } = this;
-    const msg = m => `${this.constructor.name}.matrix() ${m}`;
-    const debug = m => log.debug(msg(m));
+    const msg = (m) => `${this.constructor.name}.matrix() ${m}`;
+    const debug = (m) => log.debug(msg(m));
 
     for (let yIdx = 0; yIdx < nCols; yIdx++) {
       // else
@@ -843,9 +843,9 @@ class DataFrame {
   }
 
   /**
-   * @param {!Array<!String>|!Array<!Number>|TypedArray} col
+   * @param {string[]|number[]|TypedArray} col
    * @param {?String} [name]
-   * @returns {!DataFrame} data frame
+   * @returns {DataFrame} data frame
    */
   appendCol(col, name = null, dtype = null) {
     const cols = [...this.cols];
@@ -863,9 +863,9 @@ class DataFrame {
   }
 
   /**
-   * @param {!Array<!String>|!Array<!Number>|TypedArray} col
+   * @param {string[]|number[]|TypedArray} col
    * @param {?String} [name]
-   * @returns {!DataFrame} data frame
+   * @returns {DataFrame} data frame
    */
   prependCol(col, name = null, dtype = null) {
     const cols = [...this.cols];
@@ -883,9 +883,9 @@ class DataFrame {
   }
 
   /**
-   * @param {!DataFrame} other
+   * @param {DataFrame} other
    * @param {'col'|'row'|'cols'|'rows'|0|1} [axis]
-   * @returns {!DataFrame} data frame
+   * @returns {DataFrame} data frame
    */
   concat(other, axis = 0) {
     if (isNumber(axis)) {
@@ -898,8 +898,8 @@ class DataFrame {
         const isDigit = /^\d+$/; // check if has proper column names or just indexes
         // if columns are indexes, shift them
         let colNames;
-        if (other.colNames.filter(c => c.toString().search(isDigit)).length === other.colNames.length) {
-          colNames = this.colNames.concat(other.colNames.map(cIdx => this.colNames.length + cIdx));
+        if (other.colNames.filter((c) => c.toString().search(isDigit)).length === other.colNames.length) {
+          colNames = this.colNames.concat(other.colNames.map((cIdx) => this.colNames.length + cIdx));
         } else {
           colNames = this.colNames.concat(other.colNames);
         }
@@ -938,8 +938,8 @@ class DataFrame {
   }
 
   /**
-   * @param {...!Number} idxs PAIRS of indexes
-   * @returns {!DataFrame} a data frame
+   * @param {...number} idxs PAIRS of indexes
+   * @returns {DataFrame} a data frame
    */
   slice(...idxs) {
     if (idxs.length === 0) {
@@ -950,9 +950,9 @@ class DataFrame {
        * e.g. slice(0)         -> slice(0, end)
        * e.g. slice(0, 10, 20) -> slice(0, 10, 20, end)
        */
-    } else if (idxs.some(idx => idx < 0)) {
+    } else if (idxs.some((idx) => idx < 0)) {
       // resolve negative indexes
-      return this.slice(...(idxs.map(idx => (idx < 0 ? idx + this.length : idx))));
+      return this.slice(...(idxs.map((idx) => (idx < 0 ? idx + this.length : idx))));
     }
 
     const { nCols } = this;
@@ -975,11 +975,11 @@ class DataFrame {
    * E.g. sliceCols(0)         -> sliceCols(0, end).
    * E.g. sliceCols(0, 10, 20) -> sliceCols(0, 10, 20, end).
    *
-   * @param {...(!Number|!String)} slices
-   * @returns {!DataFrame} data frame
+   * @param {...(number|string)} slices
+   * @returns {DataFrame} data frame
    */
   sliceCols(...slices) {
-    const msg = m => `${this.constructor.name}.sliceCols() ${m}`;
+    const msg = (m) => `${this.constructor.name}.sliceCols() ${m}`;
     if (slices.length === 0) {
       throw new Error(msg('no slice idxs specified (e.g. df.sliceCols(0, -1))'));
     } else if (slices.length % 2 !== 0) {
@@ -1011,21 +1011,21 @@ class DataFrame {
   }
 
   /**
-   * @param {...(!Number|!String|!RegExp|!function((!String|!Number)):!Boolean)} params
-   * @returns {!DataFrame} data frame
+   * @param {...(number|string|RegExp|function((string|number)): boolean)} params
+   * @returns {DataFrame} data frame
    */
   drop(...params) {
     if (params.length === 0) {
       throw new Error('you need to select a column (e.g. df.drop(0, -2, -4))');
     }
     const { colNames } = this.select(...params);
-    return this.select(cName => isString(cName) && colNames.indexOf(cName) < 0);
+    return this.select((cName) => isString(cName) && colNames.indexOf(cName) < 0);
   }
 
   /**
-   * @param {!function(!String|!Number,!Number): !Boolean} f
-   * @param {!String|!Number|null} [colId]
-   * @returns {!DataFrame} data frame
+   * @param {function(string|number, number): boolean} f
+   * @param {?string|number} [colId]
+   * @returns {DataFrame} data frame
    */
   filter(f, colId = null) {
     if (colId === null) {
@@ -1036,7 +1036,7 @@ class DataFrame {
     const col = this.col(colId);
     const tests = Array(col.length).fill(false).map((_, rIdx) => f(col[rIdx], rIdx));
     return new DataFrame(
-      this.cols.map(c => c.filter((_, rIdx) => tests[rIdx])),
+      this.cols.map((c) => c.filter((_, rIdx) => tests[rIdx])),
       'cols',
       [...this.colNames],
       [...this.dtypes],
@@ -1044,54 +1044,54 @@ class DataFrame {
   }
 
   /**
-   * @param {!String|!Number} val
-   * @param {!String|!Number|null} colId
+   * @param {string|number} val
+   * @param {?string|number} colId
    * @param {"not is"|"is"|"lt"|"gt"|"gte"|"lte"|">"|">="|"<"|"<="|"="|"!="|"!=="|"=="|"less than"|"greater than"|"not equal"|"ne"|"equal"|"equals"|"less than or equal"|"greater than or equal"} op
-   * @returns {!DataFrame} data frame
+   * @returns {DataFrame} data frame
    */
   where(val, colId = null, op = '=') {
     switch (op.toLowerCase()) {
-      case '!=': return this.filter(x => x !== val, colId);
-      case '!==': return this.where(val, colId, '!=');
-      case 'ne': return this.where(val, colId, '!=');
-      case 'not equal': return this.where(val, colId, '!=');
-      case 'not equals': return this.where(val, colId, '!=');
+    case '!=': return this.filter((x) => x !== val, colId);
+    case '!==': return this.where(val, colId, '!=');
+    case 'ne': return this.where(val, colId, '!=');
+    case 'not equal': return this.where(val, colId, '!=');
+    case 'not equals': return this.where(val, colId, '!=');
 
-      case 'is': return this.filter(x => Object.is(x, val), colId);
+    case 'is': return this.filter((x) => Object.is(x, val), colId);
 
-      case 'not is': return this.filter(x => !Object.is(x, val), colId);
-      case '!is': return this.where(val, colId, 'not is');
-      case 'is not': return this.where(val, colId, 'not is');
+    case 'not is': return this.filter((x) => !Object.is(x, val), colId);
+    case '!is': return this.where(val, colId, 'not is');
+    case 'is not': return this.where(val, colId, 'not is');
 
-      case '=': return this.filter(x => x === val, colId);
-      case '==': return this.where(val, colId, '=');
-      case 'equal': return this.where(val, colId, '=');
-      case 'equals': return this.where(val, colId, '=');
+    case '=': return this.filter((x) => x === val, colId);
+    case '==': return this.where(val, colId, '=');
+    case 'equal': return this.where(val, colId, '=');
+    case 'equals': return this.where(val, colId, '=');
 
-      case '>': return this.filter(x => x > val, colId);
-      case 'gt': return this.where(val, colId, '>');
-      case 'greater than': return this.where(val, colId, '>');
+    case '>': return this.filter((x) => x > val, colId);
+    case 'gt': return this.where(val, colId, '>');
+    case 'greater than': return this.where(val, colId, '>');
 
-      case '<': return this.filter(x => x < val, colId);
-      case 'lt': return this.where(val, colId, '<');
-      case 'less than': return this.where(val, colId, '<');
+    case '<': return this.filter((x) => x < val, colId);
+    case 'lt': return this.where(val, colId, '<');
+    case 'less than': return this.where(val, colId, '<');
 
-      case '<=': return this.filter(x => x <= val, colId);
-      case 'lte': return this.where(val, colId, '<=');
-      case 'less than or equal': return this.where(val, colId, '<=');
+    case '<=': return this.filter((x) => x <= val, colId);
+    case 'lte': return this.where(val, colId, '<=');
+    case 'less than or equal': return this.where(val, colId, '<=');
 
-      case '>=': return this.filter(x => x >= val, colId);
-      case 'gte': return this.where(val, colId, '>=');
-      case 'greater than or equal': return this.where(val, colId, '>=');
+    case '>=': return this.filter((x) => x >= val, colId);
+    case 'gte': return this.where(val, colId, '>=');
+    case 'greater than or equal': return this.where(val, colId, '>=');
 
-      default: throw new Error(`unrecognised op ${op}`);
+    default: throw new Error(`unrecognised op ${op}`);
     }
   }
 
   /**
    * @param {*} val
    * @param {...*} colIds
-   * @returns {!DataFrame} data frame without val in colIds
+   * @returns {DataFrame} data frame without val in colIds
    */
   removeAll(val, ...colIds) {
     if (colIds.length === 0) {
@@ -1104,19 +1104,19 @@ class DataFrame {
   }
 
   /**
-   * @param {?Number|?String} [colId]
-   * @param {!RegExp|!String|!Number} pat
-   * @param {!String|!Number} repl
+   * @param {?number|?String} [colId]
+   * @param {RegExp|string|number} pat
+   * @param {string|number} repl
    * @param {...*} args
-   * @returns {!DataFrame} data frame with f applied to colId
+   * @returns {DataFrame} data frame with f applied to colId
    */
   replace(colId = null, pat, repl, ...args) {
     return this[isNumber(pat) ? 'numeric' : 'nominal'].call(colId, 'replace', pat, repl, ...args);
   }
 
   /**
-   * @param {...!Number|...!String} colIds
-   * @returns {!DataFrame} data frame
+   * @param {...(number|string)} colIds
+   * @returns {DataFrame} data frame
    */
   removeAllOutliers(...colIds) {
     // by default compute for all (numeric) columns
@@ -1129,16 +1129,16 @@ class DataFrame {
     const numCols = this.numColIdxs;
 
     // indexes of *NUMERIC* columns
-    const numColIdxs = new Set(colIds.map(id => this.colIdx(id)).filter(cIdx => numCols.has(cIdx)));
+    const numColIdxs = new Set(colIds.map((id) => this.colIdx(id)).filter((cIdx) => numCols.has(cIdx)));
 
     // store {Q1, Q3, idx} for every *NUMERIC* column
     const IQRs = this.colNames
-      // get column indexes
+    // get column indexes
       .map((_, idx) => idx)
       // and now get all NUMERIC columns while leaving gaps to preserve indexing
-      .map(idx => (numColIdxs.has(idx) ? this.cols[idx] : null))
+      .map((idx) => (numColIdxs.has(idx) ? this.cols[idx] : null))
       // and now computer IQ1 and IQ3 for all NUMERIC columns while leaving gaps to preserve indexing
-      .map(maybeCol => (maybeCol === null ? null : ({ Q1: maybeCol.Q1(), Q3: maybeCol.Q3() })));
+      .map((maybeCol) => (maybeCol === null ? null : ({ Q1: maybeCol.Q1(), Q3: maybeCol.Q3() })));
 
     // store results of testing for all rows
     const tests = Array(this.length).fill(true);
@@ -1169,8 +1169,8 @@ class DataFrame {
   }
 
   /**
-   * @param {!Number|!String|null} [colId]
-   * @param {'asc'|'des'|!function(!String,!String): !Number|!function(!Number,!Number): !Number} [ord]
+   * @param {?number|string} [colId]
+   * @param {'asc'|'des'|function(string, string): number|function(number, number): number} [ord]
    * @returns {DataFrame}
    */
   sort(colId = null, ord = 'asc') {
@@ -1196,7 +1196,7 @@ class DataFrame {
   /**
    * Shuffle the data frame.
    *
-   * @returns {!DataFrame} data frame with shuffle rows
+   * @returns {DataFrame} data frame with shuffle rows
    */
   shuffle() {
     const rIdxs = Array(this.length).fill(0).map((_, idx) => idx);
@@ -1212,10 +1212,10 @@ class DataFrame {
   }
 
   /**
-   * @param {!Number|null} [n] number of cols to select
-   * @param {!String|!function(Column): !Number} [agg]
+   * @param {?number} [n] number of cols to select
+   * @param {string|!function(Column): number} [agg]
    * @param {...*} args
-   * @returns {!DataFrame} data frame
+   * @returns {DataFrame} data frame
    */
   nBest(n = null, agg = 'var', ...args) {
     if (n === null) {
@@ -1231,9 +1231,9 @@ class DataFrame {
   }
 
   /**
-   * @param {?Number} n ratio or number of elements
-   * @param {?Boolean} wr with replacement
-   * @returns {!DataFrame} data frame
+   * @param {?number} n ratio or number of elements
+   * @param {?boolean} wr with replacement
+   * @returns {DataFrame} data frame
    */
   sample(n = null, wr = true) {
     if (n === null) {
@@ -1269,24 +1269,24 @@ class DataFrame {
   /**
    * Produce a count table for values of a column.
    *
-   * @param {!String|!Number} colId
-   * @returns {!DataFrame} data frame of counts
+   * @param {string|number} colId
+   * @returns {DataFrame} data frame of counts
    */
-  counts(colId) { return this.groupBy(colId, xs => xs.length); }
+  counts(colId) { return this.groupBy(colId, (xs) => xs.length); }
 
   /**
    * Produce a ps table for values of a column.
    *
-   * @param {!String|!Number} colId
-   * @returns {!DataFrame} data frame of pss
+   * @param {string|number} colId
+   * @returns {DataFrame} data frame of pss
    */
-  ps(colId) { return this.counts(colId).map(-1, x => x / this.length); }
+  ps(colId) { return this.counts(colId).map(-1, (x) => x / this.length); }
 
   /**
    * One hot encode a column.
    *
-   * @param {!String|!Number} colId
-   * @returns {!DataFrame} one hot encoded table
+   * @param {string|number} colId
+   * @returns {DataFrame} one hot encoded table
    */
   oneHot(colId = null) {
     if (colId === null) {
@@ -1301,7 +1301,7 @@ class DataFrame {
     const k = col.max() + 1;
     const cols = Array(k)
       .fill(0)
-      .map(_ => Column.empty(col.length, 'u8'));
+      .map(() => Column.empty(col.length, 'u8'));
     for (let rowIdx = 0; rowIdx < col.length; rowIdx++) {
       const val = col[rowIdx];
       cols[val][rowIdx] = 1;
@@ -1310,33 +1310,33 @@ class DataFrame {
   }
 
   /**
-   * @param {!Number} [p]
-   * @param {?Boolean} [withNames]
-   * @returns {!DataFrame} data frame
+   * @param {number} [p]
+   * @param {?boolean} [withNames]
+   * @returns {DataFrame} data frame
    */
   distance(p = 2, withNames = true) {
     return this.numeric.matrix('distance', withNames, true, 0, p);
   }
 
   /**
-   * @param {?Boolean} [withNames]
-   * @returns {!DataFrame} data frame
+   * @param {?boolean} [withNames]
+   * @returns {DataFrame} data frame
    */
   dot(withNames = true) {
     return this.numeric.matrix('dot', withNames, true, null);
   }
 
   /**
-   * @param {?Boolean} [withNames]
-   * @returns {!DataFrame} data frame
+   * @param {?boolean} [withNames]
+   * @returns {DataFrame} data frame
    */
   cov(withNames = true) {
     return this.numeric.matrix('cov', withNames, true, null);
   }
 
   /**
-   * @param {?Boolean} [withNames]
-   * @returns {!DataFrame} data frame
+   * @param {?boolean} [withNames]
+   * @returns {DataFrame} data frame
    */
   corr(withNames = true) {
     return this.numeric.matrix('corr', withNames, true, 1);
@@ -1379,14 +1379,14 @@ class DataFrame {
   }
 
   /**
-   * @returns {!DataFrame} shallow copy of the data frame
+   * @returns {DataFrame} shallow copy of the data frame
    */
   copy() {
     return new DataFrame([...this.cols], 'cols', [...this.colNames], [...this.dtypes]);
   }
 
   /**
-   * @returns {!DataFrame} clone (deep copy) of the data frame
+   * @returns {DataFrame} clone (deep copy) of the data frame
    */
   clone() {
     const { nCols } = this;
@@ -1399,8 +1399,8 @@ class DataFrame {
   }
 
   /**
-   * @param {!String|null} [fileName]
-   * @returns {!Object<Array<!Number>|!Array<!String>>|undefined} dictionary
+   * @param {?string} [fileName]
+   * @returns {Object<number[]|string[]>|undefined} dictionary
    */
   toObj(fileName = null) {
     if (fileName !== null) {
@@ -1419,8 +1419,8 @@ class DataFrame {
   }
 
   /**
-   * @param {!String|null} fileName
-   * @returns {!String|undefined}
+   * @param {?string} fileName
+   * @returns {string|undefined}
    */
   toJSON(fileName = null) {
     if (fileName !== null) {
@@ -1432,8 +1432,8 @@ class DataFrame {
   }
 
   /**
-   * @param {!String|null} [fileName]
-   * @returns {!String|undefined}
+   * @param {?string} [fileName]
+   * @returns {string|undefined}
    */
   toCSV(fileName = null) {
     if (fileName !== null) {
@@ -1448,8 +1448,8 @@ class DataFrame {
   }
 
   /**
-   * @param {!String|null} [fileName]
-   * @returns {!String|undefined} HTML
+   * @param {?string} [fileName]
+   * @returns {string|undefined} HTML
    */
   toHTML(fileName = null) {
     if (fileName !== null) {
@@ -1486,10 +1486,10 @@ class DataFrame {
   }
 
   /**
-   * @returns {!Array<!String>} datasets
+   * @returns {string[]} datasets
    */
   static get dataSets() {
-    const filters = [path => path.search(/\.(csv|json)$/i) >= 0];
+    const filters = [(path) => path.search(/\.(csv|json)$/i) >= 0];
     const nodeStack = [...opts.DATASETS];
     const datasets = new Set();
     let i = 0;
@@ -1515,19 +1515,19 @@ class DataFrame {
   }
 
   /**
-   * @returns {!Record<!String,*>}
+   * @returns {Record<string,*>}
    */
   static get opts() { return opts; }
 
   /**
-   * @param {?Number} [n]
-   * @param {?Number} [m]
-   * @param {function(string)} sink
+   * @param {?number} [n]
+   * @param {?number} [m]
+   * @param {function(string): void} sink
    */
   print(n = null, m = null, sink = console.log) { sink(this.toString(n, m)); }
 
   /**
-   * @param {!String} opt
+   * @param {string} opt
    */
   static setPrinting(opt = 'minimal') {
     if (opt.search(/^mini/i) >= 0) {
@@ -1543,9 +1543,9 @@ class DataFrame {
   }
 
   /**
-   * @param {!Number} [n]
-   * @param {!Number} [m]
-   * @returns {!String} string representation of the data frame
+   * @param {number} [n]
+   * @param {number} [m]
+   * @returns {string} string representation of the data frame
    */
   toString(n = null, m = null) {
     // in node debugger rows and columns are null
@@ -1691,8 +1691,8 @@ class DataFrame {
       }
 
       /*
-       * different memory indiciator for index
-       *(doesn't acutally take any memory since it's just printed)
+       * different memory indicator for index
+       *(doesn't actually take any memory since it's just printed)
        */
       if (opts.SHOW_INDEX) {
         memInfo.unshift(opts.MEM_INFO_INDEX);
@@ -1705,17 +1705,17 @@ class DataFrame {
     const colWidths = Array(nCols)
       .fill(0)
       .map((_, cIdx) => rows
-        .map(r => r[cIdx].toString().length)
+        .map((r) => r[cIdx].toString().length)
         .reduce((len1, len2) => Math.max(len1, len2), 1));
 
     // inject underline AFTER col headings
-    rows.splice(1, 0, colWidths.map(l => opts.UNDERLINE.repeat(l)));
+    rows.splice(1, 0, colWidths.map((l) => opts.UNDERLINE.repeat(l)));
     // same for bottom but optional, the row before memory info (IF PRESENT)
     if (opts.UNDERLINE_BOT) {
       if (opts.MEM_INFO) {
-        rows.splice(rows.length - 1, 0, colWidths.map(l => opts.UNDERLINE.repeat(l)));
+        rows.splice(rows.length - 1, 0, colWidths.map((l) => opts.UNDERLINE.repeat(l)));
       } else {
-        rows.splice(rows.length, 0, colWidths.map(l => opts.UNDERLINE.repeat(l)));
+        rows.splice(rows.length, 0, colWidths.map((l) => opts.UNDERLINE.repeat(l)));
       }
     }
 

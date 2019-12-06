@@ -7,9 +7,9 @@ const isNumRegex = /^(\d+\.?\d*|\d*\.\d+)(e-?\d+)?$/i;
 const dtypeRegex = /\s*([a-z]+)(8|16|32|64)\s*/i;
 
 /**
- * @param {!Number} n
- * @param {!Number} [prec]
- * @returns {!String}
+ * @param {number} n
+ * @param {number} [prec]
+ * @returns {string}
  * @private
  */
 const fmtFloat = (n, prec = 2) => {
@@ -28,10 +28,10 @@ const fmtFloat = (n, prec = 2) => {
 };
 
 /**
- * @param {!Number} n
- * @param {!Number} [prec]
- * @param {!String} [unit]
- * @returns {!String}
+ * @param {number} n
+ * @param {number} [prec]
+ * @param {string} [unit]
+ * @returns {string}
  * @private
  */
 const fmtFloatSI = (n, prec = 2, unit = 'B') => {
@@ -49,7 +49,7 @@ const fmtFloatSI = (n, prec = 2, unit = 'B') => {
 
 /**
  *
- * @param {!Number|!String} val
+ * @param {number|string} val
  * @returns {'s'|'f64'|'f34'|'i32'|'i16'|'i8'|'u32'|'u16'|'u8'} type marker
  * @private
  */
@@ -82,8 +82,8 @@ const getTypeMarker = (val) => {
 
 
 /**
- * @param {!Array<Array<*>>} xs
- * @returns {!Array<Array<*>>} xs^T
+ * @param {*[][]} xs
+ * @returns {*[][]} xs^T
  * @private
  */
 const transpose = (xs) => {
@@ -95,7 +95,7 @@ const transpose = (xs) => {
    *  [3]]
    */
   if (!Array.isArray(xs[0])) {
-    return xs.map(x => [x]);
+    return xs.map((x) => [x]);
   }
   const colCount = xs[0].length; // assume equi-sized
   const rowCount = xs.length;
@@ -110,8 +110,8 @@ const transpose = (xs) => {
 
 /**
  * @param {*} o
- * @param {!String} type
- * @returns {!Boolean}
+ * @param {string} type
+ * @returns {boolean}
  */
 const checkType = (o, type) => {
   if (o === null || o === undefined || o.constructor === undefined || o.constructor === null || o.constructor.name === undefined || o.constructor.name === null) {
@@ -122,55 +122,64 @@ const checkType = (o, type) => {
 
 /**
  * @param {*} o
- * @returns {!Boolean}
+ * @returns {boolean}
+ * @private
  */
-const isString = o => checkType(o, 'String');
+const isString = (o) => checkType(o, 'String');
 
 /**
  * @param {*} o
- * @returns {!Boolean}
+ * @returns {boolean}
+ * @private
  */
-const isRegExp = o => checkType(o, 'RegExp');
+const isRegExp = (o) => checkType(o, 'RegExp');
 
 /**
  * @param {*} o
- * @returns {!Boolean}
+ * @returns {boolean}
+ * @private
  */
-const isNumber = o => checkType(o, 'Number');
+const isNumber = (o) => checkType(o, 'Number');
 
 /**
  * @param {*} o
- * @returns {!Boolean}
+ * @returns {boolean}
+ * @private
  */
-const isBoolean = o => checkType(o, 'Boolean');
+const isBoolean = (o) => checkType(o, 'Boolean');
 
 /**
  * @param {*} o
- * @returns {!Boolean}
+ * @returns {boolean}
+ * @private
  */
-const isObject = o => checkType(o, 'Object');
+const isObject = (o) => checkType(o, 'Object');
 
 /**
  * @param {*} o
- * @returns {!Boolean}
+ * @returns {boolean}
+ * @private
  */
-const isFunction = o => checkType(o, 'Function');
+const isFunction = (o) => checkType(o, 'Function');
 
 /**
  * @param {*} o
- * @returns {!Boolean}
+ * @returns {boolean}
+ * @private
  */
-const isGenerator = o => util.types.isGeneratorFunction(o);
+const isGenerator = (o) => util.types.isGeneratorFunction(o);
 
 /**
  * @param {*} o
- * @returns {!Boolean}
+ * @returns {boolean}
+ * @private
  */
-const isMap = o => util.types.isMap(o);
+const isMap = (o) => util.types.isMap(o);
 
 /**
  * @param {*} o
- * @returns {!Boolean}
+ * @returns {boolean}
+ * @private
  */
 const isURL = (o) => {
   if (isString(o) && o.slice(0, 4) === 'http') {
@@ -184,16 +193,18 @@ const isURL = (o) => {
 /**
  * @param {*} o
  * @param {*} o2
- * @returns {!Boolean}
+ * @returns {boolean}
+ * @private
  */
 const isSameType = (o, o2) => o && o2 && o.constructor && o2.constructor && o2.constructor.name === o.constructor.name;
 
 /**
- * @param {!String} root
- * @returns {IterableIterator<!String>}
+ * @param {!string} root
+ * @returns {IterableIterator<string>}
+ * @private
  */
 const walkFiles = function* (...root) {
-  const nodeStack = [...root.map(p => resolve(p))];
+  const nodeStack = [...root.map((p) => resolve(p))];
   while (nodeStack.length !== 0) {
     const path = nodeStack.pop();
     const stats = statSync(path);
