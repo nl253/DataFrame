@@ -79,7 +79,7 @@
     "retire": "^2.0.3",
     "write-good": "^1.0.2"
   },
-  "main": "DataFrame.js",
+  "main": "./DataFrame.js",
   "directories": {
     "example": "./examples",
     "doc": "./docs",
@@ -100,11 +100,19 @@
   },
   "scripts": {
     "test": "npx jest",
-    "doc": "echo -e 'GENERATING DOCS\\n' && rm -rf ./docs && npx jsdoc -d ./docs -R ./README.md ./*.js",
-    "doc:publish": "echo -e 'PUBLISHING DOCS\\n' && npm run doc && git add ./docs && git commit -am 'Update docs' -n && git push",
+    "doc": "echo -e 'GENERATING DOCS\\n' && rm -rf ./docs && npx jsdoc --pedantic -d ./docs -R ./README.md ./*.js",
     "doc:open": "npm run doc && $BROWSER ./docs/index.html",
+    "doc:publish": "echo -e 'PUBLISHING DOCS\\n' && npm run doc && git add ./docs && git commit -am 'Update docs' -n && git push",
     "loc": "tokei -- $(git ls-files | grep -v docs | grep -v bin)",
-    "lint": "npx eslint *.js",
+    "lint": "npm run lint:code && npm run lint:doc && npm run lint:deps",
+    "lint:code": "npx eslint *.js",
+    "lint:doc": "npm run lint:doc:markdown-lint && npm run lint:doc:write-good && npm run lint:doc:remark",
+    "lint:doc:write-good": "npx write-good --so --weasel --tooWordy --cliches --thereIs *.md || echo ''",
+    "lint:doc:markdown-lint": "npx markdownlint *.md",
+    "lint:doc:remark": "npx remark -u lint *.md",
+    "lint:deps": "npm run lint:deps:license && npm run lint:deps:security",
+    "lint:deps:security": "npx retire --js",
+    "lint:deps:license": "npx license-checker --summary",
     "prepublishOnly": "npm run doc:publish"
   }
 }

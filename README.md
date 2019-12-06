@@ -42,7 +42,7 @@ DF.dataSets
 
 ```javascript
 [ 'alcohol.csv',   // alcohol consumption math students
-  'countries.csv', // geographical and economical data for all countries
+  'countries.csv', // geopolitical data for all countries
   'diabetes.csv',
   'food.csv',      // food choices
   'got.csv',       // game of thrones deaths
@@ -170,7 +170,7 @@ iris.sliceCols(0, 2).print(3)
      150B           600B           600B
 ```
 
-This is equivalent to:
+This is the same as:
 
 ```javascript
 iris.sliceCols('Id', 'SepalWidthCm').print(3)
@@ -275,9 +275,9 @@ Array.from(irow)
   'Iris-setosa' ]
 ```
 
-#### Iterating Over Many Rows
+#### Iterating Over Rows
 
-If you want to iterate over all the rows (this isn't very efficient) try:
+If you want to iterate over all the rows (not efficient) try:
 
 ```javascript
 const rowIt = iris.slice(0, 3).rowsIter // (getter)
@@ -645,7 +645,7 @@ Signature: `iris.nBest(n, metric)` where metric is one of:
 OR a function from Column (one column) to a number (`Column -> Num`). <br>
 
 ```javascript
-iris.drop('Id') // `Id` column is not very useful
+iris.drop('Id') // `Id` column is not useful
     .numeric    // select all numeric cols
     .nBest(2)   // best 2 features using variance as score
     .print(3)   // show first 3 rows
@@ -666,10 +666,10 @@ iris.drop('Id') // `Id` column is not very useful
 
 #### Normalization
 
-However, using `.nBest()` in this way is very naive and you might want to normalize (scale to the same range) the values:
+Using `.nBest()` in this way is naive and you might want to normalize (scale to the same range) the values:
 
 ```javascript
-iris.drop('Id')  // `Id` column is not very useful
+iris.drop('Id')  // `Id` column is not useful
     .numeric     // select all numeric cols
     .normalize() // bring them to range [0, 1]
     .nBest(2)    // best 2 features using variance as score
@@ -1167,7 +1167,7 @@ TODO
 3. Alpha-stage
 4. I would not use it in production (yet)
 5. This isn't supposed to be an exact copy of pandas
-6. In some places it's not very efficient
+6. In some places it's not efficient
 7. Date columns / mixed data types not supported. Every column must be either
    numeric OR string. A single `DataFrame` may have a combination of numeric
    and string columns.
@@ -1175,17 +1175,4 @@ TODO
 
 ### License
 
-**MIT**
-
-Copyright 2019 Norbert Logiewa
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-<!--
-TODO document `df.call()`
-TODO document `df.agg()`
--->
+MIT
