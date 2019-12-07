@@ -1846,16 +1846,11 @@ const empty = (len = 0, dtype = null) => {
  * @param {number} len
  * @param {?number} [lBound]
  * @param {?number} [uBound]
- * @param {?DType} [dtype]
- * @returns {ColNum} rand array
+ * @param {?DType|'s'} [dtype]
+ * @returns {ColNum|ColStr} rand array
  */
 const rand = (len, lBound = null, uBound = null, dtype = null) => {
   if (dtype === 's') {
-    if (lBound === null) {
-      return rand(len, 0, uBound, dtype);
-    } else if (uBound === null) {
-      return rand(len, lBound, lBound + 1, dtype);
-    } /* else */
     // eslint-disable-next-line no-shadow
     const range = uBound - lBound;
     const LOWER_RANGE = 122 - 97;
@@ -1969,26 +1964,26 @@ Object.setPrototypeOf(COL_NUM_PROTO, COL_PROTO);
 
 module.exports = Object.freeze(
   { ...({
-    empty,
-    repeat,
-    from,
-    fromFunct,
-    isCol,
-    isColNum,
-    isColStr,
-    of,
-    ones,
-    opts,
-    rand,
-    range,
-    zeros,
-  }),
-  ...PRODUCERS,
-  ...({
-    bag,
-    constFromDtype,
-    guessNumDtype,
-    rangeIter,
-  })
+      empty,
+      repeat,
+      from,
+      fromFunct,
+      isCol,
+      isColNum,
+      isColStr,
+      of,
+      ones,
+      opts,
+      rand,
+      range,
+      zeros,
+    }),
+    ...PRODUCERS,
+    ...({
+      bag,
+      constFromDtype,
+      guessNumDtype,
+      rangeIter,
+    })
   },
 );

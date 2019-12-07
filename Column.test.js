@@ -3,13 +3,77 @@ const Column = require('./Column');
 const { isMap } = require('./utils');
 
 const FLOAT_DELTA = 0.001;
+
 const LOW_BOUND_INT = 0;
 const HIGH_BOUND_INT = 100;
+
 const LOW_BOUND_FLOAT = -100;
 const HIGH_BOUND_FLOAT = 100;
+
 const STR_MAX_LEN = 20;
 
+const INT_LARGE = 1000;
+const INT_MEDIUM = 100;
+const INT_SMALL = 10;
+
 const DTYPES = ['s', 'u8', 'u16', 'u32', 'i8', 'i16', 'i32', 'f32', 'f64'];
+
+const ARRAY_PROTO_METHODS = [
+  'concat',
+  'constructor',
+  'copyWithin',
+  'entries',
+  'every',
+  'fill',
+  'filter',
+  'find',
+  'findIndex',
+  'flat',
+  'flatMap',
+  'forEach',
+  'includes',
+  'indexOf',
+  'join',
+  'keys',
+  'lastIndexOf',
+  'map',
+  'pop',
+  'push',
+  'reduce',
+  'reduceRight',
+  'reverse',
+  'shift',
+  'slice',
+  'some',
+  'sort',
+  'splice',
+  'toLocaleString',
+  'toString',
+  'unshift',
+  'values',
+];
+const TYPED_ARRAY_PROTO_METHODS = [
+  'findIndex',
+  'forEach',
+  'includes',
+  'indexOf',
+  'join',
+  'keys',
+  'lastIndexOf',
+  'length',
+  'map',
+  'reduce',
+  'reduceRight',
+  'reverse',
+  'set',
+  'slice',
+  'some',
+  'sort',
+  'subarray',
+  'toLocaleString',
+  'toString',
+  'values',
+];
 
 const RAND = {
   float(n = LOW_BOUND_FLOAT, m = HIGH_BOUND_FLOAT) {
@@ -27,7 +91,19 @@ const RAND = {
       a[i] = String.fromCharCode(Math.random() < 0.8 ? this.int(97, 123) : this.int(65, 97));
     }
     return a.join('');
-  }
+  },
+  colNum() {
+    return Math.random() < 0.33 ? this.colInt() : this.colFloat();
+  },
+  colInt() {
+    return Column.rand(this.int(), this.int(0, INT_SMALL), this.int(INT_SMALL, INT_LARGE));
+  },
+  colFloat() {
+    return Column.rand(this.int(), this.float(-INT_SMALL, INT_SMALL), this.float(INT_SMALL, INT_LARGE));
+  },
+  colStr() {
+    return Column.rand(this.int(), this.int(0, INT_SMALL), this.int(INT_SMALL, INT_SMALL * 2), 's');
+  },
 };
 
 // Tests for Functions
@@ -67,16 +143,15 @@ describe('utils', () => {
   });
 });
 
-
 describe('generation', () => {
 
   for (const pair of [
-    [RAND.int(0, 10), RAND.int(10, 100)],
-    [RAND.float(0, 10), RAND.float(10, 100)],
-    [RAND.float(-10, 10), RAND.float(10, 100)],
+    [RAND.int(0, INT_SMALL), RAND.int(INT_SMALL, INT_MEDIUM)],
+    [RAND.float(0, INT_SMALL), RAND.float(INT_SMALL, INT_MEDIUM)],
+    [RAND.float(-INT_SMALL, INT_SMALL), RAND.float(INT_SMALL, INT_MEDIUM)],
   ]) {
     const [lBound, uBound] = pair;
-    const col = Column.rand(100, lBound, uBound);
+    const col = Column.rand(INT_MEDIUM, lBound, uBound);
     for (let i = 0; i < col.length; i++) {
       test(`.rand(${col.length}, ${lBound}, ${uBound}) generated rand array with nums in range [${lBound}, ${uBound}) has ${i}th element (${col[i]}) in the range [${lBound}, ${uBound})`, () => {
         expect(col[i]).toBeLessThan(uBound);
@@ -87,9 +162,9 @@ describe('generation', () => {
 
   describe('.range(lBound, uBound, step)', () => {
     for (const pair of [
-      [RAND.int(0, 10), RAND.int(10, 100), RAND.int(1, 3)],
-      [RAND.float(0, 10), RAND.float(10, 100), RAND.float(1, 3)],
-      [RAND.float(-10, 10), RAND.float(10, 100), RAND.float(1, 3)],
+      [RAND.int(0, INT_SMALL), RAND.int(INT_SMALL, INT_MEDIUM), RAND.int(1, 3)],
+      [RAND.float(0, INT_SMALL), RAND.float(INT_SMALL, INT_MEDIUM), RAND.float(1, 3)],
+      [RAND.float(-INT_SMALL, INT_SMALL), RAND.float(INT_SMALL, INT_MEDIUM), RAND.float(1, 3)],
     ]) {
       const [lBound, uBound, step] = pair;
       const arr = Column.range(lBound, uBound, step);
@@ -124,7 +199,7 @@ describe('generation', () => {
     for (const input of [
       ['0'],
       ['0', '1'],
-      Array(RAND.int(1, 100)).fill('').map(() => RAND.int(0, 128).toString()),
+      Array(RAND.int(1, INT_MEDIUM)).fill('').map(() => RAND.int(0, 128).toString()),
     ]) {
       test(`.from([${input.join(', ')}]) parses ints and converts a col`, () => {
         const col = Column.from(input);
@@ -140,7 +215,7 @@ describe('generation', () => {
     for (const input of [
       ['0.3'],
       ['0.9999', '99231.9'],
-      Array(RAND.int(1, 100)).fill('').map(() => RAND.float(0, 128).toString()),
+      Array(RAND.int(1, INT_MEDIUM)).fill('').map(() => RAND.float(0, 128).toString()),
     ]) {
       test(`.from([${input.join(', ')}]) parses floats and converts a col`, () => {
         const col = Column.from(input);
@@ -153,14 +228,11 @@ describe('generation', () => {
         }
       });
     }
-  });
-
-  describe('.of(...items)', () => {
     for (const input of [
       [0.3],
       [0.9999, 99911.9],
     ]) {
-      test(`.of(${input.join(', ')}) parses floats and converts a col`, () => {
+      test(`.from(${input.toString()}) parses floats and converts a col`, () => {
         const col = Column.from(input);
         expect(input).toHaveLength(col.length);
         expect(col).toHaveProperty('dtype');
@@ -171,12 +243,14 @@ describe('generation', () => {
         }
       });
     }
+  });
 
+  describe('.of(...items)', () => {
     for (const input of [
       [3, 1, 3, 0],
       [-9990],
-      Array(RAND.int(1, 100)).fill('').map(() => RAND.float(0, 128)),
-      Array(RAND.int(1, 100)).fill('').map(() => RAND.int(0, 128)),
+      Array(RAND.int()).fill('').map(() => RAND.float(0, 128)),
+      Array(RAND.int()).fill('').map(() => RAND.int(0, 128)),
     ]) {
       test(`.of(${input.join(', ')}) parses ints and converts a col`, () => {
         const col = Column.of(...input);
@@ -191,7 +265,7 @@ describe('generation', () => {
   });
 
   test(`.ones(n) creates a col full of ones`, () => {
-    const n = RAND.int(1, 100);
+    const n = RAND.int();
     const col = Column.ones(n);
     expect(col).toHaveProperty('dtype', 'u8');
     expect(DTYPES).toContain(col.dtype);
@@ -202,7 +276,7 @@ describe('generation', () => {
   });
 
   test(`.zeros(n) creates a col full of zeros`, () => {
-    const n = RAND.int(1, 100);
+    const n = RAND.int();
     const col = Column.zeros(n);
     expect(col).toHaveProperty('dtype', 'u8');
     expect(DTYPES).toContain(col.dtype);
@@ -213,7 +287,7 @@ describe('generation', () => {
   });
 
   test(`.empty(n) creates a col full of zeros`, () => {
-    const n = RAND.int(1, 100);
+    const n = RAND.int();
     const col = Column.zeros(n);
     expect(col).toHaveProperty('dtype');
     expect(DTYPES).toContain(col.dtype);
@@ -241,8 +315,8 @@ describe('generation', () => {
     });
   }
 
-  for (const lBound of [0, 10, 100, -10, -1, -1000]) {
-    const n = RAND.int(1, 100);
+  for (const lBound of [0, INT_SMALL, INT_MEDIUM, -INT_SMALL, -1, -INT_LARGE]) {
+    const n = RAND.int();
     const uBound = lBound + 5;
     test(`.rand(${n}, ${lBound}, ${uBound}) creates a col full of rand nums in range [${lBound}, ${uBound}) with length ${n}`, () => {
       const col = Column.rand(n, lBound, uBound);
@@ -273,7 +347,6 @@ describe('generation', () => {
   }
 });
 
-
 describe('methods', () => {
 
   describe('ColNum', () => {
@@ -286,18 +359,18 @@ describe('methods', () => {
 
       describe('measures of spread', () => {
         for (const f of ['mad', 'stdev', 'var']) {
-          const r = RAND.float();
-          test(`${f} of Column [${r}, ${r}, ${r}] is 0 (${f} measure of spread should give 0 if there is no spread)`, () => {
-            expect(Column.of(r, r, r)[f]()).toEqual(0);
-          });
+          for (const r of [RAND.int(), RAND.float()]) {
+            test(`${f} of Column [${r}, ${r}, ${r}] is 0 (${f} measure of spread should give 0 if there is no spread)`, () => {
+              expect(Column.of(r, r, r)[f]()).toEqual(0);
+            });
+          }
         }
       });
     });
 
-    {
+    describe('Math object operations', () => {
       const mathObjectOps = ['round', 'trunc', 'floor', 'ceil', 'abs'];
-      const [lBound, uBound] = [RAND.float(-10, 10), RAND.float(10, 100)];
-      const c = Column.rand(100, lBound - 10, uBound + 10);
+      const c = RAND.colNum();
       for (const f of mathObjectOps) {
         const col = c[f]();
         test(`col.${f}() applies Math.${f} to each item`, () => {
@@ -306,16 +379,16 @@ describe('methods', () => {
           }
         });
       }
-    }
+    });
 
     describe('.clip(lBound, uBound)', () => {
       for (const pair of [
-        [RAND.int(0, 10),     RAND.int(10, 100)],
-        [RAND.float(0, 10),   RAND.float(10, 100)],
-        [RAND.float(-10, 10), RAND.float(10, 100)],
+        [RAND.int(0, INT_SMALL),     RAND.int(INT_SMALL, INT_MEDIUM)],
+        [RAND.float(0, INT_SMALL),   RAND.float(INT_SMALL, INT_MEDIUM)],
+        [RAND.float(-INT_SMALL, INT_SMALL), RAND.float(INT_SMALL, INT_MEDIUM)],
       ]) {
         const [lBound, uBound] = pair;
-        const col = Column.rand(100, lBound - 10, uBound + 10).clip(lBound, uBound);
+        const col = Column.rand(INT_MEDIUM, lBound - INT_SMALL, uBound + INT_SMALL).clip(lBound, uBound);
         test(`after col.clip(${lBound}, ${uBound}) the col does not have any values smaller than (${lBound}) or greater than (${uBound})`, () => {
           for (let i = 0; i < col.length; i++) {
             expect(col[i]).toBeGreaterThanOrEqual(lBound - FLOAT_DELTA);
@@ -385,16 +458,65 @@ describe('methods', () => {
   });
 
   describe('ColStr and ColNum (shared)', () => {
-    for (const pair of [
-      [RAND.int(1, 10),     RAND.int(10, 100)],
-      [RAND.float(1, 10),   RAND.float(10, 100)],
-      [RAND.float(-10, 10), RAND.float(10, 100)],
-    ]) {
-      const [lBound, uBound] = pair;
-      const c = Column.rand(100, lBound - 10, uBound + 10);
+    for (const c of [RAND.colStr(), RAND.colInt(), RAND.colFloat()]) {
       const v = c[RAND.int(0, c.length)];
-      test(`col.replace(${v}) removes all such items from the col`, () => {
-        expect([...c.replace(v, 0)]).not.toContain(v);
+      describe(`col implements all methods from Array`, () => {
+        for (const method of ARRAY_PROTO_METHODS) {
+          test(`col.${method} is implemented`, () => expect(c[method]).toBeDefined());
+        }
+      });
+      describe(`col implements all methods from TypedArray`, () => {
+        for (const method of TYPED_ARRAY_PROTO_METHODS) {
+          test(`col.${method} is implemented`, () => expect(c[method]).toBeDefined());
+        }
+      });
+      describe(`col.ps() creates a map of probabilities`, () => {
+        const ps = c.ps();
+        test(`${ps} is a Map`, () => expect(isMap(ps)).toBe(true));
+        for (const k of ps.keys()) {
+          const val = ps.get(k);
+          test(`${val} is a probability`, () => {
+            expect(val).toBeLessThanOrEqual(1);
+            expect(val).toBeGreaterThanOrEqual(0);
+          });
+        }
+        test('probabilities add up to 1', () => expect([...ps.keys()].map((k) => ps.get(k)).reduce((x, y) => x + y, 0)).toBeCloseTo(1));
+      });
+      test(`col.replace(${v}) removes all such items from the col`, () => expect([...c.replace(v, 0)]).not.toContain(v));
+      describe(`${c}.concat(${c}) joins 2 cols`, () => {
+        const c2 = c.clone();
+        const c3 = c.concat(c2);
+        const newColLen = c.length + c2.length;
+        test('new col has correct length', () => expect(c3).toHaveLength(newColLen));
+        for (let i = 0; i < c.length; i++) {
+          test(`new col at idx #${i} should have ${c[i]}`, () => {
+            if (c.dtype === 's') {
+              expect(c3[i]).toEqual(c[i]);
+            } else {
+              expect(c3[i]).toBeCloseTo(c[i]);
+            }
+          });
+        }
+        for (let i = c.length; i < newColLen; i++) {
+          test(`new col at idx #${i} should have ${c2[i]}`, () => {
+            if (c.dtype === 's') {
+              expect(c3[i]).toEqual(c2[i - c.length]);
+            } else {
+              expect(c3[i]).toBeCloseTo(c2[i - c.length]);
+            }
+          });
+        }
+      });
+      describe(`${c}.unique() removes duplicate items`, () => {
+        const c2 = c.unique();
+        const c2Arr = [...c2];
+        for (let i = 0; i < c2.length; i++) {
+          const val = c2[i];
+          test(`${c2} should not contain ${val}`, () => {
+            expect(c2Arr.slice(i + 1)).not.toContain(val);
+            expect(c2Arr.slice(0, i)).not.toContain(val);
+          });
+        }
       });
     }
   });
