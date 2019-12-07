@@ -1,4 +1,4 @@
-/* eslint-disable no-magic-numbers,array-element-newline,no-multi-spaces,array-bracket-spacing,max-lines,array-bracket-newline,max-nested-callbacks */
+/* eslint-disable no-magic-numbers,array-element-newline,no-multi-spaces,array-bracket-spacing,max-lines,array-bracket-newline,max-nested-callbacks,complexity */
 const Column = require('./Column');
 const { isMap } = require('./utils');
 
@@ -29,61 +29,6 @@ const RAND = {
     return a.join('');
   }
 };
-
-/*
- * TODO unit test for `.IQR`
- * TODO unit test for `.Q1`
- * TODO unit test for `.Q3`
- * TODO unit test for `.abs`
- * TODO unit test for `.all`
- * TODO unit test for `.argMax`
- * TODO unit test for `.argMin`
- * TODO unit test for `.cast`
- * [X]  unit test for `.clip`
- * TODO unit test for `.clone`
- * TODO unit test for `.concat`
- * TODO unit test for `.contains`
- * TODO unit test for `.counts`
- * TODO unit test for `.cube`
- * TODO unit test for `.dot`
- * TODO unit test for `.downcast`
- * TODO unit test for `.drop`
- * TODO unit test for `.filter`
- * TODO unit test for `.head`
- * TODO unit test for `.mad`
- * TODO unit test for `.magnitude`
- * TODO unit test for `.map`
- * TODO unit test for `.max`
- * [X]  unit test for `.mean`
- * TODO unit test for `.median`
- * TODO unit test for `.min`
- * TODO unit test for `.mode`
- * TODO unit test for `.nLargest`
- * TODO unit test for `.nQuart`
- * TODO unit test for `.nSmallest`
- * TODO unit test for `.none`
- * TODO unit test for `.normalize`
- * TODO unit test for `.pop`
- * TODO unit test for `.pow`
- * TODO unit test for `.range`
- * TODO unit test for `.reverse`
- * TODO unit test for `.sample`
- * TODO unit test for `.shuffle`
- * TODO unit test for `.skewness`
- * TODO unit test for `.slice`
- * TODO unit test for `.sort`
- * TODO unit test for `.square`
- * TODO unit test for `.std`
- * TODO unit test for `.subarray`
- * TODO unit test for `.swap`
- * TODO unit test for `.tail`
- * TODO unit test for `.takeWhile`
- * TODO unit test for `.trimOutliers`
- * TODO unit test for `.unique`
- * TODO unit test for `.var`
- * TODO unit test for `.zipWith`
- * TODO unit test for `.zipWith3`
- */
 
 // Tests for Functions
 
@@ -121,7 +66,6 @@ describe('utils', () => {
     });
   });
 });
-
 
 
 describe('generation', () => {
@@ -358,7 +302,7 @@ describe('methods', () => {
       ]) {
         const [lBound, uBound] = pair;
         const c = Column.rand(100, lBound - 10, uBound + 10);
-        for (const f of ['round', 'trunc', 'floor', 'ceil']) {
+        for (const f of ['round', 'trunc', 'floor', 'ceil', 'abs']) {
           const col = c[f]();
           test(`col.${f}() applies Math.${f} to each item`, () => {
             for (let i = 0; i < col.length; i++) {
