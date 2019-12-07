@@ -1689,7 +1689,7 @@ const rangeIter = function* (a = 0, b = null, step = 1) {
  */
 const range = (a = 0, b = null, step = 1) => {
   if (b === null) return range(0, a);
-  const newArr = empty(Math.ceil(b - a) / step, guessNumDtype([b - step, a + step]));
+  const newArr = empty(Math.floor(Math.ceil(b - a) / step), guessNumDtype([b - step, a + step]));
   let i = 0;
   for (const n of rangeIter(a, b, step)) {
     newArr[i] = n;

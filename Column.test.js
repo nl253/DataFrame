@@ -1,5 +1,6 @@
 /* eslint-disable no-magic-numbers,array-element-newline,no-multi-spaces,array-bracket-spacing,max-lines,array-bracket-newline */
 const Column = require('./Column');
+const { isMap } = require('./utils');
 
 const FLOAT_DELTA = 0.001;
 const LOW_BOUND_INT = 0;
@@ -113,11 +114,12 @@ for (const triplet of [
 }
 
 for (const pair of [
-  [0, 1],
-  [-10, 10],
+  [RAND.int(0, 10), RAND.int(10, 100)],
+  [RAND.float(0, 10), RAND.float(10, 100)],
+  [RAND.float(-10, 10), RAND.float(10, 100)],
 ]) {
   const [lBound, uBound] = pair;
-  const arr = Column.rand(100);
+  const arr = Column.rand(100, lBound, uBound);
   for (let i = 0; i < arr.length; i++) {
     test(`rand generated rand array with nums in range [${lBound}, ${uBound}) has element ${i} (${arr[i]}) in the range`, () => {
       expect(arr[i]).toBeLessThan(uBound);
@@ -128,22 +130,26 @@ for (const pair of [
 
 test('inserting 1, 2, 3, 1, 1 into a bag has 1x3, 2x1, 3x1', () => {
   const multiset = Column.bag([1, 2, 3, 1, 1]);
+  expect(isMap(multiset)).toBe(true);
   expect(multiset.get(1)).toBe(3);
   expect(multiset.get(2)).toBe(1);
   expect(multiset.get(3)).toBe(1);
 });
 
 for (const pair of [
-  [  0, 10],
-  [  0, 30],
-  [-10, 99]
+  [RAND.int(0, 10), RAND.int(10, 100), RAND.int(1, 3)],
+  [RAND.float(0, 10), RAND.float(10, 100), RAND.float(1, 3)],
+  [RAND.float(-10, 10), RAND.float(10, 100), RAND.float(1, 3)],
 ]) {
-  const [lBound, uBound] = pair;
-  const arr = Column.range(lBound, uBound);
+  const [lBound, uBound, step] = pair;
+  const arr = Column.range(lBound, uBound, step);
   for (let i = 0; i < arr.length; i++) {
     test(`range(${lBound}, ${uBound}) has all element ${lBound} <= ${i}th element (${arr[i]}) < ${uBound}`, () => {
-      expect(arr[i]).toBeGreaterThanOrEqual(lBound);
-      expect(arr[i]).toBeLessThan(uBound);
+      expect(arr[i]).toBeGreaterThanOrEqual(lBound - FLOAT_DELTA);
+      expect(arr[i]).toBeLessThan(uBound + FLOAT_DELTA);
+      if (i >= 1) {
+        expect(arr[i]).toBeCloseTo(arr[i - 1] + step);
+      }
     });
   }
 }
@@ -166,6 +172,7 @@ for (const input of [
 for (const input of [
   ['0'],
   ['0', '1'],
+  Array(RAND.int(1, 100)).fill('').map(() => RAND.int(0, 128).toString()),
 ]) {
   test(`Column.from([${input.join(', ')}]) parses ints and converts a col`, () => {
     const col = Column.from(input);
@@ -181,6 +188,7 @@ for (const input of [
 for (const input of [
   ['0.3'],
   ['0.9999', '99231.9'],
+  Array(RAND.int(1, 100)).fill('').map(() => RAND.float(0, 128).toString()),
 ]) {
   test(`Column.from([${input.join(', ')}]) parses floats and converts a col`, () => {
     const col = Column.from(input);
@@ -226,6 +234,8 @@ for (const input of [
 for (const input of [
   [3, 1, 3, 0],
   [-9990],
+  Array(RAND.int(1, 100)).fill('').map(() => RAND.float(0, 128)),
+  Array(RAND.int(1, 100)).fill('').map(() => RAND.int(0, 128)),
 ]) {
   test(`Column.of(${input.join(', ')}) parses ints and converts a col`, () => {
     const col = Column.of(...input);
@@ -233,43 +243,40 @@ for (const input of [
     expect(col).toHaveProperty('dtype');
     expect(DTYPES).toContain(col.dtype);
     for (let i = 0; i < col.length; i++) {
-      expect(col[i]).toEqual(parseInt(input[i]));
+      expect(col[i]).toBeCloseTo(input[i]);
     }
   });
 }
 
-for (const n of [0, 10, 99]) {
-  test(`Column.ones(${n}) creates a col full of ones`, () => {
-    const col = Column.ones(n);
-    expect(col).toHaveProperty('dtype');
-    expect(DTYPES).toContain(col.dtype);
-    expect(col).toHaveLength(n);
-    for (let i = 0; i < col.length; i++) {
-      expect(col[i]).toEqual(1);
-    }
-  });
-}
+test(`Column.ones() creates a col full of ones`, () => {
+  const n = RAND.int(1, 100);
+  const col = Column.ones(n);
+  expect(col).toHaveProperty('dtype', 'u8');
+  expect(DTYPES).toContain(col.dtype);
+  expect(col).toHaveLength(n);
+  for (let i = 0; i < col.length; i++) {
+    expect(col[i]).toEqual(1);
+  }
+});
 
-for (const n of [0, 10, 99]) {
-  test(`Column.zeros(${n}) creates a col full of zeros`, () => {
-    const col = Column.zeros(n);
-    expect(col).toHaveProperty('dtype');
-    expect(DTYPES).toContain(col.dtype);
-    expect(col).toHaveLength(n);
-    for (let i = 0; i < col.length; i++) {
-      expect(col[i]).toEqual(0);
-    }
-  });
-  test(`Column.empty(${n}) creates a col full of zeros`, () => {
-    const col = Column.zeros(n);
-    expect(col).toHaveProperty('dtype');
-    expect(DTYPES).toContain(col.dtype);
-    expect(col).toHaveLength(n);
-    for (let i = 0; i < col.length; i++) {
-      expect(col[i]).toEqual(0);
-    }
-  });
-}
+test(`Column.zeros() creates a col full of zeros`, () => {
+  const n = RAND.int(1, 100);
+  const col = Column.zeros(n);
+  expect(col).toHaveProperty('dtype', 'u8');
+  expect(DTYPES).toContain(col.dtype);
+  expect(col).toHaveLength(n);
+  for (let i = 0; i < col.length; i++) {
+    expect(col[i]).toEqual(0);
+  }
+});
+
+test(`Column.empty() creates a col full of zeros`, () => {
+  const n = RAND.int(1, 100);
+  const col = Column.zeros(n);
+  expect(col).toHaveProperty('dtype');
+  expect(DTYPES).toContain(col.dtype);
+  expect(col).toHaveLength(n);
+});
 
 for (const pair of [
   [RAND.int(), RAND.float()],
@@ -292,20 +299,19 @@ for (const pair of [
   });
 }
 
-for (const n of [0, 1, 9, 222]) {
-  for (const lBound of [0, 10, 100, -10, -1, -1000]) {
-    const uBound = lBound + 5;
-    test(`Column.rand(${n}, ${lBound}, ${uBound}) creates a col full of rand nums in range [${lBound}, ${uBound})`, () => {
-      const col = Column.rand(n, lBound, uBound);
-      expect(col).toHaveProperty('dtype');
-      expect(DTYPES).toContain(col.dtype);
-      expect(col).toHaveLength(n);
-      for (let i = 0; i < col.length; i++) {
-        expect(col[i]).toBeGreaterThanOrEqual(lBound);
-        expect(col[i]).toBeLessThan(uBound);
-      }
-    });
-  }
+for (const lBound of [0, 10, 100, -10, -1, -1000]) {
+  const n = RAND.int(1, 100);
+  const uBound = lBound + 5;
+  test(`Column.rand(${n}, ${lBound}, ${uBound}) creates a col full of rand nums in range [${lBound}, ${uBound})`, () => {
+    const col = Column.rand(n, lBound, uBound);
+    expect(col).toHaveProperty('dtype');
+    expect(DTYPES).toContain(col.dtype);
+    expect(col).toHaveLength(n);
+    for (let i = 0; i < col.length; i++) {
+      expect(col[i]).toBeGreaterThanOrEqual(lBound);
+      expect(col[i]).toBeLessThan(uBound);
+    }
+  });
 }
 
 for (const pair of [
@@ -338,8 +344,8 @@ for (const f of ['mad', 'stdev', 'var']) {
 }
 
 for (const pair of [
-  [RAND.int(0, 10), RAND.int(10, 100)],
-  [RAND.float(0, 10), RAND.float(10, 100)],
+  [RAND.int(0, 10),     RAND.int(10, 100)],
+  [RAND.float(0, 10),   RAND.float(10, 100)],
   [RAND.float(-10, 10), RAND.float(10, 100)],
 ]) {
   const [lBound, uBound] = pair;
@@ -393,7 +399,7 @@ describe('arithmetic',  () => {
       });
     });
 
-    describe('operations on itself and a number', () => {{
+    describe('operations on itself and a number', () => {
       test(`${singX.toString()}.add(${y}) should add y to every item`, () => {
         expect(singX.add(y)[0]).toBeCloseTo(x + y);
       });
@@ -406,6 +412,6 @@ describe('arithmetic',  () => {
       test(`${singX.toString()}.add(${y}) should div every item by y`, () => {
         expect(singX.div(y)[0]).toBeCloseTo(x / y);
       });
-    }});
+    });
   }
 });
