@@ -39,7 +39,6 @@ const RAND = {
  * TODO unit test for `Column.argMax`
  * TODO unit test for `Column.argMin`
  * TODO unit test for `Column.cast`
- * TODO unit test for `Column.ceil`
  * [X]  unit test for `Column.clip`
  * TODO unit test for `Column.clone`
  * TODO unit test for `Column.concat`
@@ -50,7 +49,6 @@ const RAND = {
  * TODO unit test for `Column.downcast`
  * TODO unit test for `Column.drop`
  * TODO unit test for `Column.filter`
- * TODO unit test for `Column.floor`
  * TODO unit test for `Column.head`
  * TODO unit test for `Column.mad`
  * TODO unit test for `Column.magnitude`
@@ -68,9 +66,7 @@ const RAND = {
  * TODO unit test for `Column.pop`
  * TODO unit test for `Column.pow`
  * TODO unit test for `Column.range`
- * TODO unit test for `Column.replace`
  * TODO unit test for `Column.reverse`
- * TODO unit test for `Column.round`
  * TODO unit test for `Column.sample`
  * TODO unit test for `Column.shuffle`
  * TODO unit test for `Column.skewness`
@@ -83,7 +79,6 @@ const RAND = {
  * TODO unit test for `Column.tail`
  * TODO unit test for `Column.takeWhile`
  * TODO unit test for `Column.trimOutliers`
- * TODO unit test for `Column.trunc`
  * TODO unit test for `Column.unique`
  * TODO unit test for `Column.var`
  * TODO unit test for `Column.zipWith`
@@ -341,6 +336,55 @@ for (const f of ['mad', 'stdev', 'var']) {
   test(`${f} of Column [${r}, ${r}, ${r}] is 0 (${f} measure of spread should give 0 if there is no spread)`, () => {
     expect(Column.of(r, r, r)[f]()).toEqual(0);
   });
+}
+
+for (const pair of [
+  [RAND.int(0, 10),     RAND.int(10, 100)],
+  [RAND.float(0, 10),   RAND.float(10, 100)],
+  [RAND.float(-10, 10), RAND.float(10, 100)],
+]) {
+  const [lBound, uBound] = pair;
+  const c = Column.rand(100, lBound - 10, uBound + 10);
+  for (const f of ['round', 'trunc', 'floor', 'ceil']) {
+    const col = c[f]();
+    test(`col.${f}() applies Math.${f} to each item`, () => {
+      for (let i = 0; i < col.length; i++) {
+        expect(col[i]).toBeCloseTo(Math[f](c[i]));
+      }
+    });
+  }
+}
+
+for (const pair of [
+  [RAND.int(1, 10),     RAND.int(10, 100)],
+  [RAND.float(1, 10),   RAND.float(10, 100)],
+  [RAND.float(-10, 10), RAND.float(10, 100)],
+]) {
+  test('col.replace removes all such items from the col', () => {
+    const [lBound, uBound] = pair;
+    const c = Column.rand(100, lBound - 10, uBound + 10);
+    const v = c[RAND.int(0, c.length)];
+    const arr = [...c.replace(v, 0)];
+    expect(arr).not.toContain(v);
+  });
+}
+
+
+for (const pair of [
+  [RAND.int(0, 10),     RAND.int(10, 100)],
+  [RAND.float(0, 10),   RAND.float(10, 100)],
+  [RAND.float(-10, 10), RAND.float(10, 100)],
+]) {
+  const [lBound, uBound] = pair;
+  const c = Column.rand(100, lBound - 10, uBound + 10);
+  for (const f of ['round', 'trunc', 'floor', 'ceil']) {
+    const col = c[f]();
+    test(`col.${f}() applies Math.${f} to each item`, () => {
+      for (let i = 0; i < col.length; i++) {
+        expect(col[i]).toBeCloseTo(Math[f](c[i]));
+      }
+    });
+  }
 }
 
 for (const pair of [
