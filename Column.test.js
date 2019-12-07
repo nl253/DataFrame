@@ -294,24 +294,19 @@ describe('methods', () => {
       });
     });
 
-    describe('Math object operations', () => {
-      for (const pair of [
-        [RAND.int(0, 10),     RAND.int(10, 100)],
-        [RAND.float(0, 10),   RAND.float(10, 100)],
-        [RAND.float(-10, 10), RAND.float(10, 100)],
-      ]) {
-        const [lBound, uBound] = pair;
-        const c = Column.rand(100, lBound - 10, uBound + 10);
-        for (const f of ['round', 'trunc', 'floor', 'ceil', 'abs']) {
-          const col = c[f]();
-          test(`col.${f}() applies Math.${f} to each item`, () => {
-            for (let i = 0; i < col.length; i++) {
-              expect(col[i]).toBeCloseTo(Math[f](c[i]));
-            }
-          });
-        }
+    {
+      const mathObjectOps = ['round', 'trunc', 'floor', 'ceil', 'abs'];
+      const [lBound, uBound] = [RAND.float(-10, 10), RAND.float(10, 100)];
+      const c = Column.rand(100, lBound - 10, uBound + 10);
+      for (const f of mathObjectOps) {
+        const col = c[f]();
+        test(`col.${f}() applies Math.${f} to each item`, () => {
+          for (let i = 0; i < col.length; i++) {
+            expect(col[i]).toBeCloseTo(Math[f](c[i]));
+          }
+        });
       }
-    });
+    }
 
     describe('.clip(lBound, uBound)', () => {
       for (const pair of [
@@ -389,7 +384,7 @@ describe('methods', () => {
     });
   });
 
-  describe('shared between ColStr and ColNum', () => {
+  describe('ColStr and ColNum (shared)', () => {
     for (const pair of [
       [RAND.int(1, 10),     RAND.int(10, 100)],
       [RAND.float(1, 10),   RAND.float(10, 100)],

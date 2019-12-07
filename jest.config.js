@@ -17,6 +17,7 @@ module.exports = {
    * Stop running tests after `n` failures
    * bail: 0,
    */
+  bail: 10,
 
   /*
    * Respect "browser" field in package.json when resolving modules
@@ -40,6 +41,7 @@ module.exports = {
    * An array of glob patterns indicating a set of files for which coverage information should be collected
    * collectCoverageFrom: null,
    */
+  collectCoverageFrom: ['./DataFrame.js', './Column.js'],
 
   // the directory where Jest should output its coverage files
   coverageDirectory: 'coverage',
