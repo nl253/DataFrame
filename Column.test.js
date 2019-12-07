@@ -104,6 +104,9 @@ const RAND = {
   colStr() {
     return Column.rand(this.int(), this.int(0, INT_SMALL), this.int(INT_SMALL, INT_SMALL * 2), 's');
   },
+  el(c) {
+    return c[this.int(0, c.length)];
+  }
 };
 
 // Tests for Functions
@@ -459,7 +462,7 @@ describe('methods', () => {
 
   describe('ColStr and ColNum (shared)', () => {
     for (const c of [RAND.colStr(), RAND.colInt(), RAND.colFloat()]) {
-      const v = c[RAND.int(0, c.length)];
+      const v = RAND.el(c);
       describe(`col implements all methods from Array`, () => {
         for (const method of ARRAY_PROTO_METHODS) {
           test(`col.${method} is implemented`, () => expect(c[method]).toBeDefined());
@@ -483,6 +486,7 @@ describe('methods', () => {
         test('probabilities add up to 1', () => expect([...ps.keys()].map((k) => ps.get(k)).reduce((x, y) => x + y, 0)).toBeCloseTo(1));
       });
       test(`col.replace(${v}) removes all such items from the col`, () => expect([...c.replace(v, 0)]).not.toContain(v));
+      test(`col.removeAll(${v}) removes all such items from the col`, () => expect([...c.removeAll(v)]).not.toContain(v));
       describe(`${c}.concat(${c}) joins 2 cols`, () => {
         const c2 = c.clone();
         const c3 = c.concat(c2);
