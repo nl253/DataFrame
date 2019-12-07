@@ -2,13 +2,38 @@
 const Column = require('./Column');
 
 const FLOAT_DELTA = 0.001;
+const LOW_BOUND_INT = 0;
+const HIGH_BOUND_INT = 100;
+const LOW_BOUND_FLOAT = -100;
+const HIGH_BOUND_FLOAT = 100;
+const STR_MAX_LEN = 20;
+
+const DTYPES = ['s', 'u8', 'u16', 'u32', 'i8', 'i16', 'i32', 'f32', 'f64'];
+
+const RAND = {
+  float(n = LOW_BOUND_FLOAT, m = HIGH_BOUND_FLOAT) {
+    return m === undefined
+      ? this.float(0, n)
+      : n + Math.random() * (m - n);
+  },
+  int(n = LOW_BOUND_INT, m = HIGH_BOUND_INT) {
+    return Math.floor(this.float(n, m));
+  },
+  str(n = 0, m = STR_MAX_LEN) {
+    const len = this.int(n, m);
+    const a = Array(len).fill('');
+    for (let i = 0; i < len; i++) {
+      a[i] = String.fromCharCode(Math.random() < 0.8 ? this.int(97, 123) : this.int(65, 97));
+    }
+    return a.join('');
+  }
+};
 
 /*
  * TODO unit test for `Column.IQR`
  * TODO unit test for `Column.Q1`
  * TODO unit test for `Column.Q3`
  * TODO unit test for `Column.abs`
- * TODO unit test for `Column.add`
  * TODO unit test for `Column.all`
  * TODO unit test for `Column.argMax`
  * TODO unit test for `Column.argMin`
@@ -20,7 +45,6 @@ const FLOAT_DELTA = 0.001;
  * TODO unit test for `Column.contains`
  * TODO unit test for `Column.counts`
  * TODO unit test for `Column.cube`
- * TODO unit test for `Column.div`
  * TODO unit test for `Column.dot`
  * TODO unit test for `Column.downcast`
  * TODO unit test for `Column.drop`
@@ -35,7 +59,6 @@ const FLOAT_DELTA = 0.001;
  * TODO unit test for `Column.median`
  * TODO unit test for `Column.min`
  * TODO unit test for `Column.mode`
- * TODO unit test for `Column.mul`
  * TODO unit test for `Column.nLargest`
  * TODO unit test for `Column.nQuart`
  * TODO unit test for `Column.nSmallest`
@@ -43,7 +66,6 @@ const FLOAT_DELTA = 0.001;
  * TODO unit test for `Column.normalize`
  * TODO unit test for `Column.pop`
  * TODO unit test for `Column.pow`
- * TODO unit test for `Column.print`
  * TODO unit test for `Column.range`
  * TODO unit test for `Column.replace`
  * TODO unit test for `Column.reverse`
@@ -55,7 +77,6 @@ const FLOAT_DELTA = 0.001;
  * TODO unit test for `Column.sort`
  * TODO unit test for `Column.square`
  * TODO unit test for `Column.std`
- * TODO unit test for `Column.sub`
  * TODO unit test for `Column.subarray`
  * TODO unit test for `Column.swap`
  * TODO unit test for `Column.tail`
@@ -82,6 +103,7 @@ for (const triplet of [
   const [arr, dtype, dtype2] = triplet;
   test('correct guesses dtype [-1,2] to be i8 ', () => {
     const guess = Column.guessNumDtype(arr);
+    expect(DTYPES).toContain(guess);
     if (dtype === dtype2) {
       expect(guess).toEqual(dtype);
     } else  {
@@ -146,11 +168,12 @@ for (const input of [
   ['0', '1'],
 ]) {
   test(`Column.from([${input.join(', ')}]) parses ints and converts a col`, () => {
-    const s = Column.from(input);
-    expect(input).toHaveLength(s.length);
-    expect(s).toHaveProperty('dtype');
-    for (let i = 0; i < s.length; i++) {
-      expect(s[i]).toEqual(parseInt(input[i]));
+    const col = Column.from(input);
+    expect(input).toHaveLength(col.length);
+    expect(col).toHaveProperty('dtype');
+    expect(DTYPES).toContain(col.dtype);
+    for (let i = 0; i < col.length; i++) {
+      expect(col[i]).toEqual(parseInt(input[i]));
     }
   });
 }
@@ -163,6 +186,7 @@ for (const input of [
     const col = Column.from(input);
     expect(input).toHaveLength(col.length);
     expect(col).toHaveProperty('dtype');
+    expect(DTYPES).toContain(col.dtype);
     expect(col.dtype === 'f32' || col.dtype === 'f64').toBe(true);
     for (let i = 0; i < col.length; i++) {
       expect(col[i]).toBeCloseTo(parseFloat(input[i]));
@@ -178,6 +202,7 @@ for (const input of [
     const col = Column.from(input);
     expect(input).toHaveLength(col.length);
     expect(col).toHaveProperty('dtype');
+    expect(DTYPES).toContain(col.dtype);
     expect(col.dtype === 'f32' || col.dtype === 'f64').toBe(true);
     for (let i = 0; i < col.length; i++) {
       expect(col[i]).toBeCloseTo(input[i]);
@@ -206,6 +231,7 @@ for (const input of [
     const col = Column.of(...input);
     expect(input).toHaveLength(col.length);
     expect(col).toHaveProperty('dtype');
+    expect(DTYPES).toContain(col.dtype);
     for (let i = 0; i < col.length; i++) {
       expect(col[i]).toEqual(parseInt(input[i]));
     }
@@ -214,11 +240,12 @@ for (const input of [
 
 for (const n of [0, 10, 99]) {
   test(`Column.ones(${n}) creates a col full of ones`, () => {
-    const s = Column.ones(n);
-    expect(s).toHaveProperty('dtype');
-    expect(s).toHaveLength(n);
-    for (let i = 0; i < s.length; i++) {
-      expect(s[i]).toEqual(1);
+    const col = Column.ones(n);
+    expect(col).toHaveProperty('dtype');
+    expect(DTYPES).toContain(col.dtype);
+    expect(col).toHaveLength(n);
+    for (let i = 0; i < col.length; i++) {
+      expect(col[i]).toEqual(1);
     }
   });
 }
@@ -227,6 +254,7 @@ for (const n of [0, 10, 99]) {
   test(`Column.zeros(${n}) creates a col full of zeros`, () => {
     const col = Column.zeros(n);
     expect(col).toHaveProperty('dtype');
+    expect(DTYPES).toContain(col.dtype);
     expect(col).toHaveLength(n);
     for (let i = 0; i < col.length; i++) {
       expect(col[i]).toEqual(0);
@@ -235,6 +263,7 @@ for (const n of [0, 10, 99]) {
   test(`Column.empty(${n}) creates a col full of zeros`, () => {
     const col = Column.zeros(n);
     expect(col).toHaveProperty('dtype');
+    expect(DTYPES).toContain(col.dtype);
     expect(col).toHaveLength(n);
     for (let i = 0; i < col.length; i++) {
       expect(col[i]).toEqual(0);
@@ -243,17 +272,22 @@ for (const n of [0, 10, 99]) {
 }
 
 for (const pair of [
-  [0, 0.1],
-  [10, 99],
-  [99, -231]
+  [RAND.int(), RAND.float()],
+  [RAND.int(), RAND.int()],
+  [RAND.int(), RAND.str()],
 ]) {
   const [n, v] = pair;
   test(`Column.repeat(${n}) creates a col full of ${n}`, () => {
     const col = Column.repeat(n, v);
     expect(col).toHaveProperty('dtype');
+    expect(DTYPES).toContain(col.dtype);
     expect(col).toHaveLength(n);
     for (let i = 0; i < col.length; i++) {
-      expect(col[i]).toEqual(v);
+      if (col.dtype === 's') {
+        expect(col[i]).toEqual(v);
+      } else {
+        expect(col[i]).toBeCloseTo(v);
+      }
     }
   });
 }
@@ -262,12 +296,13 @@ for (const n of [0, 1, 9, 222]) {
   for (const lBound of [0, 10, 100, -10, -1, -1000]) {
     const uBound = lBound + 5;
     test(`Column.rand(${n}, ${lBound}, ${uBound}) creates a col full of rand nums in range [${lBound}, ${uBound})`, () => {
-      const s = Column.rand(n, lBound, uBound);
-      expect(s).toHaveProperty('dtype');
-      expect(s).toHaveLength(n);
-      for (let i = 0; i < s.length; i++) {
-        expect(s[i]).toBeGreaterThanOrEqual(lBound);
-        expect(s[i]).toBeLessThan(uBound);
+      const col = Column.rand(n, lBound, uBound);
+      expect(col).toHaveProperty('dtype');
+      expect(DTYPES).toContain(col.dtype);
+      expect(col).toHaveLength(n);
+      for (let i = 0; i < col.length; i++) {
+        expect(col[i]).toBeGreaterThanOrEqual(lBound);
+        expect(col[i]).toBeLessThan(uBound);
       }
     });
   }
@@ -296,15 +331,16 @@ test('mean of Column [1, 2, 3] is 2', () => {
 });
 
 for (const f of ['mad', 'stdev', 'var']) {
-  test(`${f} of Column [1, 1, 1] is 0 (${f} measure of spread should give 0 if there is no spread)`, () => {
-    expect(Column.of(1, 1, 1)[f]()).toEqual(0);
+  const r = RAND.float();
+  test(`${f} of Column [${r}, ${r}, ${r}] is 0 (${f} measure of spread should give 0 if there is no spread)`, () => {
+    expect(Column.of(r, r, r)[f]()).toEqual(0);
   });
 }
 
 for (const pair of [
-  [    0,   1],
-  [   -5,   5],
-  [-0.99, 1.1],
+  [RAND.int(0, 10), RAND.int(10, 100)],
+  [RAND.float(0, 10), RAND.float(10, 100)],
+  [RAND.float(-10, 10), RAND.float(10, 100)],
 ]) {
   const [lBound, uBound] = pair;
   const col = Column.rand(100, lBound - 10, uBound + 10).clip(lBound, uBound);
@@ -315,3 +351,61 @@ for (const pair of [
     }
   });
 }
+
+describe('arithmetic',  () => {
+  for (const pair of [
+    [RAND.int(),   RAND.int()],
+    [RAND.int(),   RAND.float()],
+    [RAND.float(), RAND.int()],
+    [RAND.float(), RAND.float()],
+  ]) {
+    const [x, y] = pair;
+    const col = Column.of(x, y);
+    describe('operations on itself', () => {
+      test(`${col.toString()}.add() should add all col items`, () => {
+        expect(col.add()).toBeCloseTo(x + y);
+      });
+      test(`${col.toString()}.sub() should subtract all col items`, () => {
+        expect(col.sub()).toBeCloseTo(x - y);
+      });
+      test(`${col.toString()}.mul() should multiply all col items`, () => {
+        expect(col.mul()).toBeCloseTo(x * y);
+      });
+      test(`${col.toString()}.div() should divide all col items`, () => {
+        expect(col.div()).toBeCloseTo(x / y);
+      });
+    });
+
+    const singX = col.slice(0, 1);
+    const singY = col.slice(1, 2);
+    describe('operations on itself and other', () => {
+      test(`${singX.toString()}.add(${singY.toString()}) should add items from other to itself`, () => {
+        expect(singX.add(singY)[0]).toBeCloseTo(x + y);
+      });
+      test(`${singX.toString()}.sub(${singY.toString()}) should subtract items from other to itself`, () => {
+        expect(singX.sub(singY)[0]).toBeCloseTo(x - y);
+      });
+      test(`${singX.toString()}.mul(${singY.toString()}) should multiply items from other to itself`, () => {
+        expect(singX.mul(singY)[0]).toBeCloseTo(x * y);
+      });
+      test(`${singX.toString()}.div(${singY.toString()}) should divide items from other to itself`, () => {
+        expect(singX.div(singY)[0]).toBeCloseTo(x / y);
+      });
+    });
+
+    describe('operations on itself and a number', () => {{
+      test(`${singX.toString()}.add(${y}) should add y to every item`, () => {
+        expect(singX.add(y)[0]).toBeCloseTo(x + y);
+      });
+      test(`${singX.toString()}.sub(${y}) should sub y from every item`, () => {
+        expect(singX.sub(y)[0]).toBeCloseTo(x - y);
+      });
+      test(`${singX.toString()}.add(${y}) should mul every item by y`, () => {
+        expect(singX.mul(y)[0]).toBeCloseTo(x * y);
+      });
+      test(`${singX.toString()}.add(${y}) should div every item by y`, () => {
+        expect(singX.div(y)[0]).toBeCloseTo(x / y);
+      });
+    }});
+  }
+});

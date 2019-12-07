@@ -7,7 +7,7 @@
 const util = require('util');
 
 const { randInRange, randInt } = require('./rand');
-const { dtypeRegex, isNumRegex, fmtFloat, isNumber } = require('./utils');
+const { dtypeRegex, isNumRegex, fmtFloat, isNumber, isString } = require('./utils');
 const log = require('./log');
 const opts = require('./opts');
 
@@ -1019,7 +1019,7 @@ const COL_NUM_PROTO = {
     const amFloat = myDtype.match('f');
 
     // is num
-    if (other.constructor.name[0] === 'N') {
+    if (isNumber(other)) {
       if (dtype !== null) {
         return empty(this.length, dtype).map((x) => x / other);
       }
@@ -1028,8 +1028,7 @@ const COL_NUM_PROTO = {
 
     // else if other is enhanced array
     if (dtype !== null) {
-      return empty(this.length, dtype)
-        .map((_, idx) => this[idx] / other[idx]);
+      return empty(this.length, dtype).map((_, idx) => this[idx] / other[idx]);
     }
 
     if (Array.isArray(other)) {
@@ -1041,7 +1040,7 @@ const COL_NUM_PROTO = {
     const len = Math.min(this.length, other.length);
 
     if (isFloat && amFloat) {
-      if (other.BYTES_PER_ELEMENT >= this.BYTES_PER_ELEMENT) {
+      if (other.BYTES_PER_ELEMENT > this.BYTES_PER_ELEMENT) {
         return other.map((x, idx) => x / this[idx]);
       } else {
         return this.map((x, idx) => x / other[idx]);
@@ -1889,7 +1888,7 @@ const rand = (len, lBound = null, uBound = null, dtype = null) => {
  * @param {?DType} [dtype]
  * @returns {ColNum|ColStr} array filled with value
  */
-const repeat = (len, val, dtype = null) => empty(len, dtype === null ? guessNumDtype([val]) : dtype).fill(val);
+const repeat = (len, val, dtype = null) => empty(len, dtype === null ? isString(val) ? 's' : guessNumDtype([val]) : dtype).fill(val);
 
 /**
  * @param {number} len
