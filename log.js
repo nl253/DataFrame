@@ -21,7 +21,7 @@ const log = createLogger(process.env.NODE_ENV === 'production' ? {
   ],
 } : {
   format: fmt,
-  level: 'debug',
+  level: process.env.LOG_LVL || 'warn',
   transports: [new transports.Console()],
 });
 
