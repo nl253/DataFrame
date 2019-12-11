@@ -1657,7 +1657,7 @@ const from = (xs, toDtype = null, doClone = true) => {
    * save some computation time by checking
    * if there is at least one num-like string
    */
-  if (xs.some((x) => x.search !== undefined && x.search(isNumRegex) >= 0)) {
+  if (xs.some((x) => x !== undefined && x !== null && x.search !== undefined && x.search(isNumRegex) >= 0)) {
     /*
      * THEN try parsing all
      * const tryParse = empty(xs.length, toDtype);

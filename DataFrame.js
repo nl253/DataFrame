@@ -1453,6 +1453,55 @@ class DataFrame {
   }
 
   /**
+   * @param {string} tableName
+   * @returns {string}
+   */
+  toSQLTableDef(tableName = 'Table') {
+    const dtypeMap = {
+      f32: 'REAL',
+      f64: 'REAL',
+      i8: 'INT',
+      i16: 'INT',
+      i32: 'INT',
+      u8: 'INT',
+      u16: 'INT',
+      u32: 'INT',
+      s: 'TEXT',
+    };
+    return `
+CREATE TABLE IF NOT EXISTS ${tableName} (
+  ${this.colNames.some((col) => col.toLowerCase() === 'id') ? '' : `id int NOT NULL AUTO_INCREMENT,`}
+  ${this.colNames.map((cName, cIdx) => `${cName} ${dtypeMap[this.dtypes[cIdx]]}`).join(',\n  ')}
+) `.trim();
+  }
+
+  /**
+   * @param {string} tableName
+   * @returns {string}
+   */
+  toSQLInserts(tableName = 'Table') {
+    const { rows } = this;
+    const xs = Array(this.length);
+    for (let i = 0; i < this.length; i++) {
+      xs[i] = rows[i];
+    }
+    return xs.map((row) => `INSERT INTO ${tableName} (${this.colNames.join(', ')}) VALUES (${row.map((val) => val.toString()).join(', ')})`).join(';\n');
+  }
+
+  /**
+   * @param {string} tableName
+   * @returns {string}
+   */
+  toSQLUpdates(tableName = 'Table') {
+    const { rows } = this;
+    const xs = Array(this.length);
+    for (let i = 0; i < this.length; i++) {
+      xs[i] = rows[i];
+    }
+    return xs.map((row) => `UPDATE ${tableName} SET ${row.map((val, cIdx) => `${this.colNames[cIdx]} = ${val.toString()}`).join(', ')}`).join(';\n');
+  }
+
+  /**
    * @param {?string} [fileName]
    * @returns {string|undefined} HTML
    */
