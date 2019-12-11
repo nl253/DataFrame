@@ -428,6 +428,14 @@ iris.sort('SepalWidthCm') // default is iris.sort(colId, 'asc')
 iris.sort('SepalWidthCm', 'des') // descending sort
 ```
 
+**NOTE**
+
+constants such as `'des'` are defined in the `constants` module which you can import:
+
+```js
+const { DataType, LoggingLevel, PrintingPreset, SortingOrder, What } = require('dataf/constants')
+``` 
+
 ### Statistics & Math
 
 #### Aggregate operations, each is `DataFrame -> DataFrame`

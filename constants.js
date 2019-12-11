@@ -1,0 +1,42 @@
+module.exports = {
+  LoggingLevel: {
+    Warning: 'warn',
+    Info: 'info',
+    Debug: 'debug',
+    Error: 'error',
+  },
+  SortingOrder: {
+    Ascending: 'asc',
+    Descending: 'des',
+  },
+  DataType: {
+    Integer: 'i32',
+    Integer32: 'i32',
+    Integer16: 'i16',
+    Integer8: 'i8',
+    Byte: 'u8',
+    UnsignedInteger8: 'u8',
+    UnsignedInteger16: 'u16',
+    UnsignedInteger32: 'u32',
+    Float: 'f32',
+    Float32: 'f32',
+    Double: 'f64',
+    Float64: 'f64',
+  },
+  What: {
+    ArrayOfRows: 'rows',
+    ArrayOfColumns: 'cols',
+    Url: 'url',
+    JsonString: 'json',
+    CsvString: 'csv',
+    Object: 'obj',
+    FileName: 'file',
+    Map: 'map',
+    GeneratorFunction: 'gen',
+  },
+  PrintingPreset: {
+    Minimal: 'minimal',
+    Default: 'default',
+    Programmers: 'programmers',
+  },
+};
