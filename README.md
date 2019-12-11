@@ -1053,7 +1053,7 @@ Id,SepalLengthCm,SepalWidthCm,PetalLengthCm,PetalWidthCm,Species
 #### SQL Table
 
 ```javascript
-iris.head(2).toSQLUpdates('MyIrisTable', /* optional file name */)
+iris.head(2).toSQLTableDef('MyIrisTable', /* optional file name */)
 ```
 
 ```sql
@@ -1071,7 +1071,7 @@ CREATE TABLE IF NOT EXISTS MyIrisTable (
 #### SQL Updates
 
 ```javascript
-iris.toSQLTableDef('MyIrisTable', /* optional file name */)
+iris.toSQLUpdates('MyIrisTable', /* optional file name */)
 ```
 
 ```sql
