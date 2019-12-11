@@ -558,12 +558,7 @@ iris.counts(-1) // for the last column
 For a correlation of each column with each other column (matrix):
 
 ```javascript
-iris.corr()      // .corr(false) to *not* print the first column
-// iris.cov()    // covariance
-// iris.dot()    // dot product between each col
-distance
-distance
-distance
+iris.corr(/* `false` to *not* print the first column */)      
 ```
 
 ```text
@@ -577,6 +572,11 @@ distance
 - ------------- ------ -------------- -------------- -------------- --------------
             NaN    40B            40B            40B            40B            40B
 ```
+
+Other matrix operations:
+- `iris.cov()`
+- `iris.dot()`
+- `iri.distance()`
 
 ### Pre-Processing
 
