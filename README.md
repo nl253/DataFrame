@@ -981,7 +981,7 @@ iris.sliceCols(-3, -2, 0, 2)
 #### HTML
 
 ```javascript
-iris.head(2).toHTML()
+iris.head(2).toHTML(/* optional file name */)
 ```
 
 ```html
@@ -1016,7 +1016,7 @@ iris.head(2).toHTML()
 #### JSON
 
 ```javascript
-iris.head(2).toJSON()
+iris.head(2).toJSON(/* optional file name */)
 ```
 
 ```json
@@ -1033,13 +1033,57 @@ iris.head(2).toJSON()
 #### CSV
 
 ```javascript
-iris.head(2).toCSV()
+iris.head(2).toCSV(/* optional file name */)
 ```
 
 ```csv
 Id,SepalLengthCm,SepalWidthCm,PetalLengthCm,PetalWidthCm,Species
 1,5.099999904632568,3.5,1.399999976158142,0.20000000298023224,Iris-setosa
 2,4.900000095367432,3,1.399999976158142,0.20000000298023224,Iris-setosa
+```
+
+#### SQL Table
+
+```javascript
+iris.head(2).toSQLUpdates('MyIrisTable', /* optional file name */)
+```
+
+```sql
+CREATE TABLE IF NOT EXISTS MyIrisTable (
+  
+  Id INT,
+  SepalLengthCm REAL,
+  SepalWidthCm REAL,
+  PetalLengthCm REAL,
+  PetalWidthCm REAL,
+  Species TEXT
+)
+```
+
+#### SQL Updates
+
+```javascript
+iris.toSQLTableDef('MyIrisTable', /* optional file name */)
+```
+
+```sql
+UPDATE MyIrisTable SET Id = 1, SepalLengthCm = 5.099999904632568, SepalWidthCm = 3.5, PetalLengthCm = 1.399999976158142, PetalWidthCm = 0.20000000298023224, Species = Iris-setosa;
+UPDATE MyIrisTable SET Id = 2, SepalLengthCm = 4.900000095367432, SepalWidthCm = 3, PetalLengthCm = 1.399999976158142, PetalWidthCm = 0.20000000298023224, Species = Iris-setosa;
+UPDATE MyIrisTable SET Id = 3, SepalLengthCm = 4.699999809265137, SepalWidthCm = 3.200000047683716, PetalLengthCm = 1.2999999523162842, PetalWidthCm = 0.20000000298023224, Species = Iris-setosa;
+UPDATE MyIrisTable SET Id = 4, SepalLengthCm = 4.599999904632568, SepalWidthCm = 3.0999999046325684, PetalLengthCm = 1.5, PetalWidthCm = 0.20000000298023224, Species = Iris-setosa;
+```
+
+#### SQL Inserts
+
+```javascript
+iris.head(4).toSQLInserts('MyIrisTable', /* optional file name */)
+```
+
+```sql
+INSERT INTO MyIrisTable (Id, SepalLengthCm, SepalWidthCm, PetalLengthCm, PetalWidthCm, Species) VALUES (1, 5.099999904632568, 3.5, 1.399999976158142, 0.20000000298023224, Iris-setosa);
+INSERT INTO MyIrisTable (Id, SepalLengthCm, SepalWidthCm, PetalLengthCm, PetalWidthCm, Species) VALUES (2, 4.900000095367432, 3, 1.399999976158142, 0.20000000298023224, Iris-setosa);
+INSERT INTO MyIrisTable (Id, SepalLengthCm, SepalWidthCm, PetalLengthCm, PetalWidthCm, Species) VALUES (3, 4.699999809265137, 3.200000047683716, 1.2999999523162842, 0.20000000298023224, Iris-setosa);
+INSERT INTO MyIrisTable (Id, SepalLengthCm, SepalWidthCm, PetalLengthCm, PetalWidthCm, Species) VALUES (4, 4.599999904632568, 3.0999999046325684, 1.5, 0.20000000298023224, Iris-setosa);
 ```
 
 ### Settings

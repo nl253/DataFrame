@@ -1454,9 +1454,15 @@ class DataFrame {
 
   /**
    * @param {string} tableName
+   * @param {?string} [fileName]
    * @returns {string}
    */
-  toSQLTableDef(tableName = 'Table') {
+  toSQLTableDef(tableName = 'Table', fileName = null) {
+    if (fileName !== null) {
+      log.info(`writing SQL TABLE DEFINITION to ${fileName}`);
+      writeFileSync(fileName, this.toSQLTableDef(tableName), { encoding: 'utf-8', flag: 'w' });
+      return undefined;
+    }
     const dtypeMap = {
       f32: 'REAL',
       f64: 'REAL',
@@ -1472,33 +1478,45 @@ class DataFrame {
 CREATE TABLE IF NOT EXISTS ${tableName} (
   ${this.colNames.some((col) => col.toLowerCase() === 'id') ? '' : `id int NOT NULL AUTO_INCREMENT,`}
   ${this.colNames.map((cName, cIdx) => `${cName} ${dtypeMap[this.dtypes[cIdx]]}`).join(',\n  ')}
-) `.trim();
+);`.trim();
   }
 
   /**
-   * @param {string} tableName
+   * @param {string} [tableName]
+   * @param {?string} [fileName]
    * @returns {string}
    */
-  toSQLInserts(tableName = 'Table') {
+  toSQLInserts(tableName = 'Table', fileName = null) {
+    if (fileName !== null) {
+      log.info(`writing SQL INSERTs to ${fileName}`);
+      writeFileSync(fileName, this.toSQLInserts(tableName), { encoding: 'utf-8', flag: 'w' });
+      return undefined;
+    }
     const { rows } = this;
     const xs = Array(this.length);
     for (let i = 0; i < this.length; i++) {
       xs[i] = rows[i];
     }
-    return xs.map((row) => `INSERT INTO ${tableName} (${this.colNames.join(', ')}) VALUES (${row.map((val) => val.toString()).join(', ')})`).join(';\n');
+    return xs.map((row) => `INSERT INTO ${tableName} (${this.colNames.join(', ')}) VALUES (${row.map((val) => val.toString()).join(', ')});`).join('\n');
   }
 
   /**
-   * @param {string} tableName
-   * @returns {string}
+   * @param {string} [tableName]
+   * @param {?string} [fileName]
+   * @returns {string|undefined}
    */
-  toSQLUpdates(tableName = 'Table') {
+  toSQLUpdates(tableName = 'Table', fileName = null) {
+    if (fileName !== null) {
+      log.info(`writing SQL UPDATEs to ${fileName}`);
+      writeFileSync(fileName, this.toSQLUpdates(tableName), { encoding: 'utf-8', flag: 'w' });
+      return undefined;
+    }
     const { rows } = this;
     const xs = Array(this.length);
     for (let i = 0; i < this.length; i++) {
       xs[i] = rows[i];
     }
-    return xs.map((row) => `UPDATE ${tableName} SET ${row.map((val, cIdx) => `${this.colNames[cIdx]} = ${val.toString()}`).join(', ')}`).join(';\n');
+    return xs.map((row) => `UPDATE ${tableName} SET ${row.map((val, cIdx) => `${this.colNames[cIdx]} = ${val.toString()}`).join(', ')};`).join('\n');
   }
 
   /**
