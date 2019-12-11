@@ -5,7 +5,7 @@
 - tries to be memory efficient
 - extensions to arrays
 - great for tabular data
-- reads CSV (only for now)
+- reads data in various formats: CSV, JSON, array of rows, array of columns, JS object, JS Map
 - work in progress
 
 See [JSDoc](http://usejsdoc.org/)-generated API docs see [docs](https://nl253.github.io/DataFrame/).
@@ -61,6 +61,10 @@ All have been placed in the public domain.
 ```javascript
 let iris = new DF('iris') // use `let`, you will be re-assigning a lot
 ```
+
+**NOTE** 
+
+the lookup of datasets happens by recursive search of each directory in `DF.opts.DATASETS`. You can use this and simply `df.opts.DATASETS.push(yourDir)` and your dataset will be discoverable. You don't need to specify the extension. `.csv` and `.json` extensions are appended if not provided (e.g. iris is actually stored in `iris.csv`). Dataset files must be in either CSV or JSON formats.
 
 ### Selecting / Slicing Rows
 
@@ -971,7 +975,6 @@ The same applies to column slices:
 
 ```javascript
 iris.sliceCols(-3, -2, 0, 2)
-
 ```
 
 ```text
