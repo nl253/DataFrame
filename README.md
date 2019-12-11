@@ -428,31 +428,6 @@ iris.sort('SepalWidthCm') // default is iris.sort(colId, 'asc')
 iris.sort('SepalWidthCm', 'des') // descending sort
 ```
 
-### Transpose (inefficient)
-
-Although it's inefficient it's sometimes useful to be able to swap the x and y axis.
-Suppose you want to do summation row-wise (not column wise):
-
-```javascript
-// numeric will drop the 'Species' column
-iris.numeric.transpose().sum()
-```
-
-```text
-  # u8  column f32 add
---- ---------- -------
-  0          0   11.19
-  1          1   11.50
-  2          2   12.39
-  3          3   13.39
-  4          4   15.19
-... (145 more)     ...
---- ---------- -------
-          150B    600B
-```
-
-**NOTE** transposing will only work for homogeneous `DataFrame`s (all nums or all strings).
-
 ### Statistics & Math
 
 #### Aggregate operations, each is `DataFrame -> DataFrame`
@@ -1110,7 +1085,7 @@ DF.opts.OPTION = VALUE;
 
 ### More Advanced Examples
 
-#### Fix Column Names With Spaces (so that you can index df.Col)
+#### Fix Column Names With Spaces
 
 ```javascript
 const args = df.colNames
@@ -1119,7 +1094,7 @@ const args = df.colNames
                // flatten
                .reduce((pair1, pair2) => pair1.concat(pair2), []);
 
-df = df.rename(...args) // spread
+df = df.rename(...args)
 ```
 
 #### Matrix of Normalized Differences Between Means of Columns
