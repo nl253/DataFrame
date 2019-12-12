@@ -75,6 +75,33 @@ const TYPED_ARRAY_PROTO_METHODS = [
   'values',
 ];
 
+expect.extend({
+  toBeInRange(received, floor, ceiling) {
+    return {
+      message: () => `expected ${received} not to be within range [${floor}, ${ceiling})`,
+      pass: received >= floor && received < ceiling,
+    };
+  },
+  toBeValidDtype(received) {
+    return {
+      message: () => `expected ${received} to be valid dtype (one of ${DTYPES.join(', ')})`,
+      pass: DTYPES.contains(received.dtype),
+    };
+  },
+  toBeFloatCol(received) {
+    return {
+      message: () => `expected ${received} to be float col`,
+      pass: ['f32', 'f64'].contains(received.dtype),
+    };
+  },
+  toBeValidCol(received) {
+    return {
+      message: () => `expected ${received} to be valid col`,
+      pass: received !== null && received !== undefined && DTYPES.contains(received.dtype) && received.length !== undefined,
+    };
+  }
+});
+
 const RAND = {
   float(n = LOW_BOUND_FLOAT, m = HIGH_BOUND_FLOAT) {
     return m === undefined
@@ -113,165 +140,152 @@ const RAND = {
 
 describe('utils', () => {
   describe('dtype inference',  () => {
-    for (const triplet of [
-      [[        1,   2],  'u8',  'u8'],
-      [[       -1,   2],  'i8',  'i8'],
-      [[    -0.99,   2], 'f64', 'f32'],
-      [[   2 ** 8,   0], 'u16', 'u16'],
-      [[  2 ** 16,   0], 'u32', 'u32'],
-      [[-(2 ** 8),   0], 'i16', 'i16'],
-      [[           0.8], 'f64', 'f32'],
-    ]) {
-      const [arr, dtype, dtype2] = triplet;
-      test(`correct guesses dtype [${arr.join(', ')}] to be ${dtype2 === dtype ? dtype : `${dtype} OR ${dtype2}`}`, () => {
-        const guess = Column.guessNumDtype(arr);
-        expect(DTYPES).toContain(guess);
-        if (dtype === dtype2) {
-          expect(guess).toEqual(dtype);
-        } else  {
-          expect(guess === dtype || guess === dtype2).toEqual(true);
-        }
-      });
-    }
-  });
+    test.each([
+      [[1, 2], 'u8', 'u8'],
+      [[-1, 2], 'i8', 'i8'],
+      [[-0.99, 2], 'f64', 'f32'],
+      [[2 ** 8, 0], 'u16', 'u16'],
+      [[2 ** 16, 0], 'u32', 'u32'],
+      [[-(2 ** 8), 0], 'i16', 'i16'],
+      [[0.8], 'f64', 'f32'],
+    ])('guesses dtype of %p to be %s OR %s', (arr, dtype, dtype2) => {
+      const guess = Column.guessNumDtype(arr);
+      expect(DTYPES).toContain(guess);
+      if (dtype === dtype2) {
+        expect(guess).toEqual(dtype);
+      } else {
+        expect(guess === dtype || guess === dtype2).toEqual(true);
+      }
+    });
 
-  describe('bag', () => {
-    test('inserting 1, 2, 3, 1, 1 into a bag has 1x3, 2x1, 3x1', () => {
-      const multiset = Column.bag([1, 2, 3, 1, 1]);
-      expect(isMap(multiset)).toBe(true);
-      expect(multiset.get(1)).toBe(3);
-      expect(multiset.get(2)).toBe(1);
-      expect(multiset.get(3)).toBe(1);
+    describe('bag', () => {
+      test('inserting 1, 2, 3, 1, 1 into a bag has 1x3, 2x1, 3x1', () => {
+        const multiset = Column.bag([1, 2, 3, 1, 1]);
+        expect(isMap(multiset)).toBe(true);
+        expect(multiset.get(1)).toBe(3);
+        expect(multiset.get(2)).toBe(1);
+        expect(multiset.get(3)).toBe(1);
+      });
     });
   });
 });
 
 describe('generation', () => {
 
-  for (const pair of [
+  describe(`.rand(${INT_MEDIUM}, lBound, uBound)`, () => test.each([
     [RAND.int(0, INT_SMALL), RAND.int(INT_SMALL, INT_MEDIUM)],
     [RAND.float(0, INT_SMALL), RAND.float(INT_SMALL, INT_MEDIUM)],
     [RAND.float(-INT_SMALL, INT_SMALL), RAND.float(INT_SMALL, INT_MEDIUM)],
-  ]) {
-    const [lBound, uBound] = pair;
+  ])(`generates rand array with nums in range [%d, %d)`, (lBound, uBound) => {
     const col = Column.rand(INT_MEDIUM, lBound, uBound);
+    expect(col).toBeValidCol();
     for (let i = 0; i < col.length; i++) {
-      test(`.rand(${col.length}, ${lBound}, ${uBound}) generated rand array with nums in range [${lBound}, ${uBound}) has ${i}th element (${col[i]}) in the range [${lBound}, ${uBound})`, () => {
-        expect(col[i]).toBeLessThan(uBound);
-        expect(col[i]).toBeGreaterThanOrEqual(lBound);
-      });
+      expect(col[i]).toBeLessThan(uBound);
+      expect(col[i]).toBeGreaterThanOrEqual(lBound);
     }
-  }
+  }));
 
-  describe('.range(lBound, uBound, step)', () => {
-    for (const pair of [
-      [RAND.int(0, INT_SMALL), RAND.int(INT_SMALL, INT_MEDIUM), RAND.int(1, 3)],
-      [RAND.float(0, INT_SMALL), RAND.float(INT_SMALL, INT_MEDIUM), RAND.float(1, 3)],
-      [RAND.float(-INT_SMALL, INT_SMALL), RAND.float(INT_SMALL, INT_MEDIUM), RAND.float(1, 3)],
-    ]) {
-      const [lBound, uBound, step] = pair;
+  describe('.range(lBound uBound, step)', () => test.each([
+    [
+      RAND.int(0, INT_SMALL),
+      RAND.int(INT_SMALL, INT_MEDIUM),
+      RAND.int(1, 3),
+    ],
+    [
+      RAND.float(0, INT_SMALL),
+      RAND.float(INT_SMALL, INT_MEDIUM),
+      RAND.float(1, 3)],
+    [
+      RAND.float(-INT_SMALL, INT_SMALL),
+      RAND.float(INT_SMALL, INT_MEDIUM),
+      RAND.float(1, 3)],
+  ])(
+    `with lBound = %d, uBound = %d, step = %d has each element in range [lBound, uBound) and is larger than previous element by step`,
+    (lBound, uBound, step) => {
       const arr = Column.range(lBound, uBound, step);
       for (let i = 0; i < arr.length; i++) {
-        test(`range(${lBound}, ${uBound}, ${step}) has element ${i}th in range [${lBound}, ${uBound}) and is larger than previous element by ${step}`, () => {
-          expect(arr[i]).toBeGreaterThanOrEqual(lBound - FLOAT_DELTA);
-          expect(arr[i]).toBeLessThan(uBound + FLOAT_DELTA);
-          if (i >= 1) {
-            expect(arr[i]).toBeCloseTo(arr[i - 1] + step);
-          }
-        });
+        expect(arr[i]).toBeInRange(lBound - FLOAT_DELTA, uBound + FLOAT_DELTA);
+        if (i >= 1) {
+          expect(arr[i]).toBeCloseTo(arr[i - 1] + step);
+        }
       }
-    }
-  });
+    }));
 
   describe('.from(iterable)', () => {
-    for (const input of [
+    test.each([
       ['a', 'b'],
       ['a'],
       ['a123'],
       [],
-    ]) {
-      test(`.from([${input.join(', ')}]) gives a ColStr`, () => {
-        const col = Column.from(input);
-        expect(input).toHaveLength(col.length);
-        for (let i = 0; i < col.length; i++) {
-          expect(col[i]).toEqual(input[i]);
-        }
-      });
-    }
+    ])('gives a ColStr when not parsable e.g. %p', (...input) => {
+      const col = Column.from(input);
+      expect(col).toBeValidCol();
+      expect(input).toHaveLength(col.length);
+      for (let i = 0; i < col.length; i++) {
+        expect(col[i]).toEqual(input[i]);
+      }
+    });
 
-    for (const input of [
+    test.each([
       ['0'],
       ['0', '1'],
       Array(RAND.int(1, INT_MEDIUM)).fill('').map(() => RAND.int(0, 128).toString()),
-    ]) {
-      test(`.from([${input.join(', ')}]) parses ints and converts a col`, () => {
-        const col = Column.from(input);
-        expect(input).toHaveLength(col.length);
-        expect(col).toHaveProperty('dtype');
-        expect(DTYPES).toContain(col.dtype);
-        for (let i = 0; i < col.length; i++) {
-          expect(col[i]).toEqual(parseInt(input[i]));
-        }
-      });
-    }
+    ])(`parses ints %p and converts a col`, (...input) => {
+      const col = Column.from(input);
+      expect(col).toBeValidCol();
+      expect(input).toHaveLength(col.length);
+      for (let i = 0; i < col.length; i++) {
+        expect(col[i]).toEqual(parseInt(input[i]));
+      }
+    });
 
-    for (const input of [
+    test.each([
       ['0.3'],
       ['0.9999', '99231.9'],
       Array(RAND.int(1, INT_MEDIUM)).fill('').map(() => RAND.float(0, 128).toString()),
-    ]) {
-      test(`.from([${input.join(', ')}]) parses floats and converts a col`, () => {
-        const col = Column.from(input);
-        expect(input).toHaveLength(col.length);
-        expect(col).toHaveProperty('dtype');
-        expect(DTYPES).toContain(col.dtype);
-        expect(col.dtype === 'f32' || col.dtype === 'f64').toBe(true);
-        for (let i = 0; i < col.length; i++) {
-          expect(col[i]).toBeCloseTo(parseFloat(input[i]));
-        }
-      });
-    }
-    for (const input of [
+    ])(`parses floats %p and converts a col`, (...input) => {
+      const col = Column.from(input);
+      expect(input).toHaveLength(col.length);
+      expect(col).toBeValidCol();
+      expect(col).toBeFloatCol();
+      for (let i = 0; i < col.length; i++) {
+        expect(col[i]).toBeCloseTo(parseFloat(input[i]));
+      }
+    });
+
+    test.each([
       [0.3],
       [0.9999, 99911.9],
-    ]) {
-      test(`.from(${input.toString()}) parses floats and converts a col`, () => {
-        const col = Column.from(input);
-        expect(input).toHaveLength(col.length);
-        expect(col).toHaveProperty('dtype');
-        expect(DTYPES).toContain(col.dtype);
-        expect(col.dtype === 'f32' || col.dtype === 'f64').toBe(true);
-        for (let i = 0; i < col.length; i++) {
-          expect(col[i]).toBeCloseTo(input[i]);
-        }
-      });
-    }
+    ])(`floats %p and converts a col`, (...input) => {
+      const col = Column.from(input);
+      expect(input).toHaveLength(col.length);
+      expect(col).toBeValidCol();
+      expect(col).toBeFloatCol();
+      for (let i = 0; i < col.length; i++) {
+        expect(col[i]).toBeCloseTo(input[i]);
+      }
+    });
   });
 
-  describe('.of(...items)', () => {
-    for (const input of [
-      [3, 1, 3, 0],
-      [-9990],
-      Array(RAND.int()).fill('').map(() => RAND.float(0, 128)),
-      Array(RAND.int()).fill('').map(() => RAND.int(0, 128)),
-    ]) {
-      test(`.of(${input.join(', ')}) parses ints and converts a col`, () => {
-        const col = Column.of(...input);
-        expect(input).toHaveLength(col.length);
-        expect(col).toHaveProperty('dtype');
-        expect(DTYPES).toContain(col.dtype);
-        for (let i = 0; i < col.length; i++) {
-          expect(col[i]).toBeCloseTo(input[i]);
-        }
-      });
+  describe('.of(...item)', () => test.each([
+    [3, 1, 3, 0],
+    [-9990],
+    Array(RAND.int()).fill('').map(() => RAND.float(0, 128)),
+    Array(RAND.int()).fill('').map(() => RAND.int(0, 128)),
+  ])(`parses ints %p and converts a col`, (...input) => {
+    const col = Column.of(...input);
+    expect(input).toHaveLength(col.length);
+    expect(col).toBeValidCol();
+    for (let i = 0; i < col.length; i++) {
+      expect(col[i]).toBeCloseTo(input[i]);
     }
-  });
+  }));
 
   test(`.ones(n) creates a col full of ones`, () => {
     const n = RAND.int();
     const col = Column.ones(n);
+    expect(col).toBeValidCol();
     expect(col).toHaveProperty('dtype', 'u8');
-    expect(DTYPES).toContain(col.dtype);
     expect(col).toHaveLength(n);
     for (let i = 0; i < col.length; i++) {
       expect(col[i]).toEqual(1);
@@ -281,8 +295,8 @@ describe('generation', () => {
   test(`.zeros(n) creates a col full of zeros`, () => {
     const n = RAND.int();
     const col = Column.zeros(n);
+    expect(col).toBeValidCol();
     expect(col).toHaveProperty('dtype', 'u8');
-    expect(DTYPES).toContain(col.dtype);
     expect(col).toHaveLength(n);
     for (let i = 0; i < col.length; i++) {
       expect(col[i]).toEqual(0);
@@ -292,62 +306,37 @@ describe('generation', () => {
   test(`.empty(n) creates a col full of zeros`, () => {
     const n = RAND.int();
     const col = Column.zeros(n);
-    expect(col).toHaveProperty('dtype');
-    expect(DTYPES).toContain(col.dtype);
+    expect(col).toBeValidCol();
     expect(col).toHaveLength(n);
   });
 
-  for (const pair of [
+  describe('.repeat(n, v)', () => test.each([
     [RAND.int(), RAND.float()],
     [RAND.int(), RAND.int()],
     [RAND.int(), RAND.str()],
-  ]) {
-    const [n, v] = pair;
-    test(`.repeat(${n}) creates a col full of ${v} with length ${n}`, () => {
-      const col = Column.repeat(n, v);
-      expect(col).toHaveProperty('dtype');
-      expect(DTYPES).toContain(col.dtype);
-      expect(col).toHaveLength(n);
-      for (let i = 0; i < col.length; i++) {
-        if (col.dtype === 's') {
-          expect(col[i]).toEqual(v);
-        } else {
-          expect(col[i]).toBeCloseTo(v);
-        }
+  ])(`with n = %i and v = %p creates a col full of v with length n`, (n, v) => {
+    const col = Column.repeat(n, v);
+    expect(col).toBeValidCol();
+    expect(col).toHaveLength(n);
+    for (let i = 0; i < col.length; i++) {
+      if (col.dtype === 's') {
+        expect(col[i]).toEqual(v);
+      } else {
+        expect(col[i]).toBeCloseTo(v);
       }
-    });
-  }
+    }
+  }));
 
-  for (const lBound of [0, INT_SMALL, INT_MEDIUM, -INT_SMALL, -1, -INT_LARGE]) {
-    const n = RAND.int();
-    const uBound = lBound + 5;
-    test(`.rand(${n}, ${lBound}, ${uBound}) creates a col full of rand nums in range [${lBound}, ${uBound}) with length ${n}`, () => {
-      const col = Column.rand(n, lBound, uBound);
-      expect(col).toHaveProperty('dtype');
-      expect(DTYPES).toContain(col.dtype);
-      expect(col).toHaveLength(n);
-      for (let i = 0; i < col.length; i++) {
-        expect(col[i]).toBeGreaterThanOrEqual(lBound);
-        expect(col[i]).toBeLessThan(uBound);
-      }
-    });
-  }
-
-  for (const pair of [
-    [ 'u8',   'Uint8Array'],
-    ['u16',  'Uint16Array'],
-    ['u32',  'Uint32Array'],
-    [ 'i8',    'Int8Array'],
-    ['i16',   'Int16Array'],
-    ['i32',   'Int32Array'],
+  describe('guessing TypedArray constructor', () => test.each([
+    ['u8', 'Uint8Array'],
+    ['u16', 'Uint16Array'],
+    ['u32', 'Uint32Array'],
+    ['i8', 'Int8Array'],
+    ['i16', 'Int16Array'],
+    ['i32', 'Int32Array'],
     ['f32', 'Float32Array'],
     ['f64', 'Float64Array'],
-  ]) {
-    const [col, cons] = pair;
-    test(`correct creates constructor ${cons.constructor.name} from string "${col}"`, () => {
-      expect(Column.constFromDtype(col).name).toEqual(cons);
-    });
-  }
+  ])('given %s creates %s constructor', (col, cons) => expect(Column.constFromDtype(col).name).toEqual(cons)));
 });
 
 describe('methods', () => {
