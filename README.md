@@ -62,7 +62,7 @@ All have been placed in the public domain.
 let iris = new DF('iris') // use `let`, you will be re-assigning a lot
 ```
 
-**NOTE** 
+**NOTE**
 
 the lookup of datasets happens by recursive search of each directory in `DF.opts.DATASETS`. You can use this and simply `df.opts.DATASETS.push(yourDir)` and your dataset will be discoverable. You don't need to specify the extension. `.csv` and `.json` extensions are appended if not provided (e.g. iris is actually stored in `iris.csv`). Dataset files must be in either CSV or JSON formats.
 
@@ -438,7 +438,7 @@ constants such as `'des'` are defined in the `constants` module which you can im
 
 ```js
 const { DataType, LoggingLevel, PrintingPreset, SortingOrder, What } = require('dataf/constants')
-``` 
+```
 
 ### Statistics & Math
 
@@ -558,7 +558,7 @@ iris.counts(-1) // for the last column
 For a correlation of each column with each other column (matrix):
 
 ```javascript
-iris.corr(/* `false` to *not* print the first column */)      
+iris.corr(/* `false` to *not* print the first column */)
 ```
 
 ```text
@@ -1061,7 +1061,7 @@ iris.head(2).toSQLTableDef('MyIrisTable', /* optional file name */)
 
 ```sql
 CREATE TABLE IF NOT EXISTS MyIrisTable (
-  
+
   Id INT,
   SepalLengthCm REAL,
   SepalWidthCm REAL,
