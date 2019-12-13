@@ -82,22 +82,14 @@ expect.extend({
       pass: received >= floor && received < ceiling,
     };
   },
-  toBeValidDtype(received) {
+  toBeValidCol(col, ...dtypes) {
     return {
-      message: () => `expected ${received} to be valid dtype (one of ${DTYPES.join(', ')})`,
-      pass: DTYPES.contains(received.dtype),
-    };
-  },
-  toBeFloatCol(received) {
-    return {
-      message: () => `expected ${received} to be float col`,
-      pass: ['f32', 'f64'].contains(received.dtype),
-    };
-  },
-  toBeValidCol(received) {
-    return {
-      message: () => `expected ${received} to be valid col`,
-      pass: received !== null && received !== undefined && DTYPES.contains(received.dtype) && received.length !== undefined,
+      message: dtypes.length === 0 ? () => `expected ${col} to be valid col` : () => `expected ${col} to be valid col with dtype being one of [${dtypes.join(', ')}]`,
+      pass: col !== null
+        && col !== undefined
+        && DTYPES.some((x) => x === col.dtype)
+        && Number.isInteger(col.length)
+        && (dtypes.length === 0 || dtypes.some((t) => t === col.dtype)),
     };
   }
 });
@@ -157,15 +149,14 @@ describe('utils', () => {
         expect(guess === dtype || guess === dtype2).toEqual(true);
       }
     });
-
-    describe('bag', () => {
-      test('inserting 1, 2, 3, 1, 1 into a bag has 1x3, 2x1, 3x1', () => {
-        const multiset = Column.bag([1, 2, 3, 1, 1]);
-        expect(isMap(multiset)).toBe(true);
-        expect(multiset.get(1)).toBe(3);
-        expect(multiset.get(2)).toBe(1);
-        expect(multiset.get(3)).toBe(1);
-      });
+  });
+  describe('bag', () => {
+    test('inserting 1, 2, 3, 1, 1 into a bag has 1x3, 2x1, 3x1', () => {
+      const multiset = Column.bag([1, 2, 3, 1, 1]);
+      expect(isMap(multiset)).toBe(true);
+      expect(multiset.get(1)).toBe(3);
+      expect(multiset.get(2)).toBe(1);
+      expect(multiset.get(3)).toBe(1);
     });
   });
 });
@@ -176,7 +167,7 @@ describe('generation', () => {
     [RAND.int(0, INT_SMALL), RAND.int(INT_SMALL, INT_MEDIUM)],
     [RAND.float(0, INT_SMALL), RAND.float(INT_SMALL, INT_MEDIUM)],
     [RAND.float(-INT_SMALL, INT_SMALL), RAND.float(INT_SMALL, INT_MEDIUM)],
-  ])(`generates rand array with nums in range [%d, %d)`, (lBound, uBound) => {
+  ])(`with lBound = %d, uBound = %d generates rand array with nums in range [lBound, uBound)`, (lBound, uBound) => {
     const col = Column.rand(INT_MEDIUM, lBound, uBound);
     expect(col).toBeValidCol();
     for (let i = 0; i < col.length; i++) {
@@ -209,7 +200,8 @@ describe('generation', () => {
           expect(arr[i]).toBeCloseTo(arr[i - 1] + step);
         }
       }
-    }));
+    }
+  ));
 
   describe('.from(iterable)', () => {
     test.each([
@@ -217,9 +209,9 @@ describe('generation', () => {
       ['a'],
       ['a123'],
       [],
-    ])('gives a ColStr when not parsable e.g. %p', (...input) => {
+    ])('converts %p to ColStr because not parsable ', (...input) => {
       const col = Column.from(input);
-      expect(col).toBeValidCol();
+      expect(col).toBeValidCol('s');
       expect(input).toHaveLength(col.length);
       for (let i = 0; i < col.length; i++) {
         expect(col[i]).toEqual(input[i]);
@@ -230,9 +222,9 @@ describe('generation', () => {
       ['0'],
       ['0', '1'],
       Array(RAND.int(1, INT_MEDIUM)).fill('').map(() => RAND.int(0, 128).toString()),
-    ])(`parses ints %p and converts a col`, (...input) => {
+    ])(`parses ints %p and converts to col`, (...input) => {
       const col = Column.from(input);
-      expect(col).toBeValidCol();
+      expect(col).toBeValidCol('u8', 'f32', 'f64');
       expect(input).toHaveLength(col.length);
       for (let i = 0; i < col.length; i++) {
         expect(col[i]).toEqual(parseInt(input[i]));
@@ -246,8 +238,7 @@ describe('generation', () => {
     ])(`parses floats %p and converts a col`, (...input) => {
       const col = Column.from(input);
       expect(input).toHaveLength(col.length);
-      expect(col).toBeValidCol();
-      expect(col).toBeFloatCol();
+      expect(col).toBeValidCol('f32', 'f64');
       for (let i = 0; i < col.length; i++) {
         expect(col[i]).toBeCloseTo(parseFloat(input[i]));
       }
@@ -258,9 +249,8 @@ describe('generation', () => {
       [0.9999, 99911.9],
     ])(`floats %p and converts a col`, (...input) => {
       const col = Column.from(input);
+      expect(col).toBeValidCol('f32', 'f64');
       expect(input).toHaveLength(col.length);
-      expect(col).toBeValidCol();
-      expect(col).toBeFloatCol();
       for (let i = 0; i < col.length; i++) {
         expect(col[i]).toBeCloseTo(input[i]);
       }
@@ -274,8 +264,8 @@ describe('generation', () => {
     Array(RAND.int()).fill('').map(() => RAND.int(0, 128)),
   ])(`parses ints %p and converts a col`, (...input) => {
     const col = Column.of(...input);
-    expect(input).toHaveLength(col.length);
     expect(col).toBeValidCol();
+    expect(input).toHaveLength(col.length);
     for (let i = 0; i < col.length; i++) {
       expect(col[i]).toBeCloseTo(input[i]);
     }
@@ -284,8 +274,7 @@ describe('generation', () => {
   test(`.ones(n) creates a col full of ones`, () => {
     const n = RAND.int();
     const col = Column.ones(n);
-    expect(col).toBeValidCol();
-    expect(col).toHaveProperty('dtype', 'u8');
+    expect(col).toBeValidCol('u8');
     expect(col).toHaveLength(n);
     for (let i = 0; i < col.length; i++) {
       expect(col[i]).toEqual(1);
@@ -295,8 +284,7 @@ describe('generation', () => {
   test(`.zeros(n) creates a col full of zeros`, () => {
     const n = RAND.int();
     const col = Column.zeros(n);
-    expect(col).toBeValidCol();
-    expect(col).toHaveProperty('dtype', 'u8');
+    expect(col).toBeValidCol('u8');
     expect(col).toHaveLength(n);
     for (let i = 0; i < col.length; i++) {
       expect(col[i]).toEqual(0);
@@ -306,17 +294,17 @@ describe('generation', () => {
   test(`.empty(n) creates a col full of zeros`, () => {
     const n = RAND.int();
     const col = Column.zeros(n);
-    expect(col).toBeValidCol();
+    expect(col).toBeValidCol('u8');
     expect(col).toHaveLength(n);
   });
 
   describe('.repeat(n, v)', () => test.each([
-    [RAND.int(), RAND.float()],
-    [RAND.int(), RAND.int()],
-    [RAND.int(), RAND.str()],
-  ])(`with n = %i and v = %p creates a col full of v with length n`, (n, v) => {
+    [RAND.int(), RAND.float(), 'f32', 'f64'],
+    [RAND.int(), RAND.int(), 'u8', 'u16', 'u32', 'i8', 'i16', 'i32'],
+    [RAND.int(), RAND.str(), 's'],
+  ])(`with n = %i and v = %p creates a col full of v with length n`, (n, v, ...dtypes) => {
     const col = Column.repeat(n, v);
-    expect(col).toBeValidCol();
+    expect(col).toBeValidCol(...dtypes);
     expect(col).toHaveLength(n);
     for (let i = 0; i < col.length; i++) {
       if (col.dtype === 's') {
@@ -327,7 +315,7 @@ describe('generation', () => {
     }
   }));
 
-  describe('guessing TypedArray constructor', () => test.each([
+  describe('Column.constFromDtype', () => test.each([
     ['u8', 'Uint8Array'],
     ['u16', 'Uint16Array'],
     ['u32', 'Uint32Array'],
@@ -339,178 +327,140 @@ describe('generation', () => {
   ])('given %s creates %s constructor', (col, cons) => expect(Column.constFromDtype(col).name).toEqual(cons)));
 });
 
-describe('methods', () => {
+describe('ColNum', () => {
 
-  describe('ColNum', () => {
+  describe('statistical', () => {
 
-    describe('statistical', () => {
+    test('[1, 2, 3].mean() === 2', () => expect(Column.of(1, 2, 3).mean()).toEqual(2));
 
-      test('mean of Column [1, 2, 3] is 2', () => {
-        expect(Column.of(1, 2, 3).mean()).toEqual(2);
-      });
-
-      describe('measures of spread', () => {
-        for (const f of ['mad', 'stdev', 'var']) {
-          for (const r of [RAND.int(), RAND.float()]) {
-            test(`${f} of Column [${r}, ${r}, ${r}] is 0 (${f} measure of spread should give 0 if there is no spread)`, () => {
-              expect(Column.of(r, r, r)[f]()).toEqual(0);
-            });
-          }
+    describe('measure of spread should give 0 if there is no spread', () => {
+      const n = RAND.int();
+      for (const f of ['mad', 'stdev', 'var']) {
+        for (const v of [RAND.int(), RAND.float()]) {
+          test(`Column.repeat(${n}, ${v}).${f}() ===  0`, () => {
+            expect(Column.repeat(n, v)[f]()).toEqual(0);
+          });
         }
-      });
-    });
-
-    describe('Math object operations', () => {
-      const mathObjectOps = ['round', 'trunc', 'floor', 'ceil', 'abs'];
-      const c = RAND.colNum();
-      for (const f of mathObjectOps) {
-        const col = c[f]();
-        test(`col.${f}() applies Math.${f} to each item`, () => {
-          for (let i = 0; i < col.length; i++) {
-            expect(col[i]).toBeCloseTo(Math[f](c[i]));
-          }
-        });
-      }
-    });
-
-    describe('.clip(lBound, uBound)', () => {
-      for (const pair of [
-        [RAND.int(0, INT_SMALL),     RAND.int(INT_SMALL, INT_MEDIUM)],
-        [RAND.float(0, INT_SMALL),   RAND.float(INT_SMALL, INT_MEDIUM)],
-        [RAND.float(-INT_SMALL, INT_SMALL), RAND.float(INT_SMALL, INT_MEDIUM)],
-      ]) {
-        const [lBound, uBound] = pair;
-        const col = Column.rand(INT_MEDIUM, lBound - INT_SMALL, uBound + INT_SMALL).clip(lBound, uBound);
-        test(`after col.clip(${lBound}, ${uBound}) the col does not have any values smaller than (${lBound}) or greater than (${uBound})`, () => {
-          for (let i = 0; i < col.length; i++) {
-            expect(col[i]).toBeGreaterThanOrEqual(lBound - FLOAT_DELTA);
-            expect(col[i]).toBeLessThanOrEqual(uBound + FLOAT_DELTA);
-          }
-        });
-      }
-    });
-
-    describe('arithmetic',  () => {
-      for (const pair of [
-        [RAND.int(),   RAND.int()],
-        [RAND.int(),   RAND.float()],
-        [RAND.float(), RAND.int()],
-        [RAND.float(), RAND.float()],
-      ]) {
-        const [x, y] = pair;
-        const col = Column.of(x, y);
-        describe('operations on itself', () => {
-          test(`${col.toString()}.add() should add all col items`, () => {
-            expect(col.add()).toBeCloseTo(x + y);
-          });
-          test(`${col.toString()}.sub() should subtract all col items`, () => {
-            expect(col.sub()).toBeCloseTo(x - y);
-          });
-          test(`${col.toString()}.mul() should multiply all col items`, () => {
-            expect(col.mul()).toBeCloseTo(x * y);
-          });
-          test(`${col.toString()}.div() should divide all col items`, () => {
-            expect(col.div()).toBeCloseTo(x / y);
-          });
-        });
-
-        const singX = col.slice(0, 1);
-        const singY = col.slice(1, 2);
-        describe('operations on itself and other', () => {
-          test(`${singX.toString()}.add(${singY.toString()}) should add items from other to itself`, () => {
-            expect(singX.add(singY)[0]).toBeCloseTo(x + y);
-          });
-          test(`${singX.toString()}.sub(${singY.toString()}) should subtract items from other to itself`, () => {
-            expect(singX.sub(singY)[0]).toBeCloseTo(x - y);
-          });
-          test(`${singX.toString()}.mul(${singY.toString()}) should multiply items from other to itself`, () => {
-            expect(singX.mul(singY)[0]).toBeCloseTo(x * y);
-          });
-          test(`${singX.toString()}.div(${singY.toString()}) should divide items from other to itself`, () => {
-            expect(singX.div(singY)[0]).toBeCloseTo(x / y);
-          });
-        });
-
-        describe('operations on itself and a number', () => {
-          test(`${singX.toString()}.add(${y}) should add y to every item`, () => {
-            expect(singX.add(y)[0]).toBeCloseTo(x + y);
-          });
-          test(`${singX.toString()}.sub(${y}) should sub y from every item`, () => {
-            expect(singX.sub(y)[0]).toBeCloseTo(x - y);
-          });
-          test(`${singX.toString()}.add(${y}) should mul every item by y`, () => {
-            expect(singX.mul(y)[0]).toBeCloseTo(x * y);
-          });
-          test(`${singX.toString()}.add(${y}) should div every item by y`, () => {
-            expect(singX.div(y)[0]).toBeCloseTo(x / y);
-          });
-        });
       }
     });
   });
 
-  describe('ColStr and ColNum (shared)', () => {
-    for (const c of [RAND.colStr(), RAND.colInt(), RAND.colFloat()]) {
-      const v = RAND.el(c);
-      describe(`col implements all methods from Array`, () => {
-        for (const method of ARRAY_PROTO_METHODS) {
-          test(`col.${method} is implemented`, () => expect(c[method]).toBeDefined());
-        }
-      });
-      describe(`col implements all methods from TypedArray`, () => {
-        for (const method of TYPED_ARRAY_PROTO_METHODS) {
-          test(`col.${method} is implemented`, () => expect(c[method]).toBeDefined());
-        }
-      });
-      describe(`col.ps() creates a map of probabilities`, () => {
-        const ps = c.ps();
-        test(`${ps} is a Map`, () => expect(isMap(ps)).toBe(true));
-        for (const k of ps.keys()) {
-          const val = ps.get(k);
-          test(`${val} is a probability`, () => {
-            expect(val).toBeLessThanOrEqual(1);
-            expect(val).toBeGreaterThanOrEqual(0);
-          });
-        }
-        test('probabilities add up to 1', () => expect([...ps.keys()].map((k) => ps.get(k)).reduce((x, y) => x + y, 0)).toBeCloseTo(1));
-      });
-      test(`col.replace(${v}) removes all such items from the col`, () => expect([...c.replace(v, 0)]).not.toContain(v));
-      test(`col.removeAll(${v}) removes all such items from the col`, () => expect([...c.removeAll(v)]).not.toContain(v));
-      describe(`${c}.concat(${c}) joins 2 cols`, () => {
-        const c2 = c.clone();
-        const c3 = c.concat(c2);
-        const newColLen = c.length + c2.length;
-        test('new col has correct length', () => expect(c3).toHaveLength(newColLen));
-        for (let i = 0; i < c.length; i++) {
-          test(`new col at idx #${i} should have ${c[i]}`, () => {
-            if (c.dtype === 's') {
-              expect(c3[i]).toEqual(c[i]);
-            } else {
-              expect(c3[i]).toBeCloseTo(c[i]);
-            }
-          });
-        }
-        for (let i = c.length; i < newColLen; i++) {
-          test(`new col at idx #${i} should have ${c2[i]}`, () => {
-            if (c.dtype === 's') {
-              expect(c3[i]).toEqual(c2[i - c.length]);
-            } else {
-              expect(c3[i]).toBeCloseTo(c2[i - c.length]);
-            }
-          });
-        }
-      });
-      describe(`${c}.unique() removes duplicate items`, () => {
-        const c2 = c.unique();
-        const c2Arr = [...c2];
-        for (let i = 0; i < c2.length; i++) {
-          const val = c2[i];
-          test(`${c2} should not contain ${val}`, () => {
-            expect(c2Arr.slice(i + 1)).not.toContain(val);
-            expect(c2Arr.slice(0, i)).not.toContain(val);
-          });
+  describe('Math object operations', () => {
+    const mathObjectOps = ['round', 'trunc', 'floor', 'ceil', 'abs'];
+    const c = RAND.colNum();
+    for (const f of mathObjectOps) {
+      const col = c[f]();
+      test(`col.${f}() applies Math.${f} to each item`, () => {
+        for (let i = 0; i < col.length; i++) {
+          expect(col[i]).toBeCloseTo(Math[f](c[i]));
         }
       });
     }
   });
+
+  describe('.clip(lBound, uBound)', () => {
+    test.each([
+      [RAND.int(0, INT_SMALL),     RAND.int(INT_SMALL, INT_MEDIUM)],
+      [RAND.float(0, INT_SMALL),   RAND.float(INT_SMALL, INT_MEDIUM)],
+      [RAND.float(-INT_SMALL, INT_SMALL), RAND.float(INT_SMALL, INT_MEDIUM)],
+    ])('with lBound = %d, uBound = %d have values between the range', (lBound, uBound) => {
+      const col = Column.rand(INT_MEDIUM, lBound - INT_SMALL, uBound + INT_SMALL)
+                        .clip(lBound, uBound);
+      for (let i = 0; i < col.length; i++) {
+        expect(col[i]).toBeGreaterThanOrEqual(lBound - FLOAT_DELTA);
+        expect(col[i]).toBeLessThanOrEqual(uBound + FLOAT_DELTA);
+      }
+    });
+  });
+
+  describe('arithmetic', () => describe.each([
+    [RAND.int(), RAND.int()],
+    [RAND.int(), RAND.float()],
+    [RAND.float(), RAND.int()],
+    [RAND.float(), RAND.float()],
+  ])('col [%d, %d]', (x, y) => {
+
+    const col = Column.of(x, y);
+    test.each([
+      ['add', x + y],
+      ['sub', x - y],
+      ['mul', x * y],
+      ['div', x / y],
+    ])(`${col.toString()}.%s() === %d`, (f, v) => expect(col[f]()).toBeCloseTo(v));
+
+    const singX = col.slice(0, 1);
+    const singY = col.slice(1, 2);
+    test.each([
+      ['add', x + y],
+      ['sub', x - y],
+      ['mul', x * y],
+      ['div', x / y],
+    ])(`${singX.toString()}.%s(${singY.toString()})`, (f, expected) => expect(singX[f](singY)[0]).toBeCloseTo(expected));
+
+    test.each([
+      ['add', x + y],
+      ['sub', x - y],
+      ['mul', x * y],
+      ['div', x / y],
+    ])(`${singX}.%s(${y})`, (f, v) => expect(singX[f](y)[0]).toBeCloseTo(v));
+  }));
+});
+
+describe('ColStr and ColNum (shared)', () => {
+  for (const c of [RAND.colStr(), RAND.colInt(), RAND.colFloat()]) {
+    const v = RAND.el(c);
+    describe(`col implements all methods from Array`, () => {
+      for (const method of ARRAY_PROTO_METHODS) {
+        test(`col.${method} is implemented`, () => expect(c[method]).toBeDefined());
+      }
+    });
+    describe(`col implements all methods from TypedArray`, () => {
+      for (const method of TYPED_ARRAY_PROTO_METHODS) {
+        test(`col.${method} is implemented`, () => expect(c[method]).toBeDefined());
+      }
+    });
+    describe(`col.ps() creates a map of probabilities`, () => {
+      const ps = c.ps();
+      test(`${ps} is a Map`, () => expect(isMap(ps)).toBe(true));
+      for (const k of ps.keys()) {
+        const val = ps.get(k);
+        test(`${val} is a probability`, () => {
+          expect(val).toBeLessThanOrEqual(1);
+          expect(val).toBeGreaterThanOrEqual(0);
+        });
+      }
+      test('probabilities add up to 1', () => expect([...ps.keys()].map((k) => ps.get(k)).reduce((x, y) => x + y, 0)).toBeCloseTo(1));
+    });
+    test(`col.replace(${v}) removes all such items from the col`, () => expect([...c.replace(v, 0)]).not.toContain(v));
+    test(`col.removeAll(${v}) removes all such items from the col`, () => expect([...c.removeAll(v)]).not.toContain(v));
+    test(`${c}.concat(${c}) joins 2 cols`, () => {
+      const c2 = c.clone();
+      const c3 = c.concat(c2);
+      const newColLen = c.length + c2.length;
+      expect(c3).toHaveLength(newColLen);
+      for (let i = 0; i < c.length; i++) {
+        if (c.dtype === 's') {
+          expect(c3[i]).toEqual(c[i]);
+        } else {
+          expect(c3[i]).toBeCloseTo(c[i]);
+        }
+      }
+      for (let i = c.length; i < newColLen; i++) {
+        if (c.dtype === 's') {
+          expect(c3[i]).toEqual(c2[i - c.length]);
+        } else {
+          expect(c3[i]).toBeCloseTo(c2[i - c.length]);
+        }
+      }
+    });
+    test(`${c}.unique() removes duplicate items`, () => {
+      const c2 = c.unique();
+      const c2Arr = [...c2];
+      for (let i = 0; i < c2.length; i++) {
+        const val = c2[i];
+        expect(c2Arr.slice(i + 1)).not.toContain(val);
+        expect(c2Arr.slice(0, i)).not.toContain(val);
+      }
+    });
+  }
 });

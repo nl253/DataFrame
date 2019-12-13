@@ -430,6 +430,20 @@ const COL_PROTO = {
   },
 
   /**
+   * @returns {ColNum|ColStr}
+   */
+  unique() {
+    const s = new Set(this);
+    const newArr = empty(s.size, this.dtype);
+    let i = 0;
+    for (const x of s) {
+      newArr[i] = x;
+      i++;
+    }
+    return newArr;
+  },
+
+  /**
    * @param {number} depth
    * @param {Object} options
    * @returns {string}
@@ -584,19 +598,6 @@ const COL_STR_PROTO = {
     return xs;
   },
 
-  /**
-   * @returns {ColNum|ColStr}
-   */
-  unique() {
-    const s = new Set(this);
-    const newArr = empty(s.size, this.dtype);
-    let i = 0;
-    for (const x of s) {
-      newArr[i] = x;
-      i++;
-    }
-    return newArr;
-  },
 
   /**
    * @param {function(*, number, ColStr): boolean} f
