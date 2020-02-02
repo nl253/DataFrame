@@ -91,14 +91,8 @@
   },
   "files": [
     "README.md",
-    "utils.js",
-    "Column.js",
-    "constants.js",
-    "rand.js",
-    "presets.js",
-    "DataFrame.js",
-    "log.js",
-    "opts.js"
+    "*.js",
+    "datasets/*.csv"
   ],
   "private": false,
   "remarkConfig": {
