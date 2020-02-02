@@ -492,6 +492,30 @@ describe('ColStr and ColNum (shared)', () => {
       const reorderedRatio = reordered / col.length;
       expect(reorderedRatio).toBeGreaterThanOrEqual(0.25);
     });
+    if (c.dtype !== 's') {
+      describe('col.sort()', () => {
+        for (const arg of [undefined, 'asc', ((a, b) => a > b ? 1 : a < b ? -1 : 0)]) {
+          test(`col.sort(${arg}) sorts column ascending`, () => {
+            const col = c.sort(arg);
+            expect(col).toBeValidCol(c.dtype);
+            expect(col).toHaveLength(c.length);
+            for (let i = 1; i < col.length; i++) {
+              expect(col[i]).toBeGreaterThanOrEqual(col[i - 1]);
+            }
+          });
+        }
+        for (const arg of ['des', ((a, b) => a > b ? -1 : a < b ? 1 : 0)]) {
+          test(`col.sort(${arg}) sorts column descending`, () => {
+            const col = c.sort(arg);
+            expect(col).toBeValidCol(c.dtype);
+            expect(col).toHaveLength(c.length);
+            for (let i = 1; i < col.length; i++) {
+              expect(col[i]).toBeLessThanOrEqual(col[i - 1]);
+            }
+          });
+        }
+      });
+    }
     test('col.reverse() reverses column', () => {
       const col = c.reverse();
       expect(col).toBeValidCol(c.dtype);

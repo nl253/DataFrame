@@ -391,12 +391,17 @@ const COL_PROTO = {
    * @param {?DType} [dtype]
    * @returns {ColNum|ColStr}
    */
-  sort(order = 'asc', dtype = null) {
-    return this.clone(dtype)._sort(order === 'asc'
-      ? (a, b) => a > b ? 1 : a < b ? -1 : 0
-      : order === 'des'
-        ? (a, b) => a > b ? -1 : a < b ? 1 : 0
-        : order);
+  sort(order = 'asc', dtype = null, inPlace = false) {
+    if (inPlace) {
+      if (order === 'asc') {
+        return this._sort((a, b) => a > b ? 1 : a < b ? -1 : 0);
+      } else if (order === 'des') {
+        return this._sort((a, b) => a > b ? -1 : a < b ? 1 : 0);
+      } else {
+        return this._sort(order);
+      }
+    }
+    return this.clone(dtype).sort(order, null, true);
   },
 
   /**
