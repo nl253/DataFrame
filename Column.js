@@ -216,10 +216,8 @@ const COL_PROTO = {
     for (let i = 0; i < len; i++) {
       const val = this[i];
       const s = val.toString();
-      const isStr = val.constructor.name[0] === 'S';
-      const isNum = val.constructor.name[0] === 'N';
-      const isFloat = isNum && s.indexOf('.') >= 0;
-      parts.push(isFloat ? fmtFloat(val) : isStr ? `"${s}"` : s);
+      const isFloat = isNumber(val) && s.indexOf('.') >= 0;
+      parts.push(isFloat ? fmtFloat(val) : isString(val) ? `"${s}"` : s);
     }
     if (len < this.length) {
       parts.push(`... ${this.length - len} more`);
@@ -773,8 +771,7 @@ const COL_NUM_PROTO = {
     const amFloat = myDtype[0] === 'f';
     const myBits = this.BYTES_PER_ELEMENT * 8;
 
-    // is number
-    if (other.constructor.name[0] === 'N') {
+    if (isNumber(other)) {
       if (dtype !== null) {
         return empty(this.length, dtype).map((x) => x + other);
       }
@@ -845,7 +842,7 @@ const COL_NUM_PROTO = {
     }
 
     // is array, elemnt-wise op
-    if (other.constructor.name[0] !== 'N') {
+    if (!isNumber(other)) {
       // tODO fix inefficient a.sub
       return this.add(other.mul(-1, dtype), dtype);
     }
@@ -887,8 +884,7 @@ const COL_NUM_PROTO = {
     const amFloat = myDtype.indexOf('f') >= 0;
     const myBits = this.BYTES_PER_ELEMENT * 8;
 
-    // is number
-    if (other.constructor.name[0] === 'N') {
+    if (isNumber(other)) {
       if (dtype !== null) {
         return empty(this.length, dtype)
           .map((x) => x * other);
@@ -965,7 +961,6 @@ const COL_NUM_PROTO = {
     const myDtype = this.dtype;
     const amFloat = myDtype.indexOf('f') >= 0;
 
-    // is num
     if (isNumber(other)) {
       if (dtype !== null) {
         return empty(this.length, dtype).map((x) => x / other);
