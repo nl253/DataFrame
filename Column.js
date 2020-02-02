@@ -1373,6 +1373,14 @@ const COL_NUM_PROTO = {
       return doClone ? this.clone() : this;
     }
     const newArr = this.convert(`f${opts.FLOAT_PREC}`, true);
+    for (let i = 0; i < n; i++) {
+      let total = 0;
+      for (let j = 0; j < n; j++) {
+        const val = this[i + n - j - 1];
+        total += val;
+      }
+      newArr[i] = total / n;
+    }
     for (let i = n; i < this.length; i++) {
       let total = 0;
       for (let j = 0; j < n; j++) {
