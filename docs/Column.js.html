@@ -35,7 +35,7 @@
 const util = require('util');
 
 const { randInRange, randInt } = require('./rand');
-const { dtypeRegex, isNumRegex, fmtFloat, isNumber } = require('./utils');
+const { dtypeRegex, isNumRegex, fmtFloat, isNumber, isString } = require('./utils');
 const log = require('./log');
 const opts = require('./opts');
 
@@ -45,10 +45,11 @@ const opts = require('./opts');
  */
 
 /**
- * @typedef  {ArrayLike} Col
- * @property {boolean}  isEmpty
- * @property {boolean}  randEl
- * @property {function(*): boolean} all
+ * @typedef {ArrayLike&lt;number>|ArrayLike&lt;string>} Col
+ * @property {boolean} isEmpty
+ * @property {boolean} randEl
+ * @property {number} BYTES_PER_ELEMENT
+ * @property {function(fun): boolean} all
  * @property {function(*): number} argMax
  * @property {function(*): number} argMin
  * @property {function(*): boolean} contains
@@ -59,9 +60,11 @@ const opts = require('./opts');
  * @property {function(): *} mode
  * @property {function(): *} none
  * @property {function(function(any): boolean): boolean} some
+ * @property {function(number): number} tail
  * @property {function(function(any): Boolean): Col} filter
  * @property {function(): *} print
  * @property {function(): *} ps
+ * @property {function(number): number} head
  * @property {function(?DType): Col} clone
  * @property {function(): *} reduce
  * @property {function(): *} subarray
@@ -76,47 +79,46 @@ const opts = require('./opts');
  * @property {function(): *} zipWith
  * @property {function(): *} zipWith3
  * @property {function(): *} toString
- * @property {string}   dtype
- * @property {number}   length
+ * @property {string} dtype
+ * @property {number} length
  */
 
 /**
- * @typedef  {Col} ColStr
- * @property {'s'}       dtype
- * @property {function(): *} concat
- * @property {function(): *} head
+ * @typedef {Col} ColStr
+ * @property {'s'} dtype
+ * @property {string} randEl
+ * @property {function(ColStr): ColStr} concat
+ * @property {function(string, string): ColStr} replace
+ * @property {function(): string} pop
  * @property {function(): *} labelEncode
- * @property {function(): *} pop
- * @property {function(): *} replace
- * @property {function(): *} sample
- * @property {function(): *} tail
+ * @property {function(number): ColStr} sample
  */
 
 /**
- * @typedef  {Col} ColNum
- * @property {DType}  dtype
- * @property {number} BYTES_PER_ELEMENT
+ * @typedef {Col} ColNum
+ * @property {DType} dtype
+ * @property {number} randEl
  * @property {function(): number} IQR
  * @property {function(): number} Q1
  * @property {function(): number} Q3
  * @property {function(): number} abs
- * @property {function(): number} add
+ * @property {function((number|ColNum|undefined)): number} add
  * @property {function(): number} cbrt
  * @property {function(): number} ceil
  * @property {function(): number} clip
- * @property {function(): number} concat
+ * @property {function(ColNum): ColNum} concat
  * @property {function(): number} corr
  * @property {function(): number} cov
  * @property {function(): number} cube
  * @property {function(): number} disDiff
- * @property {function(): number} distance
+ * @property {function(): number} pop
+ * @property {function(number): number} distance
  * @property {function(?DType): ColNum} convert
- * @property {function(): number} div
+ * @property {function((number|ColNum|undefined)): number} div
  * @property {function(): number} dot
  * @property {function(): number} downcast
  * @property {function(): number} floor
- * @property {function(): number} head
- * @property {function(): number} kBins
+ * @property {function(number): number} kBins
  * @property {function(): number} kurtosis
  * @property {function(): number} mad
  * @property {function(): number} map
@@ -125,15 +127,14 @@ const opts = require('./opts');
  * @property {function(): number} median
  * @property {function(): number} memory
  * @property {function(): number} min
- * @property {function(): number} mul
+ * @property {function((number|ColNum|undefined)): number} mul
  * @property {function(): number} nLargest
  * @property {function(): number} nQuart
  * @property {function(): number} nSmallest
  * @property {function(): number} normalize
- * @property {function(): number} pop
  * @property {function(): number} pow
- * @property {function(): number} removeAllOutliers
- * @property {function(): number} replace
+ * @property {function(): number} removeOutliers
+ * @property {function(number, number): ColStr} replace
  * @property {function(): number} root
  * @property {function(): number} round
  * @property {function(): number} sample
@@ -142,10 +143,9 @@ const opts = require('./opts');
  * @property {function(): number} sqrt
  * @property {function(): number} square
  * @property {function(): number} stdev
- * @property {function(): number} sub
- * @property {function(): number} subarray
- * @property {function(): number} tail
- * @property {function(): number} takeWhile
+ * @property {function((number|ColNum|undefined)): number} sub
+ * @property {function(number, number): number} subarray
+ * @property {function(function(number): boolean): number} takeWhile
  * @property {function(): number} trunc
  * @property {function(): number} var
  */
@@ -163,6 +163,70 @@ const defineGetter = (o, name, f) => {
 
 const COL_PROTO = {
 
+  /**
+   * @param {?DType} [dtype]
+   * @returns {ColNum|ColStr}
+   */
+  clone(dtype = null) {
+    const newArr = empty(this.length, dtype === null ? this.dtype : dtype);
+    newArr.set(this);
+    if (this.labelMap !== undefined) {
+      newArr.labelMap = this.labelMap;
+    }
+    if (this.kBinsBounds !== undefined) {
+      newArr.kBinsBounds = this.kBinsBounds;
+    }
+    return newArr;
+  },
+
+  /**
+   * @param {?DType} [dtype]
+   * @param {boolean} [doClone]
+   * @returns {ColNum}
+   */
+  convert(dtype = null, doClone = true) {
+    return from(this, dtype, doClone);
+  },
+
+
+  /**
+   * @returns {number}
+   */
+  memory() { return this.BYTES_PER_ELEMENT * this.length; },
+
+  /**
+   * @param {?number} [n]
+   * @returns {ColNum}
+   */
+  head(n = null) {
+    return n === null
+      ? this.head(opts.HEAD_LEN)
+      : this.subarray(0, n);
+  },
+
+  /**
+   * @param {?number} [n]
+   * @returns {ColNum}
+   */
+  tail(n = null) {
+    return n === null
+      ? this.tail(opts.HEAD_LEN)
+      : this.subarray(this.length - n);
+  },
+
+  /**
+   * @param {function(*, number, ColNum): *} f
+   * @param {?DType|'s'} [dtype]
+   * @returns {ColNum}
+   */
+  map(f, dtype = null) {
+    const xs = Array(this.length).fill(0);
+    for (let i = 0; i &lt; this.length; i++) {
+      xs[i] = f(this[i], i, this);
+    }
+    return from(xs, dtype, false);
+  },
+
   // printing
 
   /**
@@ -174,19 +238,19 @@ const COL_PROTO = {
       return this.toString(opts.HEAD_LEN);
     } else if (len > this.length) {
       log.warn(`len = ${len}, but there is ${this.length} items`);
+      return this.toString(Math.min(len, this.length));
     }
     const parts = [`Col${this.dtype === undefined ? '' : this.dtype[0].toUpperCase()}${this.dtype !== undefined ? this.dtype.slice(1) : ''} [`];
-    const n = Math.min(len, this.length);
-    for (let i = 0; i &lt; n; i++) {
+    for (let i = 0; i &lt; len; i++) {
       const val = this[i];
       const s = val.toString();
       const isStr = val.constructor.name[0] === 'S';
-      const isNum = !isStr &amp;&amp; val.constructor.name[0] === 'N';
-      const isFloat = isNum &amp;&amp; s.match(/\./);
-      parts.push(isFloat ? fmtFloat(val) : s);
+      const isNum = val.constructor.name[0] === 'N';
+      const isFloat = isNum &amp;&amp; s.indexOf('.') >= 0;
+      parts.push(isFloat ? fmtFloat(val) : isStr ? `"${s}"` : s);
     }
-    if (n &lt; this.length) {
-      parts.push(`... ${this.length - n} more`);
+    if (len &lt; this.length) {
+      parts.push(`... ${this.length - len} more`);
     }
     return `${parts[0] + parts.slice(1).join(', ')}]`;
   },
@@ -197,50 +261,23 @@ const COL_PROTO = {
   print(n = null) {
     if (n === null) {
       this.print(opts.HEAD_LEN);
-      return;
+    } else {
+      console.log(this.toString(n));
     }
-    console.log(this.toString(n));
   },
 
 
   // cumulative operations
 
   /**
-   * @param {function(...*): *} f
+   * @param {function((ColNum|ColStr)): Col} f
    * @param {?DType} [dtype]
    * @returns {ColNum|ColStr}
    */
   cum(f, dtype = null) {
-    if (f === undefined) {
-      throw new Error('you need to provide a function name / function e.g. "add"');
-    } else if (this.length === 0) {
-      return this;
-    } else if (dtype === null) {
-      return this.cum(f, this.dtype);
-    } else if (f.constructor.name[0] === 'S' &amp;&amp; this[f] === undefined) {
-      throw new Error(`there is no callable funct ${f} on ${this.toString()}`);
-    }
-    let newArr;
-    if (dtype === 's') {
-      newArr = Array(this.length).fill(0);
-    } else {
-      newArr = empty(this.length, dtype);
-    }
-    newArr[0] = this[0];
-    if (this.length === 1) {
-      return newArr;
-    }
-    // function name (string)
-    if (f.constructor.name[0] === 'S') {
-      for (let i = this.length - 1; i > 0; i--) {
-        newArr[i] = this.subarray(0, i + 1)[f]();
-      }
-    } else {
-      for (let i = this.length - 1; i > 0; i--) {
-        newArr[i] = f(this.subarray(0, i + 1));
-      }
-    }
-    return newArr;
+    return isString(f)
+      ? this.cum((xs) => xs[f](), dtype)
+      : this.map((x, idx, xs) => f(xs.subarray(0, idx + 1)), dtype);
   },
 
   // other
@@ -256,9 +293,21 @@ const COL_PROTO = {
   },
 
   /**
+   * @param {function(*): boolean} f
+   * @returns {ColNum|ColStr}
+   */
+  takeUntil(f) { return this.takeWhile((x) => !f(x)); },
+
+  /**
    * @returns {Map&lt;*, number>}
    */
-  counts() { return bag(this); },
+  counts() {
+    const b = new Map();
+    for (const x of this) {
+      b.set(x, (b.get(x) || 0) + 1);
+    }
+    return b;
+  },
 
   /**
    * @returns {Map&lt;*, number>}
@@ -266,12 +315,12 @@ const COL_PROTO = {
   ps() {
     const b = this.counts();
     let total = 0;
-    for (const k of b.keys()) {
-      total += b.get(k);
+    for (const v of b.values()) {
+      total += v;
     }
     const ps = new Map();
-    for (const k of b.keys()) {
-      ps.set(k, b.get(k) / total);
+    for (const [k, v] of b.entries()) {
+      ps.set(k, v / total);
     }
     return ps;
   },
@@ -295,7 +344,7 @@ const COL_PROTO = {
   },
 
   /**
-   * @param {!function(*): number} f
+   * @param {function(*): number} f
    * @returns {*}
    */
   argMin(f) {
@@ -320,43 +369,40 @@ const COL_PROTO = {
    * @param {function(*): boolean} f
    * @returns {boolean}
    */
-  all(f) {
-    return !this.some((v) => !f(v));
-  },
+  all(f) { return !this.some((v) => !f(v)); },
 
   /**
    * @param {function(*): boolean} f
    * @returns {boolean}
    */
-  none(f) {
-    return !this.some((v) => f(v));
-  },
+  none(f) { return !this.some((v) => f(v)); },
 
   /**
    * @param {*} v
    * @returns {boolean}
    */
-  contains(v) {
-    return this.some((x) => x === v);
-  },
+  contains(v) { return this.indexOf(v) >= 0; },
 
   // manipulation
 
   /**
    * @param {?DType} [dtype]
+   * @param {boolean} [inPlace]
    * @returns {ColStr|ColNum}
    */
-  reverse(dtype = null) {
-    return this.clone(dtype)._reverse();
+  reverse(dtype = null, inPlace = false) {
+    if (inPlace || dtype === null) {
+      return this._reverse();
+    } else {
+      return this.clone(dtype).reverse(null, false);
+    }
   },
 
   /**
    * @param {*} v
    * @returns {ColNum|ColStr}
    */
-  removeAll(v) {
-    return this.filter((a) => !Object.is(a, v));
-  },
+  removeAll(v) { return this.filter((a) => !Object.is(a, v)); },
 
   /**
    * @param {number} i
@@ -384,7 +430,7 @@ const COL_PROTO = {
   },
 
   /**
-   * @returns {Col}
+   * @returns {ColStr|ColNum}
    * @private
    */
   _shuffle() {
@@ -399,18 +445,22 @@ const COL_PROTO = {
    * @param {?DType} [dtype]
    * @returns {ColStr|ColNum}
    */
-  shuffle(dtype = null) {
-    return this.clone(dtype)._shuffle();
+  shuffle(dtype = null, inPlace = false) {
+    if (!inPlace || !dtype) {
+      return this._shuffle();
+    } else {
+      return this.shuffle(null, false);
+    }
   },
 
   /**
    * @returns {number|string|undefined}
    */
   mode() {
-    if (this.length === 1) return this[0];
-    const counts = Array.from(bag(this)
-      .entries())
-      .map(([s, count]) => [s, count]);
+    if (this.length === 1) {
+      return this[0];
+    }
+    const counts = [...this.counts()];
 
     if (counts.length === 1) {
       return counts[0][0];
@@ -424,24 +474,38 @@ const COL_PROTO = {
   // functional programming
 
   /**
-   * @param {Iterable} other
+   * @param {Iterable&lt;*>} other
    * @param {function(*, *): *} f
    * @param {?DType|'s'} [dtype]
    * @returns {ColNum|ColStr}
    */
   zipWith(other, f, dtype = null) {
-    return from(Array(this.length).fill(0).map((_, idx) => f(this[idx], other[idx])), dtype);
+    return this.map((x, idx) => f(x, other[idx]), dtype);
   },
 
   /**
-   * @param {Iterable} xs
-   * @param {Iterable} ys
+   * @param {Iterable&lt;*>} xs
+   * @param {Iterable&lt;*>} ys
    * @param {function(*, *, *): *} f
    * @param {?DType|'s'} [dtype]
    * @returns {ColNum|ColStr}
    */
   zipWith3(xs, ys, f, dtype = null) {
-    return from(Array(this.length).fill(0).map((_, idx) => f(this[idx], xs[idx], ys[idx])), dtype);
+    return this.map((x, idx) => f(x, xs[idx], ys[idx]), dtype);
+  },
+
+  /**
+   * @returns {ColNum|ColStr}
+   */
+  unique() {
+    const s = new Set(this);
+    const newArr = empty(this.length, this.dtype);
+    let i = 0;
+    for (const x of s) {
+      newArr[i] = x;
+      i++;
+    }
+    return newArr;
   },
 
   /**
@@ -450,7 +514,7 @@ const COL_PROTO = {
    * @returns {string}
    */
   [util.inspect.custom](depth, options) {
-    return this.toString(opts.HEAD_LEN);
+    return this.toString(Math.min(this.length, opts.HEAD_LEN));
   },
 };
 
@@ -465,6 +529,8 @@ const enh = function (a) {
   }
 
   // hacks necessary to ensure immutability
+  a._slice = a.slice;
+  a._filter = a.filter;
   a._sort = a.sort;
   a._reverse = a.reverse;
 
@@ -472,9 +538,7 @@ const enh = function (a) {
     return this[Math.floor(randInRange(0, this.length))];
   });
 
-  defineGetter(a, 'isEmpty', function isEmpty() {
-    return this.length === 0;
-  });
+  defineGetter(a, 'isEmpty', function isEmpty() { return this.length === 0; });
 
   Object.assign(a, COL_PROTO);
 };
@@ -483,27 +547,18 @@ const COL_STR_PROTO = {
 
   // memory &amp; data type
 
+  BYTES_PER_ELEMENT: 1,
+
   dtype: 's',
 
   /**
-   * @returns {number}
+   * @param {ColStr} other
+   * @param {number} [offset]
    */
-  memory() {
-    let total = 0;
-    for (let i = 0; i &lt; this.length; i++) {
-      total += this[i].length;
+  set(other, offset = 0) {
+    for (let i = offset; i &lt; this.length; i++) {
+      this[i] = other[i - offset];
     }
-    return total;
-  },
-
-  /**
-   * @returns {ColStr}
-   */
-  clone() {
-    const xs = [...this];
-    enh(xs);
-    enhStrArr(xs);
-    return xs;
   },
 
   // pre-processing
@@ -511,20 +566,24 @@ const COL_STR_PROTO = {
   /**
    * @param {RegExp|string} pat
    * @param {string} y
+   * @param {boolean} [subStr]
    * @returns {ColStr}
    */
-  replace(pat, y) {
-    return this.map((x) => x.replace(pat, y));
+  replace(pat, y, subStr = false) {
+    if (subStr) {
+      return this.map((x) => x.replace(pat, y));
+    } else if (isString(pat)) {
+      return this.map((x) => x === pat ? y : x);
+    } else {
+      return this.map((x) => pat.test(x) ? y : x);
+    }
   },
 
   /**
    * @param {?DType} [dtype]
    * @returns {ColNum}
    */
-  labelEncode(dtype = null) {
-    if (dtype === null) {
-      return this.labelEncode('u8');
-    }
+  labelEncode(dtype = 'u8') {
     const newArr = empty(this.length, dtype);
     const map = new Map();
     let label = 0;
@@ -544,10 +603,10 @@ const COL_STR_PROTO = {
   },
 
   /**
-   * @returns {ColStr}
+   * @return {ColStr}
    */
-  unique() {
-    return from(Array.from(new Set(this)));
+  labelDecode() {
+    return this.map((x) => this.labelMap.get(x));
   },
 
   // basic stats
@@ -577,45 +636,12 @@ const COL_STR_PROTO = {
       sample[ptr] = this[idx];
       used.add(idx);
     }
-    return from(sample);
+    return from(sample, this.dtype, false);
   },
 
   // manipulation, views and slices
 
-  /**
-   * @param {number} idx
-   * @returns {ColStr}
-   */
-  pop(idx) {
-    const clone = this.clone();
-    clone.splice(idx, 1);
-    return clone;
-  },
-
-  /**
-   * @param {?number} [n]
-   * @returns {ColStr}
-   */
-  head(n = null) {
-    if (n === null) {
-      return this.head(opts.HEAD_LEN);
-    }
-    return this.slice(0, n);
-  },
-
-  /**
-   * @param {?number} [n]
-   * @returns {ColStr}
-   */
-  tail(n = null) {
-    if (n === null) {
-      return this.tail(opts.HEAD_LEN);
-    }
-    return this.slice(this.length - n);
-  },
-
   // functional programming
-
 
   // hacks
 
@@ -631,14 +657,6 @@ const COL_STR_PROTO = {
   },
 
   /**
-   * @param {?DType} [dtype]
-   * @returns {ColNum}
-   */
-  convert(dtype = null) {
-    return from(this, dtype, false);
-  },
-
-  /**
    * @param {number} n
    * @param {number} m
    * @returns {ColStr}
@@ -650,17 +668,6 @@ const COL_STR_PROTO = {
     return xs;
   },
 
-  /**
-   * @param {function(*, number, ColStr): *} f
-   * @param {?DType} [dtype]
-   * @returns {ColStr}
-   */
-  map(f, dtype = null) {
-    const xs = this._map(f);
-    enh(xs);
-    enhStrArr(xs);
-    return xs;
-  },
 
   /**
    * @param {function(*, number, ColStr): boolean} f
@@ -685,27 +692,15 @@ const enhStrArr = (a) => {
   }
 
   // hacks necessary to ensure immutability
-
   a._concat = a.concat;
-  a._slice = a.slice;
+
   // consistency of API so that I can call subarray on both
   a.subarray = a.slice;
-
-  a._map = a.map;
-  a._filter = a.filter;
 
   Object.assign(a, COL_STR_PROTO);
 };
 
 const COL_NUM_PROTO = {
-
-
-  /**
-   * @returns {number}
-   */
-  memory() {
-    return this.BYTES_PER_ELEMENT * this.length;
-  },
 
   /**
    * @param {DType} toDtype
@@ -733,52 +728,15 @@ const COL_NUM_PROTO = {
     return newArr;
   },
 
-  /**
-   * @param {?DType} [dtype]
-   * @returns {ColNum|ColStr}
-   */
-  clone(dtype = null) {
-    const newArr = empty(this.length, dtype === null ? this.dtype : dtype);
-    newArr.set(this);
-    return newArr;
-  },
-
   // manipulation, views and slices
 
   /**
-   * @param {?number} [n]
-   * @returns {ColNum}
+   * @returns {number}
    */
-  head(n = null) {
-    if (n === null) {
-      return this.head(opts.HEAD_LEN);
-    }
-    return this.subarray(0, n);
-  },
-
-  /**
-   * @param {?number} [n]
-   * @returns {ColNum}
-   */
-  tail(n = null) {
-    if (n === null) {
-      return this.tail(opts.HEAD_LEN);
-    }
-    return this.subarray(this.length - n);
-  },
-
-  /**
-   * @returns {ColNum}
-   */
-  unique() {
-    const s = new Set(this);
-    const newArr = empty(s.size, this.dtype);
-    let i = 0;
-    for (const x of s) {
-      newArr[i] = x;
-      i++;
-    }
-    return newArr;
+  pop() {
+    const fst = this[0];
+    this.buffer = this.slice(1).buffer;
+    return fst;
   },
 
 
@@ -826,17 +784,6 @@ const COL_NUM_PROTO = {
     return this.sort('asc').subarray(0, n);
   },
 
-  /**
-   *  @param {number} idx
-   * @returns {number}
-   */
-  pop(idx) {
-    const newArr = empty(this.length - 1, this.dtype);
-    newArr.set(this.subarray(0, idx));
-    newArr.set(this.subarray(idx + 1), idx);
-    return newArr;
-  },
-
   // arithmetic
 
   /**
@@ -875,7 +822,7 @@ const COL_NUM_PROTO = {
       return empty(this.length, dtype).map((_, idx) => this[idx] * other[idx]);
     }
 
-    // tried to call typearr.add([1, 2, 3]) with regular arr
+    // tried to call typedarray.add([1, 2, 3]) with regular arrary
     if (Array.isArray(other)) {
       return this.add(from(other));
     }
@@ -963,9 +910,9 @@ const COL_NUM_PROTO = {
       return this.reduce((x, y) => x * y, 1);
     }
     const myDtype = this.dtype;
-    const amInt = myDtype.match('i');
-    const amUint = myDtype.match('u');
-    const amFloat = myDtype.match('f');
+    const amInt = myDtype.indexOf('i') >= 0;
+    const amUint = myDtype.indexOf('u') >= 0;
+    const amFloat = myDtype.indexOf('f') >= 0;
     const myBits = this.BYTES_PER_ELEMENT * 8;
 
     // is number
@@ -996,9 +943,9 @@ const COL_NUM_PROTO = {
     }
 
     // if other is an EnhancedTypedArray
-    const isFloat = other.dtype.match('f');
-    const isInt = other.dtype.match('i');
-    const isUint = other.dtype.match('u');
+    const isFloat = other.dtype.indexOf('f') >= 0;
+    const isInt = other.dtype.indexOf('i') >= 0;
+    const isUint = other.dtype.indexOf('u') >= 0;
     const otherBits = other.BYTES_PER_ELEMENT * 8;
     const len = Math.min(this.length, other.length);
 
@@ -1044,10 +991,10 @@ const COL_NUM_PROTO = {
       return this.reduce((x, y) => x / y);
     }
     const myDtype = this.dtype;
-    const amFloat = myDtype.match('f');
+    const amFloat = myDtype.indexOf('f') >= 0;
 
     // is num
-    if (other.constructor.name[0] === 'N') {
+    if (isNumber(other)) {
       if (dtype !== null) {
         return empty(this.length, dtype).map((x) => x / other);
       }
@@ -1056,8 +1003,7 @@ const COL_NUM_PROTO = {
 
     // else if other is enhanced array
     if (dtype !== null) {
-      return empty(this.length, dtype)
-        .map((_, idx) => this[idx] / other[idx]);
+      return empty(this.length, dtype).map((_, idx) => this[idx] / other[idx]);
     }
 
     if (Array.isArray(other)) {
@@ -1065,11 +1011,11 @@ const COL_NUM_PROTO = {
     }
 
     // if other is an EnhancedTypedArray
-    const isFloat = other.dtype.match('f');
+    const isFloat = other.dtype.indexOf('f') >= 0;
     const len = Math.min(this.length, other.length);
 
     if (isFloat &amp;&amp; amFloat) {
-      if (other.BYTES_PER_ELEMENT >= this.BYTES_PER_ELEMENT) {
+      if (other.BYTES_PER_ELEMENT > this.BYTES_PER_ELEMENT) {
         return other.map((x, idx) => x / this[idx]);
       } else {
         return this.map((x, idx) => x / other[idx]);
@@ -1200,16 +1146,18 @@ const COL_NUM_PROTO = {
    * @returns {number|undefined}
    */
   max() {
-    if (this.length === 1) return this[0];
-    else return this.reduce((v1, v2) => Math.max(v1, v2));
+    return this.length === 1
+      ? this[0]
+      : this.reduce((v1, v2) => Math.max(v1, v2));
   },
 
   /**
    * @returns {number|undefined}
    */
   min() {
-    if (this.length === 1) return this[0];
-    else return this.reduce((v1, v2) => Math.min(v1, v2));
+    return this.length === 1
+      ? this[0]
+      : this.reduce((v1, v2) => Math.min(v1, v2));
   },
 
   /**
@@ -1300,9 +1248,7 @@ const COL_NUM_PROTO = {
   /**
    * @returns {number|undefined}
    */
-  mean() {
-    return this.add() / this.length;
-  },
+  mean() { return this.add() / this.length; },
 
   /**
    * @param {number} [n]
@@ -1321,23 +1267,17 @@ const COL_NUM_PROTO = {
   /**
    * @returns {number|undefined}
    */
-  Q1() {
-    return this.nQuart(1, 4);
-  },
+  Q1() { return this.nQuart(1, 4); },
 
   /**
    * @returns {number|undefined}
    */
-  median() {
-    return this.nQuart(2, 4);
-  },
+  median() { return this.nQuart(2, 4); },
 
   /**
    * @returns {number|undefined}
    */
-  Q3() {
-    return this.nQuart(3, 4);
-  },
+  Q3() { return this.nQuart(3, 4); },
 
   // spread
 
@@ -1345,39 +1285,29 @@ const COL_NUM_PROTO = {
    * @param {?DType} [dtype]
    * @returns {number|undefined}
    */
-  var(dtype = null) {
-    return this.sub(this.mean(), dtype).square(dtype).mean();
-  },
+  var(dtype = null) { return this.sub(this.mean(), dtype).square(dtype).mean(); },
 
   /**
    * @param {?DType} [dtype]
    * @returns {number|undefined}
    */
-  mad(dtype = null) {
-    return this.sub(this.mean(), dtype).abs().mean();
-  },
+  mad(dtype = null) { return this.sub(this.mean(), dtype).abs().mean(); },
 
   /**
    * @param {?DType} [dtype]
    * @returns {number|undefined}
    */
-  stdev(dtype = null) {
-    return Math.sqrt(this.var(dtype));
-  },
+  stdev(dtype = null) { return Math.sqrt(this.var(dtype)); },
 
   /**
    * @returns {number|undefined}
    */
-  range() {
-    return this.max() - this.min();
-  },
+  range() { return this.max() - this.min(); },
 
   /**
    * @returns {number}
    */
-  IQR() {
-    return this.Q3() - this.Q1();
-  },
+  IQR() { return this.Q3() - this.Q1(); },
 
   // linear algebra
 
@@ -1385,9 +1315,7 @@ const COL_NUM_PROTO = {
    * @param {ColNum} other
    * @returns {number}
    */
-  dot(other) {
-    return this.mul(other).add();
-  },
+  dot(other) { return this.mul(other).add(); },
 
   // pre-processing
 
@@ -1416,13 +1344,9 @@ const COL_NUM_PROTO = {
    * 5. Try to advance to next bin: 3 + binSize = 6. Out of bounds!
    *
    * @param {number} [k]
-   * @param {?DType} [dtype]
    * @returns {ColNum}
    */
-  kBins(k = 5, dtype = null) {
-    if (dtype === null) {
-      return this.kBins(k, 'u8');
-    }
+  kBins(k = 5) {
     const sorted = this.sort();
     const bounds = Array(k).fill(0);
     bounds[bounds.length - 1] = Infinity;
@@ -1435,7 +1359,8 @@ const COL_NUM_PROTO = {
       boundIdx++;
     }
 
-    const s = empty(binSize, dtype);
+    const dtype = guessNumDtype([k - 1]);
+    const s = empty(this.length, dtype);
 
     for (let i = 0; i &lt; this.length; i++) {
       const val = this[i];
@@ -1458,11 +1383,12 @@ const COL_NUM_PROTO = {
    * @returns {ColNum}
    */
   disDiff(ord = 1) {
-    if (ord === 0) return this;
-    const newArr = empty(this.length, `f${opts.FLOAT_PREC}`);
-    newArr[0] = 0;
-    for (let i = 1; i &lt; this.length; i++) {
-      newArr[i] = this[i] - this[i - 1];
+    if (ord === 0) {
+      return this;
+    }
+    const newArr = empty(this.length - 1, `f${opts.FLOAT_PREC}`);
+    for (let i = 0; i &lt; newArr.length; i++) {
+      newArr[i] = this[i + 1] - this[i];
     }
     return newArr.disDiff(ord - 1);
   },
@@ -1476,15 +1402,14 @@ const COL_NUM_PROTO = {
     if (n === 0) {
       throw new Error(`smoothing n must be >= 2`);
     }
-    if (n === 1) return doClone ? this.clone() : this;
-    const newArr = empty(this.length, `f${opts.FLOAT_PREC}`);
-    for (let i = 0; i &lt; n; i++) {
-      newArr[i] = this[i];
+    if (n === 1) {
+      return doClone ? this.clone() : this;
     }
+    const newArr = this.convert(`f${opts.FLOAT_PREC}`, true);
     for (let i = n; i &lt; this.length; i++) {
       let total = 0;
       for (let j = 0; j &lt; n; j++) {
-        const val = this[i + j];
+        const val = this[i - n + j];
         total += val;
       }
       newArr[i] = total / n;
@@ -1498,13 +1423,13 @@ const COL_NUM_PROTO = {
   normalize() {
     const smallest = this.min();
     const denominator = this.max() - smallest;
-    return empty(this.length).map((_, idx) => (this[idx] - smallest) / denominator);
+    return this.map((x) => (x - smallest) / denominator);
   },
 
   /**
    * @returns {ColNum}
    */
-  removeAllOutliers() {
+  removeOutliers() {
     const Q1 = this.Q1();
     const Q3 = this.Q3();
     return this.filter((x) => x >= Q1 &amp;&amp; x &lt;= Q3);
@@ -1526,12 +1451,17 @@ const COL_NUM_PROTO = {
   },
 
   /**
+   * @returns {ColNum}
+   */
+  clipOutliers() { return this.clip(this.Q1(), this.Q3()); },
+
+  /**
    * @param {number} v
    * @param {number} y
    * @param {number} [delta]
    * @returns {ColNum}
    */
-  replace(v, y, delta = 0.00001) {
+  replace(v, y, delta = 1E-4) {
     return this.map((x) => Math.abs(x - v) &lt;= delta ? y : x);
   },
 
@@ -1561,16 +1491,6 @@ const COL_NUM_PROTO = {
     return xs;
   },
 
-  /**
-   * @param {function(*, number, ColNum): *} f
-   * @returns {ColNum}
-   */
-  map(f) {
-    const xs = this._map(f);
-    enh(xs);
-    enhTypedArr(xs);
-    return xs;
-  },
 
   /**
    * @param {function(*, number, ColNum): boolean} f
@@ -1595,10 +1515,7 @@ const enhTypedArr = (a) => {
   }
 
   // hacks necessary to ensure immutability
-  a._slice = a.slice;
   a._subarray = a.subarray;
-  a._map = a.map;
-  a._filter = a.filter;
 
   const match = dtypeRegex.exec(a.constructor.name);
   a.dtype = match[1][0].toLocaleLowerCase() + match[2];
@@ -1717,31 +1634,16 @@ const rangeIter = function* (a = 0, b = null, step = 1) {
  * @returns {ColNum} range
  */
 const range = (a = 0, b = null, step = 1) => {
-  if (b === null) return range(0, a);
-  const newArr = empty(Math.ceil(b - a) / step, guessNumDtype([b - step, a + step]));
+  if (b === null) {
+    return range(0, a);
+  }
+  const newArr = empty(Math.floor(Math.ceil(b - a) / step), guessNumDtype([b - step, a + step]));
   let i = 0;
   for (const n of rangeIter(a, b, step)) {
     newArr[i] = n;
     i++;
   }
   return newArr;
-};
-
-/**
- * @param {Iterable&lt;*>} xs
- * @param {?Iterable&lt;*>} [vocab]
- * @returns {Map&lt;number>} multiset
- * @private
- */
-const bag = (xs, vocab = null) => {
-  if (vocab !== null) {
-    return bag(new Set(vocab));
-  }
-  const b = new Map();
-  for (const x of xs) {
-    b.set(x, (b.get(x) || 0) + 1);
-  }
-  return b;
 };
 
 /**
@@ -1752,25 +1654,22 @@ const bag = (xs, vocab = null) => {
  */
 const from = (xs, toDtype = null, doClone = true) => {
   if (toDtype === xs.dtype) {
+    log.debug(`dtype matches hint, cloning ${xs.toString()}`);
     // preserve semantics of Array.from, which clones
     if (doClone) {
-      log.debug(`dtype matches hint, cloning ${xs.toString()}`);
+      log.debug(`cloning ${xs.toString()}`);
       return xs.clone();
     } else {
-      log.debug('dtype matches hint, returning as is');
+      log.debug('returning as is');
       return xs;
     }
   }
 
   if (toDtype === null &amp;&amp; xs.dtype !== undefined &amp;&amp; xs.dtype !== 's') {
+    log.debug('no dtype hint');
+    log.debug(`dtype is numeric ${xs.dtype}`);
     // preserve semantics of Array.from, which clones
-    if (doClone) {
-      log.debug(`dtype matches hint, cloning ${xs.toString()}`);
-      return xs.clone();
-    } else {
-      log.debug('dtype matches hint, returning as is');
-      return xs;
-    }
+    return doClone ? xs.clone() : xs;
   }
 
   // use toDtype hint
@@ -1793,14 +1692,16 @@ const from = (xs, toDtype = null, doClone = true) => {
   if (!xs.some((x) => !isNumber(x) &amp;&amp; !Object.is(NaN, x))) {
     log.debug(`got array of numbers, creating ColNum`);
     const ys = empty(xs.length, toDtype);
-    for (let i = 0; i &lt; xs.length; i++) {
-      ys[i] = xs[i];
-    }
+    ys.set(xs);
     return ys;
   }
 
   if (toDtype === 's') {
     log.debug('using s dtype hint to not try to parse values (saving time)');
+    if (!xs.some(s => s.constructor.name[0] === 'S')) {
+      log.debug('converting nums in column to string');
+      xs = xs.map(x => x.toString());
+    }
     enh(xs);
     enhStrArr(xs);
     return xs;
@@ -1810,7 +1711,7 @@ const from = (xs, toDtype = null, doClone = true) => {
    * save some computation time by checking
    * if there is at least one num-like string
    */
-  if (xs.some((x) => x.search !== undefined &amp;&amp; x.search(isNumRegex) >= 0)) {
+  if (xs.some((x) => x &amp;&amp; x.constructor.name[0] === 'S' &amp;&amp; x.search(isNumRegex) >= 0)) {
     /*
      * THEN try parsing all
      * const tryParse = empty(xs.length, toDtype);
@@ -1839,6 +1740,10 @@ const from = (xs, toDtype = null, doClone = true) => {
   }
 
   log.debug('failed to parse string array, creating s Col');
+  if (!xs.some((s) => s.constructor.name[0] === 'S')) {
+    log.debug('converting nums in column to string');
+    xs = xs.map((x) => x.toString());
+  }
   enh(xs);
   enhStrArr(xs);
   return xs;
@@ -1875,16 +1780,11 @@ const empty = (len = 0, dtype = null) => {
  * @param {number} len
  * @param {?number} [lBound]
  * @param {?number} [uBound]
- * @param {?DType} [dtype]
- * @returns {ColNum} rand array
+ * @param {?DType|'s'} [dtype]
+ * @returns {ColNum|ColStr} rand array
  */
 const rand = (len, lBound = null, uBound = null, dtype = null) => {
   if (dtype === 's') {
-    if (lBound === null) {
-      return rand(len, 0, uBound, dtype);
-    } else if (uBound === null) {
-      return rand(len, lBound, lBound + 1, dtype);
-    } /* else */
     // eslint-disable-next-line no-shadow
     const range = uBound - lBound;
     const LOWER_RANGE = 122 - 97;
@@ -1917,7 +1817,7 @@ const rand = (len, lBound = null, uBound = null, dtype = null) => {
  * @param {?DType} [dtype]
  * @returns {ColNum|ColStr} array filled with value
  */
-const repeat = (len, val, dtype = null) => empty(len, dtype === null ? guessNumDtype([val]) : dtype).fill(val);
+const repeat = (len, val, dtype = null) => empty(len, dtype === null ? isString(val) ? 's' : guessNumDtype([val]) : dtype).fill(val);
 
 /**
  * @param {number} len
@@ -1960,11 +1860,18 @@ const isColStr = (xs) => xs.dtype === 's';
 const isCol = (xs) => isColNum(xs) || isColStr(xs);
 
 /**
- * @param {function(number): *} f
+ * @param {function(number, number, (ColStr|ColNum)): *} f
  * @param {number} n
- * @returns {ColNum}
+ * @param {?DType|'s'} [dtype]
+ * @returns {ColNum|ColStr}
  */
-const fromFunct = (f, n) => empty(n, `f${opts.FLOAT_PREC}`).map((_, idx) => f(idx));
+const fromFunct = (f = (x) => x, n = 0, dtype = null) => {
+  const xs = Array(n).fill(0);
+  for (let i = 0; i &lt; xs.length; i++) {
+    xs[i] = f(xs[i], i, xs);
+  }
+  return from(xs, dtype, false);
+};
 
 const PRODUCERS = {};
 for (const p of [
@@ -2014,7 +1921,6 @@ module.exports = Object.freeze(
   }),
   ...PRODUCERS,
   ...({
-    bag,
     constFromDtype,
     guessNumDtype,
     rangeIter,
@@ -2037,7 +1943,7 @@ module.exports = Object.freeze(
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Fri Dec 06 2019 19:24:01 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sun Feb 02 2020 08:13:29 GMT+0000 (Greenwich Mean Time)
 </footer>
 
 <script> prettyPrint(); </script>

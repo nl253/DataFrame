@@ -1123,11 +1123,11 @@ class DataFrame {
    * @param {...(number|string)} colIds
    * @returns {DataFrame} data frame
    */
-  removeAllOutliers(...colIds) {
+  removeOutliers(...colIds) {
     // by default compute for all (numeric) columns
     if (colIds.length === 0) {
-      log.info(`${this.constructor.name}.removeAllOutliers() running for all cols`);
-      return this.removeAllOutliers(...this.colNames);
+      log.info(`${this.constructor.name}.removeOutliers() running for all cols`);
+      return this.removeOutliers(...this.colNames);
     }
 
     const cols = [...this.cols];

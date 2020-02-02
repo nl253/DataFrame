@@ -595,11 +595,11 @@ iris.removeAll(NaN, 0, 2, 'PetalLengthCm')
 #### Discretize (Bin)
 
 ```javascript
-iris.kBins('SepalLengthCm', 5); // 5 bins for this column
+iris.kBins('SepalLengthCm'); // 5 bins for this column
 
-iris.kBins(null, 3);            // 3 bins for all columns
+iris.kBins(null);            // 3 bins for all columns
 
-iris.kBins(2, 3) // 3rd (2 idx) col, 3 bins
+iris.kBins(2) // 3rd (2 idx) col, 3 bins
     .col(2)      // select ONLY 3rd column (index is 2), which is of type Column
     .print(10)
 ```
@@ -1169,7 +1169,7 @@ iris.normalize()
 
 ```javascript
 df = df.labelEncode()  // string cols => unsigned int
-       .kBins(null, 5) // f64, f32, ... => unsigned int
+       .kBins(null) // f64, f32, ... => unsigned int
        .downcast()     // optimize
 
 // see memory

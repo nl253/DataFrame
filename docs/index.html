@@ -50,7 +50,7 @@
 <li>tries to be memory efficient</li>
 <li>extensions to arrays</li>
 <li>great for tabular data</li>
-<li>reads CSV (only for now)</li>
+<li>reads data in various formats: CSV, JSON, array of rows, array of columns, JS object, JS Map</li>
 <li>work in progress</li>
 </ul>
 <p>See <a href="http://usejsdoc.org/">JSDoc</a>-generated API docs see <a href="https://nl253.github.io/DataFrame/">docs</a>.</p>
@@ -70,7 +70,7 @@
 <pre class="prettyprint source lang-javascript"><code>DF.dataSets
 </code></pre>
 <pre class="prettyprint source lang-javascript"><code>[ 'alcohol.csv',   // alcohol consumption math students
-  'countries.csv', // geographical and economical data for all countries
+  'countries.csv', // geopolitical data for all countries
   'diabetes.csv',
   'food.csv',      // food choices
   'got.csv',       // game of thrones deaths
@@ -85,6 +85,8 @@
 <h3>Load the Iris DataSet</h3>
 <pre class="prettyprint source lang-javascript"><code>let iris = new DF('iris') // use `let`, you will be re-assigning a lot
 </code></pre>
+<p><strong>NOTE</strong></p>
+<p>the lookup of datasets happens by recursive search of each directory in <code>DF.opts.DATASETS</code>. You can use this and simply <code>df.opts.DATASETS.push(yourDir)</code> and your dataset will be discoverable. You don't need to specify the extension. <code>.csv</code> and <code>.json</code> extensions are appended if not provided (e.g. iris is actually stored in <code>iris.csv</code>). Dataset files must be in either CSV or JSON formats.</p>
 <h3>Selecting / Slicing Rows</h3>
 <h4>Head / Tail</h4>
 <pre class="prettyprint source lang-javascript"><code>iris.head().print()
@@ -155,7 +157,7 @@
 --- ----- -------------- --------------
      150B           600B           600B
 </code></pre>
-<p>This is equivalent to:</p>
+<p>This is the same as:</p>
 <pre class="prettyprint source lang-javascript"><code>iris.sliceCols('Id', 'SepalWidthCm').print(3)
 </code></pre>
 <h3>Only Numeric Columns (remove string columns)</h3>
@@ -224,8 +226,8 @@ Array.from(irow)
   0.20000000298023224,
   'Iris-setosa' ]
 </code></pre>
-<h4>Iterating Over Many Rows</h4>
-<p>If you want to iterate over all the rows (this isn't very efficient) try:</p>
+<h4>Iterating Over Rows</h4>
+<p>If you want to iterate over all the rows (not efficient) try:</p>
 <pre class="prettyprint source lang-javascript"><code>const rowIt = iris.slice(0, 3).rowsIter // (getter)
 
 for (const r of rowIt) {
@@ -338,24 +340,10 @@ iris.reverse()
 </code></pre>
 <pre class="prettyprint source lang-javascript"><code>iris.sort('SepalWidthCm', 'des') // descending sort
 </code></pre>
-<h3>Transpose (inefficient)</h3>
-<p>Although it's inefficient it's sometimes useful to be able to swap the x and y axis.
-Suppose you want to do summation row-wise (not column wise):</p>
-<pre class="prettyprint source lang-javascript"><code>// numeric will drop the 'Species' column
-iris.numeric.transpose().sum()
+<p><strong>NOTE</strong></p>
+<p>constants such as <code>'des'</code> are defined in the <code>constants</code> module which you can import:</p>
+<pre class="prettyprint source lang-js"><code>const { DataType, LoggingLevel, PrintingPreset, SortingOrder, What } = require('dataf/constants')
 </code></pre>
-<pre class="prettyprint source lang-text"><code>  # u8  column f32 add
---- ---------- -------
-  0          0   11.19
-  1          1   11.50
-  2          2   12.39
-  3          3   13.39
-  4          4   15.19
-... (145 more)     ...
---- ---------- -------
-          150B    600B
-</code></pre>
-<p><strong>NOTE</strong> transposing will only work for homogeneous <code>DataFrame</code>s (all nums or all strings).</p>
 <h3>Statistics &amp; Math</h3>
 <h4>Aggregate operations, each is <code>DataFrame -&gt; DataFrame</code></h4>
 <p><strong>MATH</strong></p>
@@ -449,12 +437,7 @@ small amount of values. E.g. <code>Gender</code> is one of <code>{M, F}</code> o
 </code></pre>
 <h4>Correlations (A Matrix Operation)</h4>
 <p>For a correlation of each column with each other column (matrix):</p>
-<pre class="prettyprint source lang-javascript"><code>iris.corr()      // .corr(false) to *not* print the first column
-// iris.cov()    // covariance
-// iris.dot()    // dot product between each col
-distance
-distance
-distance
+<pre class="prettyprint source lang-javascript"><code>iris.corr(/* `false` to *not* print the first column */)
 </code></pre>
 <pre class="prettyprint source lang-text"><code># s      column f64 Id f64 SepalLe... f64 SepalWi... f64 PetalLe... f64 PetalWi...
 - ------------- ------ -------------- -------------- -------------- --------------
@@ -466,6 +449,12 @@ distance
 - ------------- ------ -------------- -------------- -------------- --------------
             NaN    40B            40B            40B            40B            40B
 </code></pre>
+<p>Other matrix operations:</p>
+<ul>
+<li><code>iris.cov()</code></li>
+<li><code>iris.dot()</code></li>
+<li><code>iri.distance()</code></li>
+</ul>
 <h3>Pre-Processing</h3>
 <h4>Remove NaN / Infinity / other</h4>
 <p>To remove all rows that have some value:</p>
@@ -476,11 +465,11 @@ iris.removeAll(NaN)
 iris.removeAll(NaN, 0, 2, 'PetalLengthCm')
 </code></pre>
 <h4>Discretize (Bin)</h4>
-<pre class="prettyprint source lang-javascript"><code>iris.kBins('SepalLengthCm', 5); // 5 bins for this column
+<pre class="prettyprint source lang-javascript"><code>iris.kBins('SepalLengthCm'); // 5 bins for this column
 
-iris.kBins(null, 3);            // 3 bins for all columns
+iris.kBins(null);            // 3 bins for all columns
 
-iris.kBins(2, 3) // 3rd (2 idx) col, 3 bins
+iris.kBins(2) // 3rd (2 idx) col, 3 bins
     .col(2)      // select ONLY 3rd column (index is 2), which is of type Column
     .print(10)
 </code></pre>
@@ -505,7 +494,7 @@ iris.kBins(2, 3) // 3rd (2 idx) col, 3 bins
 <li><code>&quot;max&quot;</code></li>
 </ul>
 <p>OR a function from Column (one column) to a number (<code>Column -&gt; Num</code>). <br></p>
-<pre class="prettyprint source lang-javascript"><code>iris.drop('Id') // `Id` column is not very useful
+<pre class="prettyprint source lang-javascript"><code>iris.drop('Id') // `Id` column is not useful
     .numeric    // select all numeric cols
     .nBest(2)   // best 2 features using variance as score
     .print(3)   // show first 3 rows
@@ -522,8 +511,8 @@ iris.kBins(2, 3) // 3rd (2 idx) col, 3 bins
               600B           600B
 </code></pre>
 <h4>Normalization</h4>
-<p>However, using <code>.nBest()</code> in this way is very naive and you might want to normalize (scale to the same range) the values:</p>
-<pre class="prettyprint source lang-javascript"><code>iris.drop('Id')  // `Id` column is not very useful
+<p>Using <code>.nBest()</code> in this way is naive and you might want to normalize (scale to the same range) the values:</p>
+<pre class="prettyprint source lang-javascript"><code>iris.drop('Id')  // `Id` column is not useful
     .numeric     // select all numeric cols
     .normalize() // bring them to range [0, 1]
     .nBest(2)    // best 2 features using variance as score
@@ -751,7 +740,6 @@ iris.slice(9, 19, 49, 64)
 <h3>Generalized Column Slicing</h3>
 <p>The same applies to column slices:</p>
 <pre class="prettyprint source lang-javascript"><code>iris.sliceCols(-3, -2, 0, 2)
-
 </code></pre>
 <pre class="prettyprint source lang-text"><code># f32 PetalLe... f32 PetalWi... u8 Id f32 SepalLe... f32 SepalWi...
 - -------------- -------------- ----- -------------- --------------
@@ -763,7 +751,7 @@ iris.slice(9, 19, 49, 64)
 </code></pre>
 <h3>Exporting</h3>
 <h4>HTML</h4>
-<pre class="prettyprint source lang-javascript"><code>iris.head(2).toHTML()
+<pre class="prettyprint source lang-javascript"><code>iris.head(2).toHTML(/* optional file name */)
 </code></pre>
 <pre class="prettyprint source lang-html"><code>&lt;table>
   &lt;tr>
@@ -793,7 +781,7 @@ iris.slice(9, 19, 49, 64)
 &lt;/table>
 </code></pre>
 <h4>JSON</h4>
-<pre class="prettyprint source lang-javascript"><code>iris.head(2).toJSON()
+<pre class="prettyprint source lang-javascript"><code>iris.head(2).toJSON(/* optional file name */)
 </code></pre>
 <pre class="prettyprint source lang-json"><code>{
   &quot;Id&quot;: [1, 2],
@@ -805,11 +793,40 @@ iris.slice(9, 19, 49, 64)
 }
 </code></pre>
 <h4>CSV</h4>
-<pre class="prettyprint source lang-javascript"><code>iris.head(2).toCSV()
+<pre class="prettyprint source lang-javascript"><code>iris.head(2).toCSV(/* optional file name */)
 </code></pre>
 <pre class="prettyprint source lang-csv"><code>Id,SepalLengthCm,SepalWidthCm,PetalLengthCm,PetalWidthCm,Species
 1,5.099999904632568,3.5,1.399999976158142,0.20000000298023224,Iris-setosa
 2,4.900000095367432,3,1.399999976158142,0.20000000298023224,Iris-setosa
+</code></pre>
+<h4>SQL Table</h4>
+<pre class="prettyprint source lang-javascript"><code>iris.head(2).toSQLTableDef('MyIrisTable', /* optional file name */)
+</code></pre>
+<pre class="prettyprint source lang-sql"><code>CREATE TABLE IF NOT EXISTS MyIrisTable (
+
+  Id INT,
+  SepalLengthCm REAL,
+  SepalWidthCm REAL,
+  PetalLengthCm REAL,
+  PetalWidthCm REAL,
+  Species TEXT
+)
+</code></pre>
+<h4>SQL Updates</h4>
+<pre class="prettyprint source lang-javascript"><code>iris.toSQLUpdates('MyIrisTable', /* optional file name */)
+</code></pre>
+<pre class="prettyprint source lang-sql"><code>UPDATE MyIrisTable SET Id = 1, SepalLengthCm = 5.099999904632568, SepalWidthCm = 3.5, PetalLengthCm = 1.399999976158142, PetalWidthCm = 0.20000000298023224, Species = Iris-setosa;
+UPDATE MyIrisTable SET Id = 2, SepalLengthCm = 4.900000095367432, SepalWidthCm = 3, PetalLengthCm = 1.399999976158142, PetalWidthCm = 0.20000000298023224, Species = Iris-setosa;
+UPDATE MyIrisTable SET Id = 3, SepalLengthCm = 4.699999809265137, SepalWidthCm = 3.200000047683716, PetalLengthCm = 1.2999999523162842, PetalWidthCm = 0.20000000298023224, Species = Iris-setosa;
+UPDATE MyIrisTable SET Id = 4, SepalLengthCm = 4.599999904632568, SepalWidthCm = 3.0999999046325684, PetalLengthCm = 1.5, PetalWidthCm = 0.20000000298023224, Species = Iris-setosa;
+</code></pre>
+<h4>SQL Inserts</h4>
+<pre class="prettyprint source lang-javascript"><code>iris.head(4).toSQLInserts('MyIrisTable', /* optional file name */)
+</code></pre>
+<pre class="prettyprint source lang-sql"><code>INSERT INTO MyIrisTable (Id, SepalLengthCm, SepalWidthCm, PetalLengthCm, PetalWidthCm, Species) VALUES (1, 5.099999904632568, 3.5, 1.399999976158142, 0.20000000298023224, Iris-setosa);
+INSERT INTO MyIrisTable (Id, SepalLengthCm, SepalWidthCm, PetalLengthCm, PetalWidthCm, Species) VALUES (2, 4.900000095367432, 3, 1.399999976158142, 0.20000000298023224, Iris-setosa);
+INSERT INTO MyIrisTable (Id, SepalLengthCm, SepalWidthCm, PetalLengthCm, PetalWidthCm, Species) VALUES (3, 4.699999809265137, 3.200000047683716, 1.2999999523162842, 0.20000000298023224, Iris-setosa);
+INSERT INTO MyIrisTable (Id, SepalLengthCm, SepalWidthCm, PetalLengthCm, PetalWidthCm, Species) VALUES (4, 4.599999904632568, 3.0999999046325684, 1.5, 0.20000000298023224, Iris-setosa);
 </code></pre>
 <h3>Settings</h3>
 <table>
@@ -848,14 +865,14 @@ iris.slice(9, 19, 49, 64)
 <pre class="prettyprint source lang-javascript"><code>DF.opts.OPTION = VALUE;
 </code></pre>
 <h3>More Advanced Examples</h3>
-<h4>Fix Column Names With Spaces (so that you can index df.Col)</h4>
+<h4>Fix Column Names With Spaces</h4>
 <pre class="prettyprint source lang-javascript"><code>const args = df.colNames
                // replace spaces with '_'
                .map(c => [c, c.replace(/\s+/, '_')])
                // flatten
                .reduce((pair1, pair2) => pair1.concat(pair2), []);
 
-df = df.rename(...args) // spread
+df = df.rename(...args)
 </code></pre>
 <h4>Matrix of Normalized Differences Between Means of Columns</h4>
 <p>This would normally take a lot of code:</p>
@@ -868,7 +885,7 @@ df = df.rename(...args) // spread
 </code></pre>
 <h4>Save Memory</h4>
 <pre class="prettyprint source lang-javascript"><code>df = df.labelEncode()  // string cols => unsigned int
-       .kBins(null, 5) // f64, f32, ... => unsigned int
+       .kBins(null) // f64, f32, ... => unsigned int
        .downcast()     // optimize
 
 // see memory
@@ -893,22 +910,14 @@ MB = B / 1e6
 <li>Alpha-stage</li>
 <li>I would not use it in production (yet)</li>
 <li>This isn't supposed to be an exact copy of pandas</li>
-<li>In some places it's not very efficient</li>
+<li>In some places it's not efficient</li>
 <li>Date columns / mixed data types not supported. Every column must be either
 numeric OR string. A single <code>DataFrame</code> may have a combination of numeric
 and string columns.</li>
 <li>I am a student.</li>
 </ol>
 <h3>License</h3>
-<p><strong>MIT</strong></p>
-<p>Copyright 2019 Norbert Logiewa</p>
-<p>Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the &quot;Software&quot;), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:</p>
-<p>The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.</p>
-<p>THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
-<!--
-TODO document `df.call()`
-TODO document `df.agg()`
---></article>
+<p>MIT</p></article>
     </section>
 
 
@@ -925,7 +934,7 @@ TODO document `df.agg()`
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Fri Dec 06 2019 19:24:01 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sun Feb 02 2020 08:13:29 GMT+0000 (Greenwich Mean Time)
 </footer>
 
 <script> prettyPrint(); </script>

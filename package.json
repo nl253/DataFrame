@@ -29,14 +29,15 @@
   "author": "Norbert Logiewa <norbertlogiewa96@gmail.com>",
   "maintainers": [
     {
+      "name": "Norbert Logiewa",
       "email": "norbertlogiewa96@gmail.com",
-      "name": "Norbert Logiewa"
+      "url": "https://github.com/nl253"
     }
   ],
   "contributors": [
     {
       "email": "norbertlogiewa96@gmail.com",
-      "name": "Norber Logiewa",
+      "name": "Norbert Logiewa",
       "url": "https://github.com/nl253"
     }
   ],
@@ -53,7 +54,8 @@
     "csv-stringify": "^5.3.3"
   },
   "devDependencies": {
-    "eslint": "^6.7.1",
+    "@types/jest": "^25.1.1",
+    "eslint": "^6.8.0",
     "eslint-config-airbnb": "^18.0.1",
     "eslint-plugin-compat": "^3.3.0",
     "eslint-plugin-filenames": "^1.3.2",
@@ -77,18 +79,26 @@
     "remark-preset-lint-markdown-style-guide": "^2.1.3",
     "remark-preset-lint-recommended": "^3.0.3",
     "retire": "^2.0.3",
+    "typescript": "^3.7.4",
     "write-good": "^1.0.2"
   },
-  "main": "./DataFrame.js",
+  "main": "DataFrame.js",
   "directories": {
-    "example": "./examples",
-    "doc": "./docs",
-    "lib": "./"
+    "bin": "bin",
+    "doc": "docs",
+    "example": "examples",
+    "lib": "."
   },
   "files": [
     "README.md",
-    "*.js",
-    "datasets/*.csv"
+    "utils.js",
+    "Column.js",
+    "constants.js",
+    "rand.js",
+    "presets.js",
+    "DataFrame.js",
+    "log.js",
+    "opts.js"
   ],
   "private": false,
   "remarkConfig": {
@@ -98,21 +108,28 @@
       "remark-preset-lint-consistent"
     ]
   },
+  "husky": {
+    "hooks": {
+      "pre-push": "npm run lint && npm run doc"
+    }
+  },
   "scripts": {
     "test": "npx jest --ci",
-    "doc": "bash -c \"echo -e 'GENERATING DOCS\\n' && rm -rf ./docs && npx jsdoc --pedantic -d ./docs -R ./README.md ./*.js\"",
+    "doc": "bash -c \"echo -e 'GENERATING DOCS\\n' && rm -rf ./docs && npx jsdoc --pedantic -d ./docs -R ./README* . && git add -f ./docs && git commit -am 'Update docs' -n\"",
     "doc:open": "bash -c \"npm run doc && $BROWSER ./docs/index.html\"",
-    "doc:publish": "bash -c \"echo -e 'PUBLISHING DOCS\\n' && npm run doc && git add ./docs && git commit -am 'Update docs' -n && git push\"",
-    "loc": "bash -c \"tokei -- $(git ls-files | grep -v docs | grep -v bin)\"",
-    "lint": "bash -c \"npm run lint:code && npm run lint:doc && npm run lint:deps\"",
-    "lint:code": "bash -c \"npx eslint *.js\"",
-    "lint:doc": "bash -c \"npm run lint:doc:markdown-lint && npm run lint:doc:write-good && npm run lint:doc:remark\"",
-    "lint:doc:write-good": "bash -c \"npx write-good --so --weasel --tooWordy --cliches --thereIs *.md || echo ''\"",
-    "lint:doc:markdown-lint": "bash -c \"npx markdownlint *.md\"",
-    "lint:doc:remark": "bash -c \"npx remark -u lint *.md\"",
-    "lint:deps": "bash -c \"npm run lint:deps:license && npm run lint:deps:security\"",
+    "lint": "bash -c \"npm run lint:json && npm run lint:ts && npm run lint:js && npm run lint:code && npm run lint:doc && npm run lint:deps\"",
+    "lint:code": "bash -c 'for i in \"$(git ls-files | grep \\.js$ | grep -v docs)\"; do echo $i && npx eslint ./$i; done'",
+    "lint:json": "bash -c 'for i in \"$(git ls-files | grep \\.json$ | grep -v docs)\"; do echo $i && npx jsonlint ./$i; done'",
+    "lint:js": "npx acorn --allow-hash-bang --ecma9 ./bin/index.js",
+    "lint:ts": "bash -c 'npx typescript --resolveJsonModule --downLevelIteration --checkJs --allowJs --types node,jest --lib es5,es6,es7,esnext --noEmit --strict $(git ls-files | grep -E \\.js$ | grep -v docs)'",
+    "lint:types": "bash -c \"npx jsdoc --pedantic -d ./docs -R ./README* --recurse .\"",
+    "lint:doc": "bash -c 'for i in \"$(git ls-files | grep \\.md$ | grep -v docs)\"; do echo $i && npm run lint:doc:markdown-lint && npm run lint:doc:write-good && npm run lint:doc:remark; done'",
+    "lint:doc:write-good": "bash -c 'for i in \"$(git ls-files | grep \\.md$ | grep -v docs)\"; do echo $i && npx write-good --so --weasel --tooWordy --cliches --thereIs $i || echo ''; done'",
+    "lint:doc:markdown-lint": "bash -c 'for i in \"$(git ls-files | grep \\.md$ | grep -v docs)\"; do echo $i && npx markdown-lint $i; done'",
+    "lint:doc:remark": "bash -c 'for i in \"$(git ls-files | grep \\.md$ | grep -v docs)\"; do echo $i && npx remark -u lint $i; done'",
+    "lint:deps": "bash -c \"npm audit && npm run lint:deps:license && npm run lint:deps:security\"",
     "lint:deps:security": "npx retire --js",
     "lint:deps:license": "npx license-checker --summary",
-    "prepublishOnly": "npm run doc:publish"
+    "loc": "bash -c \"tokei -- $(git ls-files | grep -v docs)\""
   }
 }

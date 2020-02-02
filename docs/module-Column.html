@@ -221,7 +221,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1824">line 1824</a>
+        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1729">line 1729</a>
     </li></ul></dd>
     
 
@@ -487,7 +487,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1725">line 1725</a>
+        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1627">line 1627</a>
     </li></ul></dd>
     
 
@@ -548,7 +548,7 @@
     
 
     
-    <h4 class="name" id="~fromFunct"><span class="type-signature">(inner) </span>fromFunct<span class="signature">(f, n)</span><span class="type-signature"> &rarr; {ColNum}</span></h4>
+    <h4 class="name" id="~fromFunct"><span class="type-signature">(inner) </span>fromFunct<span class="signature">(f, n, dtype<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {ColNum|ColStr}</span></h4>
     
 
     
@@ -576,7 +576,11 @@
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -601,7 +605,19 @@
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"></td>
@@ -624,7 +640,63 @@
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    0
+                
+                </td>
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>dtype</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">DType</span>
+|
+
+<span class="param-type">'s'</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    null
+                
+                </td>
             
 
             <td class="description last"></td>
@@ -668,7 +740,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1939">line 1939</a>
+        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1840">line 1840</a>
     </li></ul></dd>
     
 
@@ -705,6 +777,9 @@
     <dd>
         
 <span class="param-type">ColNum</span>
+|
+
+<span class="param-type">ColStr</span>
 
 
     </dd>
@@ -819,7 +894,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1932">line 1932</a>
+        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1832">line 1832</a>
     </li></ul></dd>
     
 
@@ -970,7 +1045,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1920">line 1920</a>
+        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1820">line 1820</a>
     </li></ul></dd>
     
 
@@ -1121,7 +1196,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1926">line 1926</a>
+        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1826">line 1826</a>
     </li></ul></dd>
     
 
@@ -1284,7 +1359,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1914">line 1914</a>
+        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1814">line 1814</a>
     </li></ul></dd>
     
 
@@ -1499,7 +1574,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1899">line 1899</a>
+        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1799">line 1799</a>
     </li></ul></dd>
     
 
@@ -1557,7 +1632,7 @@
     
 
     
-    <h4 class="name" id="~rand"><span class="type-signature">(inner) </span>rand<span class="signature">(len, lBound<span class="signature-attributes">opt, nullable</span>, uBound<span class="signature-attributes">opt, nullable</span>, dtype<span class="signature-attributes">opt, nullable</span>)</span><span class="type-signature"> &rarr; {ColNum}</span></h4>
+    <h4 class="name" id="~rand"><span class="type-signature">(inner) </span>rand<span class="signature">(len, lBound<span class="signature-attributes">opt, nullable</span>, uBound<span class="signature-attributes">opt, nullable</span>, dtype<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {ColNum|ColStr}</span></h4>
     
 
     
@@ -1725,6 +1800,9 @@
             
                 
 <span class="param-type">DType</span>
+|
+
+<span class="param-type">'s'</span>
 
 
             
@@ -1736,8 +1814,6 @@
                     &lt;optional><br>
                 
 
-                
-                    &lt;nullable><br>
                 
 
                 
@@ -1793,7 +1869,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1853">line 1853</a>
+        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1758">line 1758</a>
     </li></ul></dd>
     
 
@@ -1834,6 +1910,9 @@
     <dd>
         
 <span class="param-type">ColNum</span>
+|
+
+<span class="param-type">ColStr</span>
 
 
     </dd>
@@ -2048,7 +2127,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1691">line 1691</a>
+        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1608">line 1608</a>
     </li></ul></dd>
     
 
@@ -2295,7 +2374,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1892">line 1892</a>
+        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1792">line 1792</a>
     </li></ul></dd>
     
 
@@ -2514,7 +2593,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1908">line 1908</a>
+        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line1808">line 1808</a>
     </li></ul></dd>
     
 
@@ -2585,7 +2664,10 @@
     <ul>
         <li>
             
-<span class="param-type">ArrayLike</span>
+<span class="param-type">ArrayLike.&lt;number></span>
+|
+
+<span class="param-type">ArrayLike.&lt;string></span>
 
 
         </li>
@@ -2651,6 +2733,29 @@
             
                 
 <span class="param-type">boolean</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>BYTES_PER_ELEMENT</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
 
 
             
@@ -2920,6 +3025,29 @@
 
         <tr>
             
+                <td class="name"><code>tail</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
                 <td class="name"><code>filter</code></td>
             
 
@@ -2967,6 +3095,29 @@
         <tr>
             
                 <td class="name"><code>ps</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>head</code></td>
             
 
             <td class="type">
@@ -3477,7 +3628,7 @@
 
         <tr>
             
-                <td class="name"><code>BYTES_PER_ELEMENT</code></td>
+                <td class="name"><code>randEl</code></td>
             
 
             <td class="type">
@@ -3799,6 +3950,29 @@
 
         <tr>
             
+                <td class="name"><code>pop</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
                 <td class="name"><code>distance</code></td>
             
 
@@ -3915,29 +4089,6 @@
         <tr>
             
                 <td class="name"><code>floor</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>head</code></td>
             
 
             <td class="type">
@@ -4282,29 +4433,6 @@
 
         <tr>
             
-                <td class="name"><code>pop</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
                 <td class="name"><code>pow</code></td>
             
 
@@ -4328,7 +4456,7 @@
 
         <tr>
             
-                <td class="name"><code>removeAllOutliers</code></td>
+                <td class="name"><code>removeOutliers</code></td>
             
 
             <td class="type">
@@ -4604,29 +4732,6 @@
 
         <tr>
             
-                <td class="name"><code>tail</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
                 <td class="name"><code>takeWhile</code></td>
             
 
@@ -4728,7 +4833,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line67">line 67</a>
+        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line69">line 69</a>
     </li></ul></dd>
     
 
@@ -4816,76 +4921,30 @@
 
         <tr>
             
+                <td class="name"><code>randEl</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
                 <td class="name"><code>concat</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>head</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>labelEncode</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>pop</code></td>
             
 
             <td class="type">
@@ -4931,7 +4990,7 @@
 
         <tr>
             
-                <td class="name"><code>sample</code></td>
+                <td class="name"><code>pop</code></td>
             
 
             <td class="type">
@@ -4954,7 +5013,30 @@
 
         <tr>
             
-                <td class="name"><code>tail</code></td>
+                <td class="name"><code>labelEncode</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>sample</code></td>
             
 
             <td class="type">
@@ -5009,7 +5091,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line55">line 55</a>
+        <a href="Column.js.html">Column.js</a>, <a href="Column.js.html#line58">line 58</a>
     </li></ul></dd>
     
 
@@ -5134,7 +5216,7 @@
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Fri Dec 06 2019 19:24:01 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sun Feb 02 2020 08:13:29 GMT+0000 (Greenwich Mean Time)
 </footer>
 
 <script> prettyPrint(); </script>

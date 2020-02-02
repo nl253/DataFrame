@@ -150,15 +150,6 @@ describe('utils', () => {
       }
     });
   });
-  describe('bag', () => {
-    test('inserting 1, 2, 3, 1, 1 into a bag has 1x3, 2x1, 3x1', () => {
-      const multiset = Column.bag([1, 2, 3, 1, 1]);
-      expect(isMap(multiset)).toBe(true);
-      expect(multiset.get(1)).toBe(3);
-      expect(multiset.get(2)).toBe(1);
-      expect(multiset.get(3)).toBe(1);
-    });
-  });
 });
 
 describe('generation', () => {
@@ -276,8 +267,8 @@ describe('generation', () => {
     const col = Column.ones(n);
     expect(col).toBeValidCol('u8');
     expect(col).toHaveLength(n);
-    for (let i = 0; i < col.length; i++) {
-      expect(col[i]).toEqual(1);
+    for (const v of col) {
+      expect(v).toEqual(1);
     }
   });
 
@@ -306,11 +297,11 @@ describe('generation', () => {
     const col = Column.repeat(n, v);
     expect(col).toBeValidCol(...dtypes);
     expect(col).toHaveLength(n);
-    for (let i = 0; i < col.length; i++) {
+    for (const x of col) {
       if (col.dtype === 's') {
-        expect(col[i]).toEqual(v);
+        expect(x).toEqual(v);
       } else {
-        expect(col[i]).toBeCloseTo(v);
+        expect(x).toBeCloseTo(v);
       }
     }
   }));
@@ -360,15 +351,77 @@ describe('ColNum', () => {
 
   describe('.clip(lBound, uBound)', () => {
     test.each([
-      [RAND.int(0, INT_SMALL),     RAND.int(INT_SMALL, INT_MEDIUM)],
-      [RAND.float(0, INT_SMALL),   RAND.float(INT_SMALL, INT_MEDIUM)],
+      [RAND.int(0, INT_SMALL),         RAND.int(INT_SMALL, INT_MEDIUM)],
+      [RAND.float(0, INT_SMALL),       RAND.float(INT_SMALL, INT_MEDIUM)],
       [RAND.float(-INT_SMALL, INT_SMALL), RAND.float(INT_SMALL, INT_MEDIUM)],
     ])('with lBound = %d, uBound = %d have values between the range', (lBound, uBound) => {
       const col = Column.rand(INT_MEDIUM, lBound - INT_SMALL, uBound + INT_SMALL)
                         .clip(lBound, uBound);
-      for (let i = 0; i < col.length; i++) {
-        expect(col[i]).toBeGreaterThanOrEqual(lBound - FLOAT_DELTA);
-        expect(col[i]).toBeLessThanOrEqual(uBound + FLOAT_DELTA);
+      for (const v of col) {
+        expect(v).toBeGreaterThanOrEqual(lBound - FLOAT_DELTA);
+        expect(v).toBeLessThanOrEqual(uBound + FLOAT_DELTA);
+      }
+    });
+  });
+
+  describe('.smooth(n)', () => {
+    test.each([
+      [RAND.int(0, INT_SMALL),         RAND.int(INT_SMALL, INT_MEDIUM),   RAND.int(2, 5)],
+      [RAND.float(0, INT_SMALL),       RAND.float(INT_SMALL, INT_MEDIUM), RAND.int(2, 5)],
+      [RAND.float(-INT_SMALL, INT_SMALL), RAND.float(INT_SMALL, INT_MEDIUM), RAND.int(2, 5)],
+    ])('with lBound = %d, uBound = %d and n = %d have only floats all smaller than max value and larger than min value', (lBound, uBound, n) => {
+      const col = Column.rand(INT_MEDIUM, lBound - INT_SMALL, uBound + INT_SMALL)
+                        .smooth(n);
+      expect(col).toBeValidCol('f32', 'f64');
+      const max = col.max();
+      const min = col.min();
+      for (const v of col) {
+        expect(v).toBeGreaterThanOrEqual(min);
+        expect(v).toBeLessThanOrEqual(max);
+      }
+    });
+  });
+
+  describe('.kBins(k)', () => {
+    test.each([
+      [RAND.int(0, INT_SMALL),         RAND.int(INT_SMALL, INT_MEDIUM),   RAND.int(2, 5)],
+      [RAND.float(0, INT_SMALL),       RAND.float(INT_SMALL, INT_MEDIUM), RAND.int(2, 5)],
+      [RAND.float(-INT_SMALL, INT_SMALL), RAND.float(INT_SMALL, INT_MEDIUM), RAND.int(2, 5)],
+    ])('with lBound = %d, uBound = %d and n = %d have only natural numbers all in range [0, %d]', (lBound, uBound, k) => {
+      const col = Column.rand(INT_MEDIUM, lBound - INT_SMALL, uBound + INT_SMALL)
+                        .kBins(k);
+      expect(col).toBeValidCol('u8');
+      for (const v of col) {
+        expect(v).toBeInRange(0, k);
+      }
+    });
+  });
+
+  describe('.disDiff(n)', () => {
+    test.each([
+      [RAND.int(0, INT_SMALL),         RAND.int(INT_SMALL, INT_MEDIUM),   RAND.int(2, 5)],
+      [RAND.float(0, INT_SMALL),       RAND.float(INT_SMALL, INT_MEDIUM), RAND.int(2, 5)],
+      [RAND.float(-INT_SMALL, INT_SMALL), RAND.float(INT_SMALL, INT_MEDIUM), RAND.int(2, 5)],
+    ])('with lBound = %d, uBound = %d and n = %d have only floats with length smaller by %d than original array', (lBound, uBound, n) => {
+      const xs = Column.rand(INT_MEDIUM, lBound - INT_SMALL, uBound + INT_SMALL);
+      const col = xs.disDiff(n);
+      expect(col).toBeValidCol('f32', 'f64');
+      expect(col).toHaveLength(xs.length - n);
+    });
+  });
+
+  describe('.normalize(n)', () => {
+    test.each([
+      [RAND.int(0, INT_SMALL),         RAND.int(INT_SMALL, INT_MEDIUM), ],
+      [RAND.float(0, INT_SMALL),       RAND.float(INT_SMALL, INT_MEDIUM)],
+      [RAND.float(-INT_SMALL, INT_SMALL), RAND.float(INT_SMALL, INT_MEDIUM)],
+    ])('with lBound = %d, uBound = %d and n = %d have only floats all in [0, 1]', (lBound, uBound) => {
+      const col = Column.rand(INT_MEDIUM, lBound - INT_SMALL, uBound + INT_SMALL)
+                        .normalize();
+      expect(col).toBeValidCol('f32', 'f64');
+      for (const v of col) {
+        expect(v).toBeGreaterThanOrEqual(0);
+        expect(v).toBeLessThanOrEqual(1);
       }
     });
   });

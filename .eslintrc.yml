@@ -1,0 +1,55 @@
+env:
+  browser: false
+  commonjs: true
+  es6: true
+  jest: true
+  node: true
+extends:
+  - 'eslint:recommended'
+  - 'plugin:node/recommended'
+  - 'plugin:security/recommended'
+  - 'plugin:promise/recommended'
+  - 'airbnb'
+globals:
+  Array: readonly
+  Date: readonly
+  JSON: readonly
+  Map: readonly
+  Math: readonly
+  Number: readonly
+  Object: readonly
+  Promise: readonly
+  Set: readonly
+  URL: readonly
+  document: readonly
+  module: readonly
+  navigator: readonly
+  process: readonly
+  window: readonly
+plugins:
+  - filenames
+  - import
+  - promise
+  - compat
+  - security
+parserOptions:
+  ecmaVersion: 2018
+root: true
+rules:
+  node/shebang: warn
+  indent:
+    - error
+    - 2
+  linebreak-style: off
+  no-restricted-syntax: off
+  no-plusplus: off
+  quotes:
+    - error
+    - single
+  guard-for-in: off
+  no-await-in-loop: off
+  radix: off
+  func-names: off
+  semi:
+    - error
+    - always
