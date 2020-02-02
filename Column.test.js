@@ -144,9 +144,9 @@ describe('utils', () => {
       const guess = Column.guessNumDtype(arr);
       expect(DTYPES).toContain(guess);
       if (dtype === dtype2) {
-        expect(guess).toEqual(dtype);
+        expect(guess).toStrictEqual(dtype);
       } else {
-        expect(guess === dtype || guess === dtype2).toEqual(true);
+        expect(guess === dtype || guess === dtype2).toStrictEqual(true);
       }
     });
   });
@@ -205,7 +205,7 @@ describe('generation', () => {
       expect(col).toBeValidCol('s');
       expect(input).toHaveLength(col.length);
       for (let i = 0; i < col.length; i++) {
-        expect(col[i]).toEqual(input[i]);
+        expect(col[i]).toStrictEqual(input[i]);
       }
     });
 
@@ -218,7 +218,7 @@ describe('generation', () => {
       expect(col).toBeValidCol('u8', 'f32', 'f64');
       expect(input).toHaveLength(col.length);
       for (let i = 0; i < col.length; i++) {
-        expect(col[i]).toEqual(parseInt(input[i]));
+        expect(col[i]).toStrictEqual(parseInt(input[i]));
       }
     });
 
@@ -268,7 +268,7 @@ describe('generation', () => {
     expect(col).toBeValidCol('u8');
     expect(col).toHaveLength(n);
     for (const v of col) {
-      expect(v).toEqual(1);
+      expect(v).toStrictEqual(1);
     }
   });
 
@@ -278,7 +278,7 @@ describe('generation', () => {
     expect(col).toBeValidCol('u8');
     expect(col).toHaveLength(n);
     for (let i = 0; i < col.length; i++) {
-      expect(col[i]).toEqual(0);
+      expect(col[i]).toStrictEqual(0);
     }
   });
 
@@ -299,7 +299,7 @@ describe('generation', () => {
     expect(col).toHaveLength(n);
     for (const x of col) {
       if (col.dtype === 's') {
-        expect(x).toEqual(v);
+        expect(x).toStrictEqual(v);
       } else {
         expect(x).toBeCloseTo(v);
       }
@@ -322,14 +322,14 @@ describe('ColNum', () => {
 
   describe('statistical', () => {
 
-    test('[1, 2, 3].mean() === 2', () => expect(Column.of(1, 2, 3).mean()).toEqual(2));
+    test('[1, 2, 3].mean() === 2', () => expect(Column.of(1, 2, 3).mean()).toStrictEqual(2));
 
     describe('measure of spread should give 0 if there is no spread', () => {
       const n = RAND.int();
       for (const f of ['mad', 'stdev', 'var']) {
         for (const v of [RAND.int(), RAND.float()]) {
           test(`Column.repeat(${n}, ${v}).${f}() ===  0`, () => {
-            expect(Column.repeat(n, v)[f]()).toEqual(0);
+            expect(Column.repeat(n, v)[f]()).toStrictEqual(0);
           });
         }
       }
@@ -484,8 +484,34 @@ describe('ColStr and ColNum (shared)', () => {
       }
       test('probabilities add up to 1', () => expect([...ps.keys()].map((k) => ps.get(k)).reduce((x, y) => x + y, 0)).toBeCloseTo(1));
     });
-    test(`col.replace(${v}) removes all such items from the col`, () => expect([...c.replace(v, 0)]).not.toContain(v));
-    test(`col.removeAll(${v}) removes all such items from the col`, () => expect([...c.removeAll(v)]).not.toContain(v));
+    test('col.shuffle() reorders elements so that at least 25% of elements changed place', () => {
+      const col = c.shuffle();
+      expect(col).toBeValidCol(c.dtype);
+      expect(col).toHaveLength(c.length);
+      const reordered = col.filter((x, idx) => c[idx] !== x).reduce((acc, _) => acc + 1, 0);
+      const reorderedRatio = reordered / col.length;
+      expect(reorderedRatio).toBeGreaterThanOrEqual(0.25);
+    });
+    test('col.reverse() reverses column', () => {
+      const col = c.reverse();
+      expect(col).toBeValidCol(c.dtype);
+      expect(col).toHaveLength(c.length);
+      if (col.dtype === 's') {
+        for (let i = 0; i < c.length; i++) {
+          expect(col[i]).toStrictEqual(c[c.length - 1 - i]);
+        }
+      } else {
+        for (let i = 0; i < c.length; i++) {
+          expect(col[i]).toBeCloseTo(c[c.length - 1 - i]);
+        }
+      }
+    });
+    test(`col.replace(${v}) removes all such items from the col`, () => {
+      expect([...c.replace(v, 0)]).not.toContain(v);
+    });
+    test(`col.removeAll(${v}) removes all such items from the col`, () => {
+      expect([...c.removeAll(v)]).not.toContain(v);
+    });
     test(`${c}.concat(${c}) joins 2 cols`, () => {
       const c2 = c.clone();
       const c3 = c.concat(c2);
@@ -493,14 +519,14 @@ describe('ColStr and ColNum (shared)', () => {
       expect(c3).toHaveLength(newColLen);
       for (let i = 0; i < c.length; i++) {
         if (c.dtype === 's') {
-          expect(c3[i]).toEqual(c[i]);
+          expect(c3[i]).toStrictEqual(c[i]);
         } else {
           expect(c3[i]).toBeCloseTo(c[i]);
         }
       }
       for (let i = c.length; i < newColLen; i++) {
         if (c.dtype === 's') {
-          expect(c3[i]).toEqual(c2[i - c.length]);
+          expect(c3[i]).toStrictEqual(c2[i - c.length]);
         } else {
           expect(c3[i]).toBeCloseTo(c2[i - c.length]);
         }

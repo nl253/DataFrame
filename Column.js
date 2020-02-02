@@ -361,10 +361,10 @@ const COL_PROTO = {
    * @returns {ColStr|ColNum}
    */
   reverse(dtype = null, inPlace = false) {
-    if (inPlace || dtype === null) {
+    if (inPlace) {
       return this._reverse();
     } else {
-      return this.clone(dtype).reverse(null, false);
+      return this.clone(dtype).reverse(null, true);
     }
   },
 
@@ -416,10 +416,10 @@ const COL_PROTO = {
    * @returns {ColStr|ColNum}
    */
   shuffle(dtype = null, inPlace = false) {
-    if (!inPlace || !dtype) {
+    if (inPlace) {
       return this._shuffle();
     } else {
-      return this.shuffle(null, false);
+      return this.clone(dtype).shuffle(null, true);
     }
   },
 
