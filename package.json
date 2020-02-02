@@ -1,6 +1,6 @@
 {
   "name": "dataf",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "description": "Dataframe & Series library for statistics and tabular data manipulation (like pandas)",
   "readme": "https://nl253.github.io/DataFrame/index.html",
   "homepage": "https://github.com/nl253/DataFrame",
