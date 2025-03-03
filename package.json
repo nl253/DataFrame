@@ -51,7 +51,8 @@
     "csv-parse": "^4.8.2",
     "sync-request": "^6.1.0",
     "winston": "^3.2.1",
-    "csv-stringify": "^5.3.3"
+    "csv-stringify": "^5.3.3",
+    "snyk": "^1.319.1"
   },
   "devDependencies": {
     "@types/jest": "^25.1.1",
@@ -124,6 +125,9 @@
     "lint:deps": "bash -c \"npm audit && npm run lint:deps:license && npm run lint:deps:security\"",
     "lint:deps:security": "npx retire --js",
     "lint:deps:license": "npx license-checker --summary",
-    "loc": "bash -c \"tokei -- $(git ls-files | grep -v docs)\""
-  }
+    "loc": "bash -c \"tokei -- $(git ls-files | grep -v docs)\"",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
+  },
+  "snyk": true
 }
